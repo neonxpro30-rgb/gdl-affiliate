@@ -17,7 +17,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
     const isSilver = pkg.name.includes('Silver');
 
     // Hardcoded details for specific packages to ensure premium display
-    const siliconDetails = [
+    const siliconDetails: { title: string; desc: string }[] = [
         { title: "Affiliate Marketing ABCs", desc: "Introduction: What is Affiliate Marketing, how it works, and how money is earned." },
         { title: "Lead Magnet Mastery", desc: "Lead Generation & Traffic: Where to find leads and how to generate instant traffic." },
         { title: "The 'First Money' Sales Script", desc: "Direct Sales Technique: A tested script to sell your first product immediately." },
@@ -25,7 +25,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
         { title: "Overcome the Fear & Launch", desc: "Mindset: How to overcome fear and take the first action immediately." }
     ];
 
-    const silverDetails = [
+    const silverDetails: { title: string; desc: string }[] = [
         { title: "Organic Affiliate Marketing Mastery", desc: "Master the art of organic affiliate marketing." },
         { title: "Content Creation Mastery", desc: "Learn how to create compelling content." },
         { title: "Video Creation Mastery Course", desc: "Comprehensive guide to video creation." },
@@ -36,7 +36,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
     ];
 
     // Determine content to show
-    let displayContent = [];
+    let displayContent: { title: string; desc: string }[] = [];
     if (isSilicon) displayContent = siliconDetails;
     else if (isSilver) displayContent = silverDetails;
 
@@ -48,12 +48,12 @@ export default function PackageCard({ pkg }: PackageCardProps) {
 
     return (
         <div className={`bg-white rounded-2xl shadow-xl overflow-hidden border-2 flex flex-col ${isGold ? 'border-yellow-400 transform md:-translate-y-4' :
-                isDiamond ? 'border-[#732C3F]' :
-                    isSilicon ? 'border-[#C57C8A]' : 'border-gray-300' // Changed Silver to gray border for better visibility
+            isDiamond ? 'border-[#732C3F]' :
+                isSilicon ? 'border-[#C57C8A]' : 'border-gray-300' // Changed Silver to gray border for better visibility
             }`}>
             <div className={`p-6 text-center text-white ${isGold ? 'bg-yellow-500' :
-                    isDiamond ? 'bg-[#732C3F]' :
-                        isSilicon ? 'bg-[#1A0B12]' : 'bg-gray-600'
+                isDiamond ? 'bg-[#732C3F]' :
+                    isSilicon ? 'bg-[#1A0B12]' : 'bg-gray-600'
                 }`}>
                 <h3 className="text-2xl font-bold">{pkg.name}</h3>
                 <p className="text-4xl font-extrabold mt-2">₹{pkg.price}</p>
@@ -106,8 +106,8 @@ export default function PackageCard({ pkg }: PackageCardProps) {
                 <Link
                     href={`/signup?package=${pkg.id}`}
                     className={`block w-full text-center text-white py-3 rounded-lg transition font-semibold mt-auto ${isGold ? 'bg-yellow-600 hover:bg-yellow-700' :
-                            isDiamond ? 'bg-purple-800 hover:bg-purple-900' :
-                                'bg-gray-900 hover:bg-gray-800'
+                        isDiamond ? 'bg-purple-800 hover:bg-purple-900' :
+                            'bg-gray-900 hover:bg-gray-800'
                         }`}
                 >
                     Buy Now
