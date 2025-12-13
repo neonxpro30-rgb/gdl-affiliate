@@ -26,6 +26,13 @@ const teamMembers = [
         subName: '',
         photo: '/images/joy-alex.jpg',
         bio: 'Manages LeanPeak’s social media presence, focusing on creating engaging content, maintaining brand consistency, and strengthening audience connection across platforms.'
+    },
+    {
+        role: 'HEAD INSTRUCTOR',
+        name: 'Dharam Veer',
+        subName: '',
+        photo: 'https://ui-avatars.com/api/?name=Dharam+Veer&background=random', // Placeholder
+        bio: 'Dharam Veer is the Head Instructor at LearnPeak, having mastered all core guidance and methodologies. His expertise, leadership, and vision play a key role in building LearnPeak’s strong foundation and long-term potential.'
     }
 ];
 
@@ -66,7 +73,7 @@ export default function TeamSection() {
 
     return (
         <section className="py-12 bg-[#F7E8EC]">
-            <div className="max-w-6xl mx-auto px-4">
+            <div className="max-w-7xl mx-auto px-4">
                 <h2 className="text-2xl md:text-3xl font-bold text-[#1A0B12] mb-8 text-center">Meet Our Team</h2>
 
                 {/* Mobile Carousel */}
@@ -81,7 +88,7 @@ export default function TeamSection() {
                 </div>
 
                 {/* Desktop Grid */}
-                <div className="hidden md:grid md:grid-cols-3 gap-8">
+                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {teamMembers.map((member, index) => (
                         <MemberCard key={index} member={member} />
                     ))}
