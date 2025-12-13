@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  phone         String?
+  role          String    @default("USER")
+  profileImage  String?
+  
+  // Referral System
+  referralCode  String    @unique
+  referrerId    String?
+  referrer      User?     @relation("UserReferrals", fields: [referrerId], references: [id])
+  referrals     User[]    @relation("UserReferrals")
+  
+  // Bank Details (stored as JSON or separate fields)
+  bankName      String?
+  accountNumber String?
+  ifscCode      String?
+  upiId         String?
+
+  orders        Order[]
+  commissions   Referral[] @relation("ReferrerCommissions")
+  payouts       Payout[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  name        String   @unique // Silver, Gold, Diamond
+  price       Float
+  description String?
+  courses     Course[]
+  orders      Order[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  thumbnail   String?
+  videoUrl    String?  // Could be a secure link
+  packageId   String
+  package     Package  @relation(fields: [packageId], references: [id])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  packageId     String
+  package       Package     @relation(fields: [packageId], references: [id])
+  amount        Float
+  status        String    @default("PENDING")
+  transactionId String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Referral {
+  id             String         @id @default(cuid())
+  referrerId     String
+  referrer       User           @relation("ReferrerCommissions", fields: [referrerId], references: [id])
+  referredUserId String         @unique // One commission per user signup/purchase usually
+  amount         Float
+  status         String    @default("PENDING")
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Payout {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  amount        Float
+  status        String   // PENDING, PROCESSED
+  transactionId String?
+  
+  createdAt     DateTime @default(now())
+}
