@@ -76,22 +76,15 @@ export default function TeamSection() {
             <div className="max-w-7xl mx-auto px-4">
                 <h2 className="text-2xl md:text-3xl font-bold text-[#1A0B12] mb-8 text-center">Meet Our Team</h2>
 
-                {/* Mobile Carousel */}
-                <div className="md:hidden overflow-hidden" ref={emblaRef}>
-                    <div className="flex">
+                {/* Unified Carousel for all screens */}
+                <div className="overflow-hidden" ref={emblaRef}>
+                    <div className="flex -ml-4">
                         {teamMembers.map((member, index) => (
-                            <div key={index} className="flex-[0_0_100%] min-w-0">
+                            <div key={index} className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.33%] min-w-0 pl-4">
                                 <MemberCard member={member} />
                             </div>
                         ))}
                     </div>
-                </div>
-
-                {/* Desktop Grid */}
-                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {teamMembers.map((member, index) => (
-                        <MemberCard key={index} member={member} />
-                    ))}
                 </div>
             </div>
         </section>
