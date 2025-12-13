@@ -19,6 +19,13 @@ const teamMembers = [
         subName: '',
         photo: 'https://res.cloudinary.com/dhahxfyvo/image/upload/v1764872452/gdl_profiles/user_HA4pgFbtsGBjKCjomJzb.jpg',
         bio: 'Dedicated Operations Manager ensuring smooth platform experiences. Expert in student support and community management.'
+    },
+    {
+        role: 'SOCIAL MEDIA HEAD',
+        name: 'Joy Alex',
+        subName: '',
+        photo: '/images/joy-alex.jpg',
+        bio: 'Manages LeanPeak’s social media presence, focusing on creating engaging content, maintaining brand consistency, and strengthening audience connection across platforms.'
     }
 ];
 
@@ -45,7 +52,7 @@ export default function TeamSection() {
                         sizes="(max-width: 768px) 96px, 128px"
                     />
                 </div>
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-[#732C3F] text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-[#732C3F] text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
                     {member.role}
                 </div>
             </div>
@@ -59,7 +66,7 @@ export default function TeamSection() {
 
     return (
         <section className="py-12 bg-[#F7E8EC]">
-            <div className="max-w-4xl mx-auto px-4">
+            <div className="max-w-6xl mx-auto px-4">
                 <h2 className="text-2xl md:text-3xl font-bold text-[#1A0B12] mb-8 text-center">Meet Our Team</h2>
 
                 {/* Mobile Carousel */}
@@ -74,7 +81,7 @@ export default function TeamSection() {
                 </div>
 
                 {/* Desktop Grid */}
-                <div className="hidden md:grid md:grid-cols-2 gap-8">
+                <div className="hidden md:grid md:grid-cols-3 gap-8">
                     {teamMembers.map((member, index) => (
                         <MemberCard key={index} member={member} />
                     ))}
