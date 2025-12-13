@@ -14,6 +14,13 @@ const teamMembers = [
         bio: 'Lead Editor in a premier photography team & Digital Marketing Expert. Visionary leader empowering individuals with practical digital skills.'
     },
     {
+        role: 'HEAD INSTRUCTOR',
+        name: 'Dharam Veer',
+        subName: '',
+        photo: 'https://ui-avatars.com/api/?name=Dharam+Veer&background=random', // Placeholder
+        bio: 'Dharam Veer is the Head Instructor at LearnPeak, having mastered all core guidance and methodologies. His expertise, leadership, and vision play a key role in building LearnPeak’s strong foundation and long-term potential.'
+    },
+    {
         role: 'MANAGER',
         name: 'Prakhar Mishra',
         subName: '',
@@ -21,23 +28,23 @@ const teamMembers = [
         bio: 'Dedicated Operations Manager ensuring smooth platform experiences. Expert in student support and community management.'
     },
     {
+        role: 'INSTRUCTOR',
+        name: 'Himanshu',
+        subName: '',
+        photo: 'https://ui-avatars.com/api/?name=Himanshu&background=random', // Placeholder
+        bio: 'Himanshu is an experienced instructor with over 3 years of expertise in digital skills. He focuses on practical learning, up-to-date industry knowledge, and helping learners build real-world digital capabilities.'
+    },
+    {
         role: 'SOCIAL MEDIA HEAD',
         name: 'Joy Alex',
         subName: '',
         photo: '/images/joy-alex.jpg',
-        bio: 'Manages LeanPeak’s social media presence, focusing on creating engaging content, maintaining brand consistency, and strengthening audience connection across platforms.'
-    },
-    {
-        role: 'HEAD INSTRUCTOR',
-        name: 'Dharam Veer',
-        subName: '',
-        photo: 'https://ui-avatars.com/api/?name=Dharam+Veer&background=random', // Placeholder
-        bio: 'Dharam Veer is the Head Instructor at LearnPeak, having mastered all core guidance and methodologies. His expertise, leadership, and vision play a key role in building LearnPeak’s strong foundation and long-term potential.'
+        bio: 'Manages LearnPeak’s social media presence, focusing on creating engaging content, maintaining brand consistency, and strengthening audience connection across platforms.'
     }
 ];
 
 export default function TeamSection() {
-    const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
+    const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 3000 })]);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
