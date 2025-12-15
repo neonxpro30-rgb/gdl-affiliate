@@ -44,7 +44,7 @@ const teamMembers = [
 ];
 
 export default function TeamSection() {
-    const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 3000 })]);
+    const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 3000, stopOnInteraction: false })]);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {

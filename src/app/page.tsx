@@ -15,13 +15,34 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[#F7E8EC] font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "LearnPeak",
+            "url": "https://learnpeak.in",
+            "logo": "https://learnpeak.in/logo-icon.png",
+            "sameAs": [
+              "https://instagram.com/learnpeak", // Placeholder - Update if user has specific links
+              // Add other social links here
+            ],
+            "description": "LearnPeak is a premier platform for mastering digital skills and affiliate marketing.",
+            "founder": {
+              "@type": "Person",
+              "name": "Naksh Gupta"
+            }
+          })
+        }}
+      />
       {/* Navbar */}
       <nav className="bg-[#1A0B12] shadow-sm p-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center">
             <Link href="/">
               <video
-                src="/logo-animated.mp4"
+                src="/logo-v2.mp4"
                 poster="/logo-poster.jpg"
                 autoPlay
                 loop

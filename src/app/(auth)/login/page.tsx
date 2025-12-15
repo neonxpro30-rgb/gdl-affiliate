@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -14,6 +14,12 @@ function LoginForm() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        setIsVisible(true);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,7 +41,7 @@ function LoginForm() {
     };
 
     return (
-        <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <div className={`bg-white p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-500 transform ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}>
             <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Login to LearnPeak</h2>
 
             {success && <div className="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm">Account created! Please login.</div>}

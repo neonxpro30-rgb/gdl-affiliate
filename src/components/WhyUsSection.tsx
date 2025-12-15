@@ -9,7 +9,7 @@ export default function WhyUsSection() {
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {/* 1. Trends */}
-                    <div className="text-center p-6 rounded-2xl hover:bg-[#F7E8EC] transition duration-300 border border-transparent hover:border-[#732C3F]">
+                    <div className="text-center p-6 rounded-2xl hover:bg-gray-50 transition duration-300">
                         <div className="w-20 h-20 mx-auto mb-6 relative bg-blue-50 rounded-full flex items-center justify-center">
                             <Image src="/images/icon-trend.png" alt="Trends" width={48} height={48} className="object-contain" />
                         </div>

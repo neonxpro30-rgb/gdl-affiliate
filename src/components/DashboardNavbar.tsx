@@ -28,7 +28,7 @@ export default function DashboardNavbar({ user }: { user: any }) {
                 <div className="flex items-center gap-2">
                     <Link href="/" className="flex-shrink-0 flex items-center">
                         <video
-                            src="/logo-animated.mp4"
+                            src="/logo-v2.mp4"
                             poster="/logo-poster.jpg"
                             autoPlay
                             loop

@@ -33,7 +33,7 @@ export default function HomeCarousel() {
         <div className="overflow-hidden bg-gray-100" ref={emblaRef}>
             <div className="flex">
                 {slides.map((slide) => (
-                    <div key={slide.id} className="flex-[0_0_100%] min-w-0 relative aspect-[16/9] md:aspect-[21/9]">
+                    <div key={slide.id} className="flex-[0_0_100%] min-w-0 relative aspect-[16/9] md:aspect-[16/9]">
                         <Image
                             src={slide.image}
                             alt="Carousel Slide"
