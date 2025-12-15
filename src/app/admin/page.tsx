@@ -7,6 +7,7 @@ import AdminDashboardClient from "./AdminDashboardClient";
 import UsersTable from "./UsersTable";
 import CategoriesTable from "./CategoriesTable";
 import CoursesTable from "./CoursesTable";
+import BlogManager from "./BlogManager";
 
 export const dynamic = 'force-dynamic';
 
@@ -291,6 +292,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     >
                         Leaderboard
                     </a>
+                    <a
+                        href="/admin?tab=blog"
+                        className={`px-4 py-2 rounded-lg font-medium text-sm md:text-base ${activeTab === 'blog' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'}`}
+                    >
+                        Blog (Stories)
+                    </a>
                 </div>
 
                 {activeTab === 'commissions' ? (
@@ -475,6 +482,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     </div>
                 ) : activeTab === 'categories' ? (
                     <CategoriesTable categories={categories} />
+                ) : activeTab === 'blog' ? (
+                    <BlogManager />
                 ) : (
                     <CoursesTable courses={courses} categories={categoriesForCourses} />
                 )}
