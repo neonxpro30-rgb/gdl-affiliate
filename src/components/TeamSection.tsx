@@ -62,7 +62,7 @@ export default function TeamSection() {
                         src={member.photo}
                         alt={member.name}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-500 transform hover:scale-110"
                         sizes="(max-width: 768px) 96px, 128px"
                     />
                 </div>

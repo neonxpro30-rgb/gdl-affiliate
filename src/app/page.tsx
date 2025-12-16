@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Instagram, Youtube, Linkedin, Facebook } from "lucide-react";
 
 import HomeCarousel from "@/components/HomeCarousel";
 import HeroSection from "@/components/HeroSection";
@@ -26,8 +27,10 @@ export default async function Home() {
             "url": "https://learnpeak.in",
             "logo": "https://learnpeak.in/logo-icon.png",
             "sameAs": [
-              "https://instagram.com/learnpeak", // Placeholder - Update if user has specific links
-              // Add other social links here
+              "https://www.instagram.com/learnpeak.in",
+              "https://youtube.com/@learnpeak-o8r",
+              "https://www.linkedin.com/in/naksh-gupta-b51358394",
+              "https://www.facebook.com/share/17pkX8BC3z/"
             ],
             "description": "LearnPeak is a premier platform for mastering digital skills and affiliate marketing.",
             "founder": {
@@ -61,18 +64,33 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {/* Column 1: Brand & Description */}
             <div>
-              <div className="mb-6 relative w-48 h-24">
+              <div className="mb-6 relative w-48 h-auto aspect-video">
                 <Image
                   src="/logo-footer.png"
                   alt="LearnPeak"
-                  fill
+                  width={192}
+                  height={108}
                   className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 192px"
                 />
               </div>
               <p className="text-gray-400 text-sm leading-relaxed">
                 Get ahead in your career with LearnPeak, the one-stop solution for your educational needs. Connect with top industry professionals and fuel your passion for success. Join now and prepare for the real-world opportunities you've always desired.
               </p>
+
+              <div className="flex space-x-4 mt-6">
+                <a href="https://www.instagram.com/learnpeak.in?igsh=MW1pYjFxZTV2N21vOA==" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#C57C8A] transition transform hover:scale-110">
+                  <Instagram size={20} />
+                </a>
+                <a href="https://youtube.com/@learnpeak-o8r?si=5YRNUnwqJco1fvPy" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#C57C8A] transition transform hover:scale-110">
+                  <Youtube size={20} />
+                </a>
+                <a href="https://www.linkedin.com/in/naksh-gupta-b51358394?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#C57C8A] transition transform hover:scale-110">
+                  <Linkedin size={20} />
+                </a>
+                <a href="https://www.facebook.com/share/17pkX8BC3z/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#C57C8A] transition transform hover:scale-110">
+                  <Facebook size={20} />
+                </a>
+              </div>
             </div>
 
             {/* Column 2: Quick Links */}

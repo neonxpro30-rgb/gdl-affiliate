@@ -1,7 +1,7 @@
 'use client'; // Required for interactivity
 
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Loader2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Loader2, Instagram, Youtube, Linkedin, Facebook } from 'lucide-react';
 
 export default function ContactUs() {
     const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
@@ -69,6 +69,49 @@ export default function ContactUs() {
                             <div>
                                 <p className="font-bold text-gray-800">Address</p>
                                 <p className="text-gray-600">Lucknow, India</p>
+                            </div>
+                        </div>
+
+                        {/* Social Media Links */}
+                        <div className="pt-6 border-t border-gray-100">
+                            <h3 className="text-lg font-bold text-[#732C3F] mb-4">Follow Us</h3>
+                            <div className="flex space-x-4">
+                                <a
+                                    href="https://www.instagram.com/learnpeak.in?igsh=MW1pYjFxZTV2N21vOA=="
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-[#F7E8EC] p-3 rounded-full text-[#732C3F] hover:bg-[#732C3F] hover:text-white transition duration-300"
+                                    title="Instagram"
+                                >
+                                    <Instagram size={24} />
+                                </a>
+                                <a
+                                    href="https://youtube.com/@learnpeak-o8r?si=5YRNUnwqJco1fvPy"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-[#F7E8EC] p-3 rounded-full text-[#732C3F] hover:bg-[#732C3F] hover:text-white transition duration-300"
+                                    title="YouTube"
+                                >
+                                    <Youtube size={24} />
+                                </a>
+                                <a
+                                    href="https://www.linkedin.com/in/naksh-gupta-b51358394?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-[#F7E8EC] p-3 rounded-full text-[#732C3F] hover:bg-[#732C3F] hover:text-white transition duration-300"
+                                    title="LinkedIn"
+                                >
+                                    <Linkedin size={24} />
+                                </a>
+                                <a
+                                    href="https://www.facebook.com/share/17pkX8BC3z/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-[#F7E8EC] p-3 rounded-full text-[#732C3F] hover:bg-[#732C3F] hover:text-white transition duration-300"
+                                    title="Facebook"
+                                >
+                                    <Facebook size={24} />
+                                </a>
                             </div>
                         </div>
                     </div>
