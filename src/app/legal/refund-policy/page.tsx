@@ -23,7 +23,7 @@ export default function RefundPolicy() {
 
                     <h2 className="text-xl font-bold text-[#732C3F]">3. Contact for Support</h2>
                     <p>
-                        If you face any issues with your purchase, please contact our support team immediately at neonxpro30@gmail.com. We are dedicated to helping you resolve any problems.
+                        If you have any questions concerning our return policy, please contact us at: <a href="mailto:learnpeak.in@gmail.com" className="text-[#732C3F] font-bold">learnpeak.in@gmail.com</a>. We are dedicated to helping you resolve any problems.
                     </p>
                 </div>
             </div>

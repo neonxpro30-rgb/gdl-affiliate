@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
+
 import HomeCarousel from "@/components/HomeCarousel";
 import HeroSection from "@/components/HeroSection";
 import WhyUsSection from "@/components/WhyUsSection";
@@ -37,7 +37,7 @@ export default async function Home() {
           })
         }}
       />
-      <Navbar />
+
 
       {/* 1. Carousel Section */}
       <HomeCarousel />

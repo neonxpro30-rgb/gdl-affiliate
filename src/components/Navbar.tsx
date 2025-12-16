@@ -3,10 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Menu, X, MoreVertical } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { Menu, X, MoreVertical, FileText, Phone, Info } from "lucide-react";
+import { SessionProvider, useSession } from "next-auth/react";
 
-export default function Navbar() {
+function NavbarContent() {
     const { data: session } = useSession();
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -71,27 +71,27 @@ export default function Navbar() {
                         </button>
 
                         {menuOpen && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+                            <div className="absolute right-0 top-full mt-2 w-64 bg-[#1A0B12] rounded-lg shadow-xl border border-[#732C3F] py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                                 <Link
                                     href="/blog"
-                                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#732C3F]"
+                                    className="flex items-center px-4 py-3 hover:bg-[#732C3F] text-[#C57C8A] hover:text-white transition"
                                     onClick={() => setMenuOpen(false)}
                                 >
-                                    <span className="font-bold">📝 Blog</span>
+                                    <FileText className="w-4 h-4 mr-3" /> Blog
                                 </Link>
                                 <Link
                                     href="/company/contact"
-                                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#732C3F]"
+                                    className="flex items-center px-4 py-3 hover:bg-[#732C3F] text-[#C57C8A] hover:text-white transition"
                                     onClick={() => setMenuOpen(false)}
                                 >
-                                    📞 Contact Us
+                                    <Phone className="w-4 h-4 mr-3" /> Contact Us
                                 </Link>
                                 <Link
                                     href="/company/about"
-                                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#732C3F]"
+                                    className="flex items-center px-4 py-3 hover:bg-[#732C3F] text-[#C57C8A] hover:text-white transition"
                                     onClick={() => setMenuOpen(false)}
                                 >
-                                    ℹ️ About Us
+                                    <Info className="w-4 h-4 mr-3" /> About Us
                                 </Link>
                             </div>
                         )}
@@ -107,5 +107,13 @@ export default function Navbar() {
                 </div>
             </div>
         </nav>
+    );
+}
+
+export default function Navbar() {
+    return (
+        <SessionProvider>
+            <NavbarContent />
+        </SessionProvider>
     );
 }

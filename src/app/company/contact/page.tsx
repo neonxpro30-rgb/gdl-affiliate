@@ -1,7 +1,35 @@
-import React from 'react';
-import { Mail, Phone, MapPin } from 'lucide-react';
+'use client'; // Required for interactivity
+
+import React, { useState } from 'react';
+import { Mail, Phone, MapPin, Loader2 } from 'lucide-react';
 
 export default function ContactUs() {
+    const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setStatus('loading');
+
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (res.ok) {
+                setStatus('success');
+                setFormData({ name: '', email: '', phone: '', message: '' });
+                setTimeout(() => setStatus('idle'), 5000);
+            } else {
+                setStatus('error');
+            }
+        } catch (error) {
+            setStatus('error');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#F7E8EC] py-16 px-4 font-sans">
             <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
@@ -20,7 +48,7 @@ export default function ContactUs() {
                             </div>
                             <div>
                                 <p className="font-bold text-gray-800">Email</p>
-                                <p className="text-gray-600">neonxpro30@gmail.com</p>
+                                <p className="text-gray-600">learnpeak.in@gmail.com</p>
                             </div>
                         </div>
 
@@ -46,22 +74,63 @@ export default function ContactUs() {
                     </div>
 
                     <div className="bg-gray-50 p-6 rounded-xl">
-                        <form className="space-y-4">
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                <input type="text" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none" placeholder="Your Name" />
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none text-gray-900 bg-white placeholder-gray-400"
+                                    placeholder="Your Name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input type="email" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none" placeholder="Your Email" />
+                                <input
+                                    type="email"
+                                    required
+                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none text-gray-900 bg-white placeholder-gray-400"
+                                    placeholder="Your Email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                                <input
+                                    type="tel"
+                                    required
+                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none text-gray-900 bg-white placeholder-gray-400"
+                                    placeholder="Your Mobile Number"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                                <textarea className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none h-32" placeholder="How can we help?"></textarea>
+                                <textarea
+                                    required
+                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none h-32 text-gray-900 bg-white placeholder-gray-400"
+                                    placeholder="How can we help?"
+                                    value={formData.message}
+                                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                ></textarea>
                             </div>
-                            <button className="w-full bg-[#732C3F] text-white py-2 rounded-lg font-bold hover:bg-[#5a2231] transition">
-                                Send Message
+                            <button
+                                type="submit"
+                                disabled={status === 'loading'}
+                                className="w-full bg-[#732C3F] text-white py-2 rounded-lg font-bold hover:bg-[#5a2231] transition flex items-center justify-center disabled:opacity-70"
+                            >
+                                {status === 'loading' ? <Loader2 className="animate-spin" /> : 'Send Message'}
                             </button>
+                            {status === 'success' && (
+                                <p className="text-green-600 text-sm text-center font-medium">Message sent successfully!</p>
+                            )}
+                            {status === 'error' && (
+                                <p className="text-red-500 text-sm text-center font-medium">Failed to send message. Please try again.</p>
+                            )}
                         </form>
                     </div>
                 </div>

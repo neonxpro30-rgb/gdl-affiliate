@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
+
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
@@ -19,7 +19,7 @@ export default async function BlogPage() {
 
     return (
         <div className="min-h-screen bg-[#F7E8EC] font-sans">
-            <Navbar />
+
 
             <main className="max-w-7xl mx-auto px-4 py-12">
                 <div className="text-center mb-16">
@@ -39,7 +39,7 @@ export default async function BlogPage() {
                             <Link href={`/blog/${post.slug}`} key={post.id} className="group">
                                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col border border-gray-100">
                                     <div className="relative h-56 w-full bg-gray-200">
-                                        {post.image ? (
+                                        {post.image?.startsWith('http') || post.image?.startsWith('/') ? (
                                             <Image
                                                 src={post.image}
                                                 alt={post.title}
@@ -57,7 +57,7 @@ export default async function BlogPage() {
                                             {post.title}
                                         </h2>
                                         <p className="text-gray-600 line-clamp-3 text-sm mb-4 flex-1">
-                                            {post.excerpt || post.content.replace(/<[^>]+>/g, '').slice(0, 100) + '...'}
+                                            {post.excerpt || (post.content || '').replace(/<[^>]+>/g, '').slice(0, 100) + '...'}
                                         </p>
                                         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
                                             <span className="text-xs text-gray-500">

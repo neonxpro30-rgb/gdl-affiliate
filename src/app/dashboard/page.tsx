@@ -74,7 +74,7 @@ export default function DashboardPage() {
                 }
             } catch (error) {
                 console.error("Error fetching mentor:", error);
-                setMentor({ name: 'Prakhar Mishra', phone: '+91 9554819859', email: 'neonxpro30@gmail.com', referralCode: 'ADMIN' });
+                setMentor({ name: 'Prakhar Mishra', phone: '+91 9554819859', email: 'learnpeak.in@gmail.com', referralCode: 'ADMIN' });
             }
         }
 
@@ -125,7 +125,7 @@ export default function DashboardPage() {
             data: {
                 name: 'Prakhar Mishra',
                 phone: '+91 93692 10597',
-                email: 'neonxpro30@gmail.com',
+                email: 'learnpeak.in@gmail.com',
                 referralCode: 'MANAGER',
                 whatsappLink: 'https://chat.whatsapp.com/KEDtQP9L7hLJqmnHsBmqvg'
             }

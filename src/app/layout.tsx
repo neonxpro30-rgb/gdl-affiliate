@@ -65,6 +65,8 @@ export const metadata: Metadata = {
 
 import Providers from "@/components/Providers";
 
+import GlobalNavbar from "@/components/GlobalNavbar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -77,6 +79,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <GlobalNavbar />
           {children}
         </Providers>
       </body>

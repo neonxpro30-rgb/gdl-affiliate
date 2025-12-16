@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Laptop, Wallet, BookOpen } from 'lucide-react';
+import { Laptop, Wallet, BookOpen, TrendingUp } from 'lucide-react';
 
 export default function WhyUsSection() {
     return (
@@ -10,8 +10,8 @@ export default function WhyUsSection() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {/* 1. Trends */}
                     <div className="text-center p-6 rounded-2xl hover:bg-gray-50 transition duration-300">
-                        <div className="w-20 h-20 mx-auto mb-6 relative bg-blue-50 rounded-full flex items-center justify-center">
-                            <Image src="/images/icon-trend.png" alt="Trends" width={48} height={48} className="object-contain" />
+                        <div className="w-20 h-20 mx-auto mb-6 relative bg-blue-50 rounded-full flex items-center justify-center text-blue-600 transition-transform active:scale-95 animate-float cursor-pointer">
+                            <TrendingUp size={40} strokeWidth={1.5} />
                         </div>
                         <h3 className="text-xl font-bold mb-3 text-gray-800">Latest Trends</h3>
                         <p className="text-gray-600 text-sm leading-relaxed">
@@ -21,7 +21,7 @@ export default function WhyUsSection() {
 
                     {/* 2. Skills */}
                     <div className="text-center p-6 rounded-2xl hover:bg-gray-50 transition duration-300">
-                        <div className="w-20 h-20 mx-auto mb-6 relative bg-purple-50 rounded-full flex items-center justify-center text-purple-600">
+                        <div className="w-20 h-20 mx-auto mb-6 relative bg-purple-50 rounded-full flex items-center justify-center text-purple-600 transition-transform active:scale-95 animate-float cursor-pointer">
                             <Laptop size={40} strokeWidth={1.5} />
                         </div>
                         <h3 className="text-xl font-bold mb-3 text-gray-800">Digital Skills</h3>
@@ -32,7 +32,7 @@ export default function WhyUsSection() {
 
                     {/* 3. Commission */}
                     <div className="text-center p-6 rounded-2xl hover:bg-gray-50 transition duration-300">
-                        <div className="w-20 h-20 mx-auto mb-6 relative bg-green-50 rounded-full flex items-center justify-center text-green-600">
+                        <div className="w-20 h-20 mx-auto mb-6 relative bg-green-50 rounded-full flex items-center justify-center text-green-600 transition-transform active:scale-95 animate-float cursor-pointer">
                             <Wallet size={40} strokeWidth={1.5} />
                         </div>
                         <h3 className="text-xl font-bold mb-3 text-gray-800">High Commission</h3>
@@ -43,7 +43,7 @@ export default function WhyUsSection() {
 
                     {/* 4. Resources */}
                     <div className="text-center p-6 rounded-2xl hover:bg-gray-50 transition duration-300">
-                        <div className="w-20 h-20 mx-auto mb-6 relative bg-orange-50 rounded-full flex items-center justify-center text-orange-600">
+                        <div className="w-20 h-20 mx-auto mb-6 relative bg-orange-50 rounded-full flex items-center justify-center text-orange-600 transition-transform active:scale-95 animate-float cursor-pointer">
                             <BookOpen size={40} strokeWidth={1.5} />
                         </div>
                         <h3 className="text-xl font-bold mb-3 text-gray-800">Resources & Guidance</h3>

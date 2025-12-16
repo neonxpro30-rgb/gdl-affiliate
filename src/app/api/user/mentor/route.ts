@@ -23,7 +23,7 @@ export async function GET() {
         let mentor = {
             name: "Prakhar Mishra",
             phone: "+91 9554819859",
-            email: "neonxpro30@gmail.com",
+            email: 'learnpeak.in@gmail.com',
             referralCode: "ADMIN",
             isDefault: true
         };

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
+
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
@@ -41,21 +41,60 @@ export default async function BlogPostPage({ params }: Props) {
 
     return (
         <div className="min-h-screen bg-white font-sans">
-            <Navbar />
+
 
             <main className="max-w-4xl mx-auto px-4 py-12">
                 <header className="mb-12 text-center">
-                    {post.image && (
-                        <div className="relative w-full h-[300px] md:h-[400px] rounded-2xl overflow-hidden mb-8 shadow-lg">
+                    {(post.image?.startsWith('http') || post.image?.startsWith('/')) && (
+                        <div className="relative w-full mb-8 shadow-lg rounded-2xl overflow-hidden">
                             <Image
                                 src={post.image}
                                 alt={post.title}
-                                fill
-                                className="object-cover"
+                                width={0}
+                                height={0}
+                                sizes="100vw"
+                                className="w-full h-auto"
                                 priority
                             />
                         </div>
                     )}
+
+                    {/* JSON-LD for Google Knowledge Graph */}
+                    <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{
+                            __html: JSON.stringify({
+                                "@context": "https://schema.org",
+                                "@type": "BlogPosting",
+                                "headline": post.title,
+                                "image": post.image,
+                                "datePublished": post.createdAt,
+                                "dateModified": post.updatedAt,
+                                "author": {
+                                    "@type": "Person",
+                                    "name": "Naksh Gupta",
+                                    "alternateName": "Priyanshu",
+                                    "jobTitle": "Founder",
+                                    "worksFor": {
+                                        "@type": "Organization",
+                                        "name": "LearnPeak",
+                                        "url": "https://learnpeak.in"
+                                    },
+                                    "url": "https://learnpeak.in/about", // Suggesting linking to About page
+                                },
+                                "publisher": {
+                                    "@type": "Organization",
+                                    "name": "LearnPeak",
+                                    "logo": {
+                                        "@type": "ImageObject",
+                                        "url": "https://learnpeak.in/logo.png" // Using domain for logo if available, or fallback
+                                    }
+                                },
+                                "description": post.excerpt || "Read the inspiring journey of Naksh Gupta, Founder of LearnPeak."
+                            })
+                        }}
+                    />
+
                     <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
                         {post.title}
                     </h1>

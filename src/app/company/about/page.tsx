@@ -36,8 +36,12 @@ export default function AboutUs() {
                     <div className="mt-12 border-t border-gray-200 pt-8">
                         <h2 className="text-2xl font-bold text-[#732C3F] mb-6 text-center">Meet Our Founder</h2>
                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-8">
-                            <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-[#732C3F] to-[#C57C8A] rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg shrink-0">
-                                NG
+                            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden shadow-lg shrink-0 border-4 border-[#732C3F] relative">
+                                <img
+                                    src="https://res.cloudinary.com/dhahxfyvo/image/upload/v1764329854/gdl_profiles/user_KgvQCIZGzPW5SpXPknDV.jpg"
+                                    alt="Naksh Gupta"
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                             <div className="text-center md:text-left">
                                 <h3 className="text-xl font-bold text-gray-900">Naksh Gupta</h3>

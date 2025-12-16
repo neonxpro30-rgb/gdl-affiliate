@@ -1,7 +1,17 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function HeroSection() {
+    const scrollToPackages = (e: React.MouseEvent) => {
+        e.preventDefault();
+        const element = document.getElementById('packages');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     return (
         <section className="py-16 px-4 max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -20,9 +30,12 @@ export default function HeroSection() {
                         <Link href="/signup" className="bg-[#732C3F] text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-[#5a2231] transition shadow-lg hover:shadow-xl">
                             Get Started
                         </Link>
-                        <Link href="#packages" className="bg-transparent text-[#732C3F] border-2 border-[#732C3F] px-8 py-3 rounded-full font-bold text-lg hover:bg-[#F7E8EC] transition">
+                        <button
+                            onClick={scrollToPackages}
+                            className="bg-transparent text-[#732C3F] border-2 border-[#732C3F] px-8 py-3 rounded-full font-bold text-lg hover:bg-[#F7E8EC] transition cursor-pointer"
+                        >
                             View Packages
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
