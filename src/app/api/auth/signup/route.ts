@@ -74,6 +74,10 @@ export async function POST(req: Request) {
             updatedAt: new Date().toISOString(),
         });
 
+        // Send Welcome Email (Async - don't block response)
+        const { sendWelcomeEmail } = await import('@/lib/email');
+        sendWelcomeEmail(email, name).catch(err => console.error("Email send failed:", err));
+
         return NextResponse.json({ message: 'User created', userId, orderId: newOrderRef.id });
     } catch (error) {
         console.error('Signup error:', error);
