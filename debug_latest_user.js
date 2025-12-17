@@ -17,10 +17,10 @@ const db = admin.firestore();
 async function debugLatest() {
     console.log('Debugging Latest User/Order...');
 
-    // 1. Fetch Latest User
-    const usersSnap = await db.collection('users').get();
+    // 1. Fetch Specific User
+    const usersSnap = await db.collection('users').where('email', '==', 'zoomvistazs@gmail.com').get();
     const users = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const latestUser = users[0];
     if (!latestUser) {
@@ -34,6 +34,8 @@ async function debugLatest() {
     console.log(`- Email: ${latestUser.email}`);
     console.log(`- Referrer ID: ${latestUser.referrerId || 'NONE (⚠️ No Referrer Linked!)'}`);
     console.log(`- Created At: ${latestUser.createdAt}`);
+    console.log(`- IsActive: ${latestUser.isActive}`);
+    console.log(`- Password Hash: ${latestUser.password ? 'User has password' : 'NO PASSWORD'}`);
 
     // If referrer exists, fetch details
     if (latestUser.referrerId) {

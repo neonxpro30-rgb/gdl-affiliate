@@ -61,3 +61,45 @@ export async function sendWelcomeEmail(toEmail: string, userName: string) {
         console.error("Failed to send welcome email:", error);
     }
 }
+
+export async function sendSaleNotificationEmail(toEmail: string, mentorName: string, buyerName: string, packageName: string) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+
+    const mailOptions = {
+        from: `"LearnPeak Team" <${process.env.EMAIL_USER}>`,
+        to: toEmail,
+        subject: `Cha-Ching! New Sale: ${packageName} 💰`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #28a745;">Congratulations, ${mentorName}! 🥳</h1>
+                </div>
+                
+                <p>Great news! You have a new referral.</p>
+                
+                <div style="background-color: #f0fdf4; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 5px solid #28a745;">
+                    <p style="margin: 5px 0;"><strong>Buyer:</strong> ${buyerName}</p>
+                    <p style="margin: 5px 0;"><strong>Package:</strong> ${packageName}</p>
+                    <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: green; font-weight: bold;">Confirmed</span></p>
+                </div>
+                
+                <p>Keep up the great work! Your earnings have been updated in your dashboard.</p>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="https://learnpeak.in/dashboard" style="background-color: #732C3F; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Check Dashboard</a>
+                </div>
+                
+                <p style="margin-top: 30px; font-size: 12px; color: #888; text-align: center;">
+                    LearnPeak Affiliate System
+                </p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Sale notification email sent to ${toEmail}`);
+    } catch (error) {
+        console.error("Failed to send sale notification:", error);
+    }
+}

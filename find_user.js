@@ -18,11 +18,12 @@ async function findUser() {
     let found = false;
     snapshot.forEach(doc => {
         const data = doc.data();
-        if (data.name && data.name.toLowerCase().includes('priyanshu')) {
+        if (data.email === 'final@check.com') {
             console.log(`Found User: `);
             console.log(`- Name: ${data.name} `);
             console.log(`- Email: ${data.email} `);
             console.log(`- Role: ${data.role} `);
+            console.log(`- IsActive: ${data.isActive} `);
             console.log(`- ID: ${doc.id} `);
             found = true;
         }

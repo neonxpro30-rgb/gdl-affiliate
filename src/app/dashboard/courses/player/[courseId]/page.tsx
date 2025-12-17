@@ -69,19 +69,66 @@ export default async function CoursePlayerPage({ params }: { params: Promise<{ c
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     {/* Video Player Container */}
                     <div className="aspect-video bg-black w-full relative">
-                        {course.videoLink ? (
-                            <iframe
-                                src={course.videoLink.replace('watch?v=', 'embed/')}
-                                className="w-full h-full"
-                                allowFullScreen
-                                title={course.title}
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white">
-                                <PlayCircle className="w-16 h-16 opacity-50" />
-                                <span className="ml-4">Video not available</span>
-                            </div>
-                        )}
+                        {(() => {
+                            const getEmbedUrl = (url: string) => {
+                                if (!url) return null;
+
+                                // YouTube
+                                if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                                    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+                                    return `https://www.youtube.com/embed/${videoId}`;
+                                }
+
+                                // Vimeo
+                                if (url.includes('vimeo.com')) {
+                                    // Robust Regex for Vimeo (Handles standard, private, and manage links)
+                                    // Matches: vimeo.com/123, vimeo.com/123/hash, vimeo.com/manage/videos/123
+                                    const vimeoRegex = /(?:vimeo\.com\/(?:video\/|manage\/videos\/)?|player\.vimeo\.com\/video\/)([0-9]+)(?:\/([a-zA-Z0-9]+))?/;
+                                    const match = url.match(vimeoRegex);
+
+                                    if (match && match[1]) {
+                                        const videoId = match[1];
+                                        const hash = match[2]; // Optional private hash
+
+                                        let embedSrc = `https://player.vimeo.com/video/${videoId}`;
+
+                                        // Construct query params
+                                        const queryParams = new URLSearchParams(url.split('?')[1] || '');
+                                        if (hash) queryParams.set('h', hash);
+
+                                        const queryString = queryParams.toString();
+                                        if (queryString) {
+                                            embedSrc += `?${queryString}`;
+                                        }
+
+                                        return embedSrc;
+                                    }
+                                }
+
+                                return url; // Fallback
+                            };
+
+                            const embedUrl = getEmbedUrl(course.videoLink);
+
+                            if (embedUrl) {
+                                return (
+                                    <iframe
+                                        src={embedUrl}
+                                        className="w-full h-full"
+                                        allowFullScreen
+                                        allow="autoplay; fullscreen; picture-in-picture"
+                                        title={course.title}
+                                    />
+                                );
+                            } else {
+                                return (
+                                    <div className="w-full h-full flex items-center justify-center text-white">
+                                        <PlayCircle className="w-16 h-16 opacity-50" />
+                                        <span className="ml-4">Video not available</span>
+                                    </div>
+                                );
+                            }
+                        })()}
                     </div>
 
                     <div className="p-6 md:p-8">

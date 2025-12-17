@@ -65,15 +65,20 @@ export async function POST(req: Request) {
         const ordersRef = db.collection('orders');
         const newOrderRef = ordersRef.doc();
 
+        const timestamp = new Date().toISOString();
         await newOrderRef.set({
             userId,
             packageId,
             amount,
             status: 'PENDING',
-            createdAt: new Date().toISOString(),
-            return NextResponse.json({ message: 'User created', userId, orderId: newOrderRef.id });
-        } catch (error) {
-            console.error('Signup error:', error);
-            return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-        }
+            createdAt: timestamp,
+            updatedAt: timestamp,
+        });
+
+        // Success
+        return NextResponse.json({ message: 'User created', userId, orderId: newOrderRef.id });
+    } catch (error) {
+        console.error('Signup error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
+}

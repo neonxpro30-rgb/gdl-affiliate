@@ -22,6 +22,11 @@ function SignupForm() {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        // Clear any existing session to prevent "Ghost Login"
+        import('next-auth/react').then(({ signOut }) => {
+            signOut({ redirect: false });
+        });
+
         // Auto-fill from URL
         const pkgId = searchParams.get('package');
         const refCode = searchParams.get('ref');

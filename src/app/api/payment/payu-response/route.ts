@@ -28,25 +28,10 @@ export async function POST(req: Request) {
         }
 
         if (data.status === 'success') {
-            const orderData = orderDoc.data();
+            const { processSuccessfulPayment } = await import('@/lib/payment-processor');
 
-            // Update Order
-            await orderRef.update({
-                status: 'SUCCESS',
-                transactionId: data.mihpayid,
-                updatedAt: new Date().toISOString(),
-                paymentData: data
-            });
-
-            // Activate User
-            if (orderData?.userId) {
-                await db.collection('users').doc(orderData.userId).update({
-                    isActive: true,
-                    updatedAt: new Date().toISOString()
-                });
-            }
-
-            // Commission logic removed to prevent duplication. Handled in /api/payment/verify
+            // Unified Processor handles: Order Update, User Activation, Commission, Emails
+            await processSuccessfulPayment(orderId, data.mihpayid, data);
 
             return NextResponse.redirect(new URL(`/dashboard?payment=success&orderId=${orderId}`, req.url));
         } else {
