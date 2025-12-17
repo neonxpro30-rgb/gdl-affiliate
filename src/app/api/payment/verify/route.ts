@@ -120,6 +120,12 @@ export async function POST(req: Request) {
             }
         }
 
+        // Send Welcome Email
+        if (userData?.email && userData?.name) {
+            const { sendWelcomeEmail } = await import('@/lib/email');
+            sendWelcomeEmail(userData.email, userData.name).catch(err => console.error("Email send failed:", err));
+        }
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(error);

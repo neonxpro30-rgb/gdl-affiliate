@@ -39,13 +39,52 @@ function SignupForm() {
             .catch(err => console.error(err));
     }, [searchParams]);
 
+    const [referrerName, setReferrerName] = useState('');
+    const [verifyingReferral, setVerifyingReferral] = useState(false);
+
+    useEffect(() => {
+        const verifyReferral = async () => {
+            if (formData.referralCode.length < 4) {
+                setReferrerName('');
+                return;
+            }
+
+            setVerifyingReferral(true);
+            try {
+                const res = await fetch('/api/auth/verify-referral', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: formData.referralCode })
+                });
+                const data = await res.json();
+                if (data.valid) {
+                    setReferrerName(data.name);
+                } else {
+                    setReferrerName('');
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setVerifyingReferral(false);
+            }
+        };
+
+        const timeoutId = setTimeout(() => {
+            if (formData.referralCode) verifyReferral();
+        }, 500); // Debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [formData.referralCode]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
         if (name === 'phone') {
-            // Only allow numbers and max 10 digits
             const numericValue = value.replace(/\D/g, '').slice(0, 10);
             setFormData({ ...formData, [name]: numericValue });
+        } else if (name === 'referralCode') {
+            // Auto-capitalize
+            setFormData({ ...formData, [name]: value.toUpperCase() });
         } else {
             setFormData({ ...formData, [name]: value });
         }
@@ -150,12 +189,22 @@ function SignupForm() {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Referral Code (Optional)</label>
-                    <input
-                        name="referralCode" type="text"
-                        className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none bg-gray-50 text-gray-900"
-                        value={formData.referralCode} onChange={handleChange}
-                        placeholder="Enter code if you have one"
-                    />
+                    <div className="relative">
+                        <input
+                            name="referralCode" type="text"
+                            className={`w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none bg-gray-50 text-gray-900 ${referrerName ? 'border-green-500 ring-1 ring-green-500' : ''}`}
+                            value={formData.referralCode} onChange={handleChange}
+                            placeholder="Enter code if you have one"
+                        />
+                        {verifyingReferral && (
+                            <span className="absolute right-3 top-3 text-gray-400 text-xs">Checking...</span>
+                        )}
+                    </div>
+                    {referrerName && (
+                        <p className="text-green-600 text-xs mt-1 font-semibold flex items-center">
+                            ✅ Mentor: {referrerName}
+                        </p>
+                    )}
                 </div>
 
                 <div>
