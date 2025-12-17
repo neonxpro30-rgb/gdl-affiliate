@@ -1,14 +1,22 @@
 import { MetadataRoute } from 'next';
+import { prisma } from '@/lib/prisma';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://learnpeak.in';
 
-    return [
+    // Static pages
+    const routes: MetadataRoute.Sitemap = [
         {
             url: baseUrl,
             lastModified: new Date(),
             changeFrequency: 'daily',
             priority: 1,
+        },
+        {
+            url: `${baseUrl}/blog`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.9,
         },
         {
             url: `${baseUrl}/login`,
@@ -59,4 +67,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.5,
         },
     ];
+
+    try {
+        const posts = await prisma.post.findMany({
+            where: { published: true },
+            select: { slug: true, updatedAt: true },
+        });
+
+        const blogRoutes = posts.map((post) => ({
+            url: `${baseUrl}/blog/${post.slug}`,
+            lastModified: post.updatedAt,
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        }));
+
+        return [...routes, ...blogRoutes];
+    } catch (error) {
+        console.error("Failed to generate blog sitemap:", error);
+        return routes;
+    }
 }

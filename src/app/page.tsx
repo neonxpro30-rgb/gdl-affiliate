@@ -12,32 +12,61 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const dynamic = 'force-dynamic';
 
+import { db } from "@/lib/firebaseAdmin";
+
+async function getPackagesForSchema() {
+  try {
+    const snapshot = await db.collection('packages').orderBy('price', 'asc').get();
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        "@type": "Product",
+        "name": data.title,
+        "description": data.description || `Master digital skills with the ${data.title} from LearnPeak.`,
+        "image": data.image || "https://learnpeak.in/logo-icon.png",
+        "offers": {
+          "@type": "Offer",
+          "price": data.price,
+          "priceCurrency": "INR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://learnpeak.in/#packages"
+        }
+      };
+    });
+  } catch (error) {
+    return [];
+  }
+}
+
 export default async function Home() {
   const session = await getServerSession(authOptions);
+  const productSchemas = await getPackagesForSchema();
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "LearnPeak",
+    "url": "https://learnpeak.in",
+    "logo": "https://learnpeak.in/logo-icon.png",
+    "sameAs": [
+      "https://www.instagram.com/learnpeak.in",
+      "https://youtube.com/@learnpeak-o8r",
+      "https://www.linkedin.com/in/naksh-gupta-b51358394",
+      "https://www.facebook.com/share/17pkX8BC3z/"
+    ],
+    "description": "LearnPeak is a premier platform for mastering digital skills and affiliate marketing.",
+    "founder": {
+      "@type": "Person",
+      "name": "Naksh Gupta"
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#F7E8EC] font-sans">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "LearnPeak",
-            "url": "https://learnpeak.in",
-            "logo": "https://learnpeak.in/logo-icon.png",
-            "sameAs": [
-              "https://www.instagram.com/learnpeak.in",
-              "https://youtube.com/@learnpeak-o8r",
-              "https://www.linkedin.com/in/naksh-gupta-b51358394",
-              "https://www.facebook.com/share/17pkX8BC3z/"
-            ],
-            "description": "LearnPeak is a premier platform for mastering digital skills and affiliate marketing.",
-            "founder": {
-              "@type": "Person",
-              "name": "Naksh Gupta"
-            }
-          })
+          __html: JSON.stringify([organizationSchema, ...productSchemas])
         }}
       />
 
