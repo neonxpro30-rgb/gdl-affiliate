@@ -60,7 +60,7 @@ export default function TeamSection() {
                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-[#732C3F] shadow-lg relative">
                     <Image
                         src={member.photo}
-                        alt={member.name}
+                        alt={`${member.name} - ${member.role} of LearnPeak`}
                         fill
                         className="object-cover transition-transform duration-500 transform hover:scale-110"
                         sizes="(max-width: 768px) 96px, 128px"

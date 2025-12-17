@@ -57,7 +57,13 @@ export default async function Home() {
     "description": "LearnPeak is a premier platform for mastering digital skills and affiliate marketing.",
     "founder": {
       "@type": "Person",
-      "name": "Naksh Gupta"
+      "name": "Naksh Gupta",
+      "image": "https://res.cloudinary.com/dhahxfyvo/image/upload/v1764329854/gdl_profiles/user_KgvQCIZGzPW5SpXPknDV.jpg",
+      "jobTitle": "Founder",
+      "sameAs": [
+        "https://www.instagram.com/learnpeak.in",
+        "https://www.linkedin.com/in/naksh-gupta-b51358394"
+      ]
     }
   };
 
