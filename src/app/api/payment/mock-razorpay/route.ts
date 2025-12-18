@@ -31,15 +31,13 @@ export async function POST(req: Request) {
             }
         });
 
-        // Activate User
-        if (orderData?.userId) {
-            await db.collection('users').doc(orderData.userId).update({
-                isActive: true,
-                updatedAt: new Date().toISOString()
-            });
-        }
-
-        // Commission logic removed. It will be handled by /api/payment/verify on dashboard load.
+        // Process payment including user activation and commission calculation
+        const { processSuccessfulPayment } = await import('@/lib/payment-processor');
+        await processSuccessfulPayment(orderId, `mock_razorpay_${Date.now()}`, {
+            method: 'mock_razorpay',
+            amount: orderData?.amount,
+            date: new Date().toISOString()
+        });
 
         return NextResponse.json({ success: true });
 

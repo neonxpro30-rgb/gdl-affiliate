@@ -49,11 +49,14 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
             const soldPackageName = soldPackage?.name || '';
 
             // Determine Commission Amount
-            let totalCommission = 0;
+            let directCommission = 0;
+            let passiveCommission = 0;
+            let packageMismatch = false; // Flag for when referrer package < sold package
 
             if (soldPackageName.includes('Silicon')) {
                 // Fixed commission for Silicon (Exception)
-                totalCommission = 17;
+                directCommission = 17;
+                passiveCommission = 0;
             } else {
                 // Fetch Referrer's Active Package Price
                 const referrerOrdersSnapshot = await db.collection('orders')
@@ -73,21 +76,28 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
                     }
                 }
 
-                // Base Amount logic
+                // Base Amount logic - min of sold price and referrer's package price
                 const baseAmount = Math.min(soldPackagePrice, referrerPackagePrice);
-                totalCommission = baseAmount * 0.80;
-            }
 
-            // Distribute Commission
-            let passiveCommission = 0;
-            let directCommission = totalCommission;
+                // Check if there's a package mismatch (referrer package < sold package)
+                if (referrerPackagePrice < soldPackagePrice) {
+                    packageMismatch = true;
+                }
 
-            if (referrerData.referrerId && !soldPackageName.includes('Silicon')) {
-                passiveCommission = totalCommission * 0.10;
-                directCommission = totalCommission - passiveCommission;
-            } else if (soldPackageName.includes('Silicon')) {
-                passiveCommission = 0;
-                directCommission = totalCommission;
+                // Commission calculation
+                // If base amount is Silicon price (₹19), use fixed ₹17 commission
+                if (baseAmount === 19) {
+                    directCommission = 17;
+                    passiveCommission = 0; // No passive for Silicon-based commission
+                } else {
+                    // 70% Direct, 10% Passive (of base amount)
+                    directCommission = baseAmount * 0.70;
+
+                    // Passive only if referrer has an upline
+                    if (referrerData.referrerId) {
+                        passiveCommission = baseAmount * 0.10;
+                    }
+                }
             }
 
             // Save Direct Referral (User B)
@@ -106,6 +116,7 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
                         amount: directCommission,
                         type: 'DIRECT',
                         status: 'PENDING',
+                        packageMismatch: packageMismatch, // Flag: referrer package < sold package
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                     });

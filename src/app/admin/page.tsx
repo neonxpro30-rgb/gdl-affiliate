@@ -8,17 +8,27 @@ import UsersTable from "./UsersTable";
 import CategoriesTable from "./CategoriesTable";
 import CoursesTable from "./CoursesTable";
 import BlogManager from "./BlogManager";
+import DateFilter from "./DateFilter";
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string, startDate?: string, endDate?: string }> }) {
     const session = await getServerSession(authOptions);
-    const { tab } = await searchParams;
+    const { tab, startDate, endDate } = await searchParams;
     const activeTab = tab || 'commissions';
 
     if (!session || session.user.role !== 'ADMIN') {
         redirect('/dashboard');
     }
+
+    // Date filter helper
+    const isDateInRange = (dateStr: string) => {
+        if (!startDate && !endDate) return true;
+        const date = dateStr.split('T')[0];
+        if (startDate && date < startDate) return false;
+        if (endDate && date > endDate) return false;
+        return true;
+    };
 
     // Fetch Pending & Paid Referrals
     let commissions: any[] = [];
@@ -27,7 +37,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             .where('status', 'in', ['PENDING', 'PAID'])
             .get();
 
-        commissions = await Promise.all(referralsSnapshot.docs.map(async (doc) => {
+        const allCommissions = await Promise.all(referralsSnapshot.docs.map(async (doc) => {
             const data = doc.data();
 
             let referrer = { name: 'Unknown' };
@@ -56,6 +66,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 sourceUser: sourceUser
             };
         }));
+
+        // Apply date filter to commissions
+        commissions = allCommissions.filter((comm: any) => isDateInRange(comm.createdAt));
     } catch (error) {
         console.error("Error fetching commissions:", error);
     }
@@ -71,7 +84,61 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             .where('status', '==', 'SUCCESS')
             .get();
 
-        orders = ordersSnapshot.docs.map(doc => ({ ...doc.data() }));
+        // Fetch package names, buyer names, and commission data for each order
+        orders = await Promise.all(ordersSnapshot.docs.map(async (doc) => {
+            const orderData = doc.data();
+            let packageName = orderData.paymentData?.productinfo || '';
+            let buyerName = orderData.paymentData?.firstname || '';
+            let referrerPackagePrice = 0;
+            let baseAmount = orderData.amount || 0;
+
+            // If productinfo is empty, fetch from packages collection
+            if (!packageName && orderData.packageId) {
+                const pkgDoc = await db.collection('packages').doc(orderData.packageId).get();
+                if (pkgDoc.exists) {
+                    packageName = pkgDoc.data()?.name || '';
+                }
+            }
+
+            // Fetch buyer and referrer data for commission calculation
+            if (orderData.userId) {
+                const userDoc = await db.collection('users').doc(orderData.userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    buyerName = buyerName || userData?.name || '';
+
+                    // Get referrer's package price
+                    if (userData?.referrerId) {
+                        const referrerOrdersSnapshot = await db.collection('orders')
+                            .where('userId', '==', userData.referrerId)
+                            .where('status', '==', 'SUCCESS')
+                            .get();
+
+                        if (!referrerOrdersSnapshot.empty) {
+                            const referrerOrders = referrerOrdersSnapshot.docs.map(d => d.data());
+                            referrerOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                            const latestReferrerOrder = referrerOrders[0];
+
+                            if (latestReferrerOrder.packageId) {
+                                const rPkgDoc = await db.collection('packages').doc(latestReferrerOrder.packageId).get();
+                                referrerPackagePrice = rPkgDoc.data()?.price || 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Calculate base amount (min of sold price and referrer's package price)
+            const soldPrice = orderData.amount || 0;
+            if (referrerPackagePrice > 0) {
+                baseAmount = Math.min(soldPrice, referrerPackagePrice);
+            }
+
+            return { ...orderData, packageName, buyerName, baseAmount, referrerPackagePrice };
+        }));
+
+        // Apply date filter to orders
+        orders = orders.filter((order: any) => isDateInRange(order.createdAt));
 
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -139,7 +206,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     let users: any[] = [];
     if (activeTab === 'users') {
         const usersSnapshot = await db.collection('users').get();
-        users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const allUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Apply date filter to users based on createdAt
+        users = allUsers.filter((user: any) => isDateInRange(user.createdAt));
     }
 
     // Fetch All Courses (only if tab is courses)
@@ -254,6 +323,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     </div>
                 </div>
 
+                {/* Date Filter - shown for commissions, sales, and users tabs */}
+                {(activeTab === 'commissions' || activeTab === 'sales' || activeTab === 'users') && (
+                    <DateFilter />
+                )}
+
                 {/* Tabs */}
                 <div className="flex flex-wrap gap-2 mb-6">
                     <a
@@ -356,7 +430,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                                     {comm.type === 'PASSIVE' ? comm.sourceUser.name : '-'}
                                                 </td>
                                                 <td className="p-4 text-gray-900">{comm.referredUser.name}</td>
-                                                <td className="p-4 text-green-700 font-bold">₹{comm.amount}</td>
+                                                <td className="p-4">
+                                                    <span className="text-green-700 font-bold">₹{comm.amount}</span>
+                                                    {comm.packageMismatch && (
+                                                        <span className="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded font-medium" title="Referrer's package was lower than sold package">
+                                                            ⚠️ Pkg Mismatch
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold ${comm.status === 'PENDING' ? 'bg-yellow-100 text-yellow-900' :
                                                         comm.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-900' :
@@ -405,25 +486,36 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                     ) : (
                                         orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((order: any, index: number) => {
                                             const price = order.amount || 0;
-                                            const productName = order.paymentData?.productinfo || '';
+                                            const packageName = order.packageName || order.paymentData?.productinfo || '';
+                                            const baseAmount = order.baseAmount || price;
+                                            const hasMismatch = order.referrerPackagePrice > 0 && order.referrerPackagePrice < price;
 
                                             let direct, passive, company;
 
-                                            if (productName.includes('Silicon')) {
+                                            // Silicon or base amount = 19: Fixed commission
+                                            if (packageName.includes('Silicon') || baseAmount === 19) {
                                                 direct = 17;
                                                 passive = 0;
-                                                company = 2;
+                                                company = price - 17; // Company gets remaining
                                             } else {
-                                                direct = Math.round(price * 0.70);
-                                                passive = Math.round(price * 0.10);
-                                                company = Math.round(price * 0.20);
+                                                // Commission based on base amount
+                                                direct = Math.round(baseAmount * 0.70);
+                                                passive = Math.round(baseAmount * 0.10);
+                                                company = price - direct - passive; // Company gets remaining
                                             }
 
                                             return (
                                                 <tr key={order.transactionId || index} className="hover:bg-gray-50">
                                                     <td className="p-4 text-gray-700">{new Date(order.createdAt).toISOString().split('T')[0]}</td>
-                                                    <td className="p-4 font-medium text-gray-900">{order.paymentData?.firstname || 'Unknown'}</td>
-                                                    <td className="p-4 text-gray-900">{order.paymentData?.productinfo || 'Package'}</td>
+                                                    <td className="p-4 font-medium text-gray-900">{order.buyerName || order.paymentData?.firstname || 'Unknown'}</td>
+                                                    <td className="p-4 text-gray-900">
+                                                        {packageName || 'Package'}
+                                                        {hasMismatch && (
+                                                            <span className="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded" title={`Referrer had ₹${order.referrerPackagePrice} package`}>
+                                                                ⚠️ Base: ₹{baseAmount}
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                     <td className="p-4 font-bold text-gray-900">₹{price}</td>
                                                     <td className="p-4 text-blue-700 font-medium">₹{direct}</td>
                                                     <td className="p-4 text-purple-700 font-medium">₹{passive}</td>
