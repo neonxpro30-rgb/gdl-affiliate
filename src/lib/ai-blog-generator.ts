@@ -78,12 +78,14 @@ Remember: Write genuinely helpful content that provides real value to readers.`;
 // Parse Gemini response into blog structure
 function parseGeminiBlogResponse(text: string): GeneratedBlog | null {
     try {
-        const titleMatch = text.match(/TITLE:\s*(.+?)(?=\n|EXCERPT:)/s);
-        const excerptMatch = text.match(/EXCERPT:\s*(.+?)(?=\n|META_DESCRIPTION:)/s);
-        const metaMatch = text.match(/META_DESCRIPTION:\s*(.+?)(?=\n|KEYWORDS:)/s);
-        const keywordsMatch = text.match(/KEYWORDS:\s*(.+?)(?=\n|IMAGE_SUGGESTION:)/s);
-        const imageMatch = text.match(/IMAGE_SUGGESTION:\s*(.+?)(?=\n|CONTENT:)/s);
-        const contentMatch = text.match(/CONTENT:\s*([\s\S]+)$/);
+        // Normalize text for simpler parsing
+        const normalizedText = text.replace(/\r\n/g, '\n');
+        const titleMatch = normalizedText.match(/TITLE:\s*([^\n]+)/);
+        const excerptMatch = normalizedText.match(/EXCERPT:\s*([^\n]+)/);
+        const metaMatch = normalizedText.match(/META_DESCRIPTION:\s*([^\n]+)/);
+        const keywordsMatch = normalizedText.match(/KEYWORDS:\s*([^\n]+)/);
+        const imageMatch = normalizedText.match(/IMAGE_SUGGESTION:\s*([^\n]+)/);
+        const contentMatch = normalizedText.match(/CONTENT:\s*([\s\S]+)$/);
 
         if (!titleMatch || !contentMatch) {
             console.error('Failed to parse blog response - missing title or content');
@@ -178,22 +180,84 @@ export async function generateBlogPost(topic?: string): Promise<{
     }
 }
 
-// Get topic suggestions based on trends
-export async function getTopicSuggestions(): Promise<string[]> {
+// Get trending topic based on current news and events
+export async function getTrendingTopic(): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    const monthName = today.toLocaleDateString('en-IN', { month: 'long' });
 
     if (!apiKey) {
-        return blogTopics.slice(0, 5); // Return default topics
+        return blogTopics[Math.floor(Math.random() * blogTopics.length)];
     }
 
     try {
-        const prompt = `Suggest 5 trending blog topics for an Indian online education platform that teaches affiliate marketing, digital skills, and passive income strategies.
+        const prompt = `Today is ${dateStr}. 
+
+You are helping create a blog for LearnPeak, an Indian online education platform focused on affiliate marketing, digital skills, and earning online.
+
+Based on current events, trends, or time of year, suggest ONE specific blog topic that would be highly relevant and timely RIGHT NOW.
+
+Consider:
+- Any major events happening in India (festivals, budget, elections, etc.)
+- Seasonal relevance (${monthName}, end of year if applicable)
+- Current digital marketing trends
+- Economic news affecting online earning
+- Technology updates relevant to content creators
+- Social media platform updates
 
 Requirements:
-- Topics should be relevant for December 2024
-- Include New Year planning if relevant
-- Focus on practical, actionable topics
-- Consider what's trending in Indian digital marketing space
+- Topic must be educational and helpful
+- Related to digital skills, online earning, or personal development
+- NO fake promises or get-rich-quick themes
+- Should be interesting for young Indians aged 18-35
+
+Respond with ONLY the topic title, nothing else. Example format:
+How to Plan Your 2025 Digital Marketing Strategy`;
+
+        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.9, maxOutputTokens: 100 }
+            })
+        });
+
+        if (!response.ok) {
+            return blogTopics[Math.floor(Math.random() * blogTopics.length)];
+        }
+
+        const data = await response.json();
+        const topic = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+        if (topic.length > 10 && topic.length < 100) {
+            console.log('📰 Trending topic found:', topic);
+            return topic;
+        }
+
+        return blogTopics[Math.floor(Math.random() * blogTopics.length)];
+
+    } catch (error) {
+        console.error('Error getting trending topic:', error);
+        return blogTopics[Math.floor(Math.random() * blogTopics.length)];
+    }
+}
+
+// Get topic suggestions for manual selection
+export async function getTopicSuggestions(): Promise<string[]> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    if (!apiKey) {
+        return blogTopics.slice(0, 5);
+    }
+
+    try {
+        const prompt = `Today is ${dateStr}. Suggest 5 trending and timely blog topics for an Indian online education platform that teaches affiliate marketing, digital skills, and passive income strategies.
+
+Consider current events, festivals, trends in India.
 
 Format: Just list 5 topics, one per line, no numbering or bullets.`;
 

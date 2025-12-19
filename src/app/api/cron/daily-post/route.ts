@@ -1,28 +1,36 @@
 // Daily Blog Cron API
-// Automatically generates and publishes a blog post daily
-// Triggered by Vercel Cron
+// Automatically generates and publishes a blog post daily at 12 PM IST
+// Uses trending topics based on current news and events
 
 import { NextResponse } from 'next/server';
-import { generateBlogPost, generateBlogImageUrl } from '@/lib/ai-blog-generator';
+import { generateBlogPost, getTrendingTopic, generateBlogImageUrl } from '@/lib/ai-blog-generator';
 import { prisma } from '@/lib/prisma';
 
 // Helper to generate URL-friendly slug
 function generateSlug(title: string): string {
+    const timestamp = Date.now().toString(36); // Add unique suffix
     return title
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
-        .substring(0, 60);
+        .substring(0, 50) + '-' + timestamp;
 }
 
 export async function GET(request: Request) {
     try {
         console.log('🚀 Daily Blog Cron Job Started');
+        console.log('📅 Time:', new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
         const startTime = Date.now();
 
-        // Generate blog using AI
-        const result = await generateBlogPost();
+        // Step 1: Get trending topic based on current news/events
+        console.log('📰 Finding trending topic...');
+        const trendingTopic = await getTrendingTopic();
+        console.log('✅ Topic:', trendingTopic);
+
+        // Step 2: Generate blog using AI
+        console.log('✍️ Generating blog content...');
+        const result = await generateBlogPost(trendingTopic);
 
         if (!result.success || !result.blog) {
             console.error('❌ Failed to generate blog:', result.error);
@@ -36,21 +44,17 @@ export async function GET(request: Request) {
         const imageUrl = result.imageUrl;
         const slug = generateSlug(blog.title);
 
-        // Check if slug already exists
+        // Step 3: Check for duplicate (unlikely with timestamp slug but safe)
         const existingPost = await prisma.post.findUnique({
             where: { slug }
         });
 
         if (existingPost) {
-            console.log('⚠️ Post with similar slug already exists, skipping');
-            return NextResponse.json({
-                success: false,
-                error: 'Post with similar title already exists',
-                existingSlug: slug
-            }, { status: 409 });
+            console.log('⚠️ Slug collision, adding random suffix');
+            const newSlug = slug + '-' + Math.random().toString(36).substring(7);
         }
 
-        // Save to database as draft (admin can review and publish)
+        // Step 4: Save and AUTO-PUBLISH
         const savedPost = await prisma.post.create({
             data: {
                 title: blog.title,
@@ -58,26 +62,32 @@ export async function GET(request: Request) {
                 content: blog.content,
                 excerpt: blog.excerpt,
                 image: imageUrl || '',
-                published: false // Save as draft for review
+                published: true // AUTO-PUBLISH!
             }
         });
 
         const duration = Date.now() - startTime;
 
-        console.log('✅ Blog generated and saved:', savedPost.id);
-        console.log(`⏱️ Processing time: ${duration}ms`);
+        console.log('✅ Blog PUBLISHED successfully!');
+        console.log('📝 Title:', savedPost.title);
+        console.log('🔗 Slug:', savedPost.slug);
+        console.log('🖼️ Image:', imageUrl?.substring(0, 50) + '...');
+        console.log(`⏱️ Total time: ${duration}ms`);
 
         return NextResponse.json({
             success: true,
-            message: 'Blog generated and saved as draft',
+            message: 'Blog generated and PUBLISHED automatically!',
             blog: {
                 id: savedPost.id,
                 title: savedPost.title,
                 slug: savedPost.slug,
                 excerpt: blog.excerpt,
-                imageUrl: imageUrl
+                imageUrl: imageUrl,
+                url: `https://learnpeak.in/blog/${savedPost.slug}`
             },
-            processingTimeMs: duration
+            topic: trendingTopic,
+            processingTimeMs: duration,
+            publishedAt: new Date().toISOString()
         });
 
     } catch (error) {
