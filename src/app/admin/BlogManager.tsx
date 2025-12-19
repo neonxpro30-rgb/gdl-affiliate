@@ -9,6 +9,12 @@ export default function BlogManager() {
     const [formData, setFormData] = useState({ title: '', content: '', image: '', published: false });
     const [loading, setLoading] = useState(false);
 
+    // AI Generation states
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [aiTopic, setAiTopic] = useState('');
+    const [topicSuggestions, setTopicSuggestions] = useState<string[]>([]);
+    const [showAiPanel, setShowAiPanel] = useState(false);
+
     useEffect(() => {
         fetchPosts();
     }, []);
@@ -23,6 +29,54 @@ export default function BlogManager() {
         } catch (error) {
             console.error('Failed to fetch posts');
         }
+    };
+
+    const fetchTopicSuggestions = async () => {
+        try {
+            const res = await fetch('/api/admin/ai-blog');
+            const data = await res.json();
+            if (data.success && data.topics) {
+                setTopicSuggestions(data.topics);
+            }
+        } catch (error) {
+            console.error('Failed to fetch topic suggestions');
+        }
+    };
+
+    const handleAiGenerate = async () => {
+        setIsGenerating(true);
+        try {
+            const res = await fetch('/api/admin/ai-blog', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: aiTopic || undefined,
+                    autoSave: false // Don't auto-save, let user review first
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.blog) {
+                // Fill form with generated content
+                setFormData({
+                    title: data.blog.title,
+                    content: data.blog.content,
+                    image: data.blog.imageUrl || '',
+                    published: false
+                });
+                setIsEditing(true);
+                setShowAiPanel(false);
+                setAiTopic('');
+                alert('✅ Blog generated! Review and edit before publishing.');
+            } else {
+                alert('❌ ' + (data.error || 'Failed to generate blog'));
+            }
+        } catch (error) {
+            alert('❌ Error generating blog');
+            console.error(error);
+        }
+        setIsGenerating(false);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -68,15 +122,95 @@ export default function BlogManager() {
         <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Manage Blog Posts</h2>
-                {!isEditing && (
-                    <button
-                        onClick={() => setIsEditing(true)}
-                        className="bg-[#732C3F] text-white px-4 py-2 rounded-lg hover:bg-[#5a2231]"
-                    >
-                        Create New Post
-                    </button>
-                )}
+                <div className="flex gap-2">
+                    {!isEditing && !showAiPanel && (
+                        <>
+                            <button
+                                onClick={() => {
+                                    setShowAiPanel(true);
+                                    fetchTopicSuggestions();
+                                }}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:opacity-90 flex items-center gap-2"
+                            >
+                                <span>🤖</span> Generate with AI
+                            </button>
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="bg-[#732C3F] text-white px-4 py-2 rounded-lg hover:bg-[#5a2231]"
+                            >
+                                Create Manual Post
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
+
+            {/* AI Generation Panel */}
+            {showAiPanel && (
+                <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span>🤖</span> AI Blog Generator
+                    </h3>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Enter topic (or leave empty for AI to choose):
+                            </label>
+                            <input
+                                type="text"
+                                value={aiTopic}
+                                onChange={(e) => setAiTopic(e.target.value)}
+                                placeholder="e.g., How to start affiliate marketing in India"
+                                className="w-full p-3 border rounded-lg text-gray-900"
+                            />
+                        </div>
+
+                        {topicSuggestions.length > 0 && (
+                            <div>
+                                <p className="text-sm text-gray-600 mb-2">💡 Suggested topics:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {topicSuggestions.map((topic, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setAiTopic(topic)}
+                                            className="px-3 py-1 bg-white border border-purple-300 rounded-full text-sm text-purple-700 hover:bg-purple-100"
+                                        >
+                                            {topic}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                onClick={handleAiGenerate}
+                                disabled={isGenerating}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                        Generating...
+                                    </>
+                                ) : (
+                                    <>Generate Blog</>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setShowAiPanel(false)}
+                                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {isEditing ? (
                 <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
@@ -98,6 +232,11 @@ export default function BlogManager() {
                             onChange={e => setFormData({ ...formData, image: e.target.value })}
                             placeholder="https://..."
                         />
+                        {formData.image && (
+                            <div className="mt-2">
+                                <img src={formData.image} alt="Preview" className="h-32 object-cover rounded-lg" />
+                            </div>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Content (HTML supported)</label>
@@ -136,7 +275,7 @@ export default function BlogManager() {
                         </button>
                     </div>
                 </form>
-            ) : (
+            ) : !showAiPanel && (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 text-gray-700 uppercase text-xs">

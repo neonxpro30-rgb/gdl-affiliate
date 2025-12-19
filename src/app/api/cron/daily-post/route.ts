@@ -1,60 +1,84 @@
-// Daily Post Cron API v2
-// Uses AI (Gemini) to generate unique content daily
-// Triggered by Vercel Cron at 4:30 PM IST daily
+// Daily Blog Cron API
+// Automatically generates and publishes a blog post daily
+// Triggered by Vercel Cron
 
 import { NextResponse } from 'next/server';
-import { generateAIPost } from '@/lib/ai-content-generator';
-import { sendDailyPostEmail } from '@/lib/email';
+import { generateBlogPost, generateBlogImageUrl } from '@/lib/ai-blog-generator';
+import { prisma } from '@/lib/prisma';
 
-// Admin email for receiving daily posts
-const ADMIN_EMAIL = 'neonxpro30@gmail.com';
-
-// Base URL for images
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://learnpeak.in';
+// Helper to generate URL-friendly slug
+function generateSlug(title: string): string {
+    return title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 60);
+}
 
 export async function GET(request: Request) {
     try {
-        console.log('🚀 Daily Post Cron Job Started (AI Version)');
+        console.log('🚀 Daily Blog Cron Job Started');
+        const startTime = Date.now();
 
-        // Generate AI content
-        const post = await generateAIPost();
-        console.log(`📝 Generated ${post.isFestival ? 'festival' : 'daily'} post:`, post.theme);
-        console.log(`💬 Caption preview:`, post.caption.substring(0, 100) + '...');
+        // Generate blog using AI
+        const result = await generateBlogPost();
 
-        // Build image URL
-        const imageUrl = `${BASE_URL}/social-posts/${post.imageFile}`;
-        console.log('🖼️ Image URL:', imageUrl);
-
-        // Send email
-        const emailResult = await sendDailyPostEmail(ADMIN_EMAIL, {
-            type: post.isFestival ? 'festival' : 'daily',
-            caption: post.caption,
-            hashtags: post.hashtags,
-            imageUrl: imageUrl,
-            festivalName: post.festivalName,
-            dayTheme: post.theme
-        });
-
-        if (emailResult.success) {
-            console.log('✅ Daily post email sent successfully');
-            return NextResponse.json({
-                success: true,
-                message: 'AI-generated post email sent successfully',
-                postType: post.isFestival ? 'festival' : 'daily',
-                theme: post.theme,
-                caption: post.caption,
-                hashtags: post.hashtags,
-                imageUrl: imageUrl,
-                sentTo: ADMIN_EMAIL,
-                generatedAt: post.generatedAt
-            });
-        } else {
-            console.error('❌ Failed to send email:', emailResult.error);
+        if (!result.success || !result.blog) {
+            console.error('❌ Failed to generate blog:', result.error);
             return NextResponse.json({
                 success: false,
-                error: emailResult.error
+                error: result.error || 'Failed to generate blog'
             }, { status: 500 });
         }
+
+        const blog = result.blog;
+        const imageUrl = result.imageUrl;
+        const slug = generateSlug(blog.title);
+
+        // Check if slug already exists
+        const existingPost = await prisma.post.findUnique({
+            where: { slug }
+        });
+
+        if (existingPost) {
+            console.log('⚠️ Post with similar slug already exists, skipping');
+            return NextResponse.json({
+                success: false,
+                error: 'Post with similar title already exists',
+                existingSlug: slug
+            }, { status: 409 });
+        }
+
+        // Save to database as draft (admin can review and publish)
+        const savedPost = await prisma.post.create({
+            data: {
+                title: blog.title,
+                slug: slug,
+                content: blog.content,
+                excerpt: blog.excerpt,
+                image: imageUrl || '',
+                published: false // Save as draft for review
+            }
+        });
+
+        const duration = Date.now() - startTime;
+
+        console.log('✅ Blog generated and saved:', savedPost.id);
+        console.log(`⏱️ Processing time: ${duration}ms`);
+
+        return NextResponse.json({
+            success: true,
+            message: 'Blog generated and saved as draft',
+            blog: {
+                id: savedPost.id,
+                title: savedPost.title,
+                slug: savedPost.slug,
+                excerpt: blog.excerpt,
+                imageUrl: imageUrl
+            },
+            processingTimeMs: duration
+        });
 
     } catch (error) {
         console.error('❌ Cron job error:', error);
@@ -65,7 +89,7 @@ export async function GET(request: Request) {
     }
 }
 
-// Also support POST for manual triggers
+// Support POST for manual triggers
 export async function POST(request: Request) {
     return GET(request);
 }
