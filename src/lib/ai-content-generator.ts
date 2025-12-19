@@ -3,8 +3,8 @@
 
 import { getTodaysFestival } from './festival-calendar';
 
-// Gemini API endpoint
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Gemini API endpoint - using flash-lite for higher free tier limits
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
 
 // Day themes
 const dayThemes: Record<number, { name: string; focus: string }> = {
