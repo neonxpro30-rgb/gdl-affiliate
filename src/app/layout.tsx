@@ -56,6 +56,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  verification: {
+    // Site is verified via Google Search Console
+  },
   icons: {
     icon: '/logo-icon.png',
     shortcut: '/logo-icon.png',

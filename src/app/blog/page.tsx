@@ -7,8 +7,33 @@ import { Metadata } from "next";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-    title: "Blog | LearnPeak",
-    description: "Read the latest stories, tips, and insights on digital skills and affiliate marketing from LearnPeak.",
+    title: "Blog - Digital Marketing Tips & Success Stories | LearnPeak",
+    description: "Explore expert tips on affiliate marketing, digital skills, success stories, and tutorials. Learn from industry leaders at LearnPeak to boost your online career.",
+    keywords: ["digital marketing blog", "affiliate marketing tips", "online earning", "digital skills", "success stories", "LearnPeak blog"],
+    openGraph: {
+        title: "Blog - Digital Marketing Tips & Success Stories | LearnPeak",
+        description: "Explore expert tips on affiliate marketing, digital skills, success stories, and tutorials.",
+        url: "https://learnpeak.in/blog",
+        siteName: "LearnPeak",
+        type: "website",
+        images: [
+            {
+                url: "https://learnpeak.in/og-blog.png",
+                width: 1200,
+                height: 630,
+                alt: "LearnPeak Blog"
+            }
+        ]
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Blog - Digital Marketing Tips & Success Stories | LearnPeak",
+        description: "Explore expert tips on affiliate marketing, digital skills, and success stories.",
+        images: ["https://learnpeak.in/og-blog.png"]
+    },
+    alternates: {
+        canonical: "https://learnpeak.in/blog"
+    }
 };
 
 export default async function BlogPage() {
@@ -17,9 +42,37 @@ export default async function BlogPage() {
         orderBy: { createdAt: 'desc' },
     });
 
+    // Generate BlogPosting list schema
+    const blogListSchema = {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "LearnPeak Blog",
+        "description": "Expert tips on affiliate marketing, digital skills, and success stories.",
+        "url": "https://learnpeak.in/blog",
+        "publisher": {
+            "@type": "Organization",
+            "name": "LearnPeak",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://learnpeak.in/logo-icon.png"
+            }
+        },
+        "blogPost": posts.slice(0, 10).map(post => ({
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "url": `https://learnpeak.in/blog/${post.slug}`,
+            "datePublished": post.createdAt,
+            "image": post.image || ""
+        }))
+    };
+
     return (
         <div className="min-h-screen bg-[#F7E8EC] font-sans">
-
+            {/* JSON-LD Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(blogListSchema) }}
+            />
 
             <main className="max-w-7xl mx-auto px-4 py-12">
                 <div className="text-center mb-16">

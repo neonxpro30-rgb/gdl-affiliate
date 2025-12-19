@@ -17,15 +17,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!post) return { title: 'Post Not Found' };
 
+    const description = post.excerpt || post.content.replace(/<[^>]+>/g, '').slice(0, 150);
+
     return {
         title: `${post.title} | LearnPeak Blog`,
-        description: post.excerpt || post.content.replace(/<[^>]+>/g, '').slice(0, 150),
+        description: description,
+        keywords: ["LearnPeak", "affiliate marketing", "digital skills", "success story", post.title],
+        authors: [{ name: "Naksh Gupta", url: "https://learnpeak.in/company/about" }],
         openGraph: {
             title: post.title,
-            description: post.excerpt || post.content.replace(/<[^>]+>/g, '').slice(0, 150),
-            images: post.image ? [post.image] : [],
+            description: description,
+            url: `https://learnpeak.in/blog/${slug}`,
+            siteName: "LearnPeak",
+            images: post.image ? [{ url: post.image, width: 1200, height: 630, alt: post.title }] : [],
             type: 'article',
+            publishedTime: post.createdAt.toISOString(),
+            modifiedTime: post.updatedAt.toISOString(),
+            authors: ["Naksh Gupta"]
         },
+        twitter: {
+            card: "summary_large_image",
+            title: post.title,
+            description: description,
+            images: post.image ? [post.image] : []
+        },
+        alternates: {
+            canonical: `https://learnpeak.in/blog/${slug}`
+        }
     };
 }
 

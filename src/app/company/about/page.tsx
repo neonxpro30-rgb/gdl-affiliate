@@ -27,6 +27,7 @@ export default function AboutUs() {
 
                     <h2 className="text-xl font-bold text-[#732C3F]">Why Choose Us?</h2>
                     <ul className="list-disc ml-6 space-y-2">
+                        <li><strong>Lifetime Access</strong> to all courses – learn at your own pace, forever.</li>
                         <li>Expert-led courses designed for real-world application.</li>
                         <li>Comprehensive support and mentorship.</li>
                         <li>A thriving community of learners and achievers.</li>

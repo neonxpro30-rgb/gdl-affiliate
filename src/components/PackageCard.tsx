@@ -47,9 +47,9 @@ export default function PackageCard({ pkg }: PackageCardProps) {
     const hasMore = displayContent.length > 3;
 
     return (
-        <div className={`bg-white rounded-2xl shadow-xl overflow-hidden border-2 flex flex-col ${isGold ? 'border-yellow-400 transform md:-translate-y-4' :
+        <div className={`bg-white rounded-2xl shadow-xl overflow-hidden border-2 flex flex-col ${isGold ? 'border-yellow-400' :
             isDiamond ? 'border-[#732C3F]' :
-                isSilicon ? 'border-[#C57C8A]' : 'border-gray-300' // Changed Silver to gray border for better visibility
+                isSilicon ? 'border-[#C57C8A]' : 'border-gray-300'
             }`}>
             <div className={`p-6 text-center text-white ${isGold ? 'bg-yellow-500' :
                 isDiamond ? 'bg-[#732C3F]' :
@@ -57,6 +57,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
                 }`}>
                 <h3 className="text-2xl font-bold">{pkg.name}</h3>
                 <p className="text-4xl font-extrabold mt-2">₹{pkg.price}</p>
+                <p className="text-xs mt-2 bg-white/20 inline-block px-3 py-1 rounded-full">✨ Lifetime Access</p>
             </div>
 
             <div className="p-6 flex-1 flex flex-col">

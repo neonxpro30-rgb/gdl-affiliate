@@ -41,15 +41,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             updateData.packageId = packageId;
 
             // Also update the user's latest SUCCESS order to reflect this package
+            // Note: Not using orderBy to avoid requiring composite index
             const ordersSnapshot = await db.collection('orders')
                 .where('userId', '==', id)
                 .where('status', '==', 'SUCCESS')
-                .orderBy('createdAt', 'desc')
-                .limit(1)
                 .get();
 
             if (!ordersSnapshot.empty) {
-                const latestOrderRef = ordersSnapshot.docs[0].ref;
+                // Sort by createdAt to get the latest order
+                const orders = ordersSnapshot.docs.map(doc => ({ ref: doc.ref, data: doc.data() }));
+                orders.sort((a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime());
+
+                const latestOrderRef = orders[0].ref;
                 await latestOrderRef.update({
                     packageId: packageId,
                     updatedAt: new Date().toISOString()

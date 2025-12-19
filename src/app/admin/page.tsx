@@ -9,12 +9,13 @@ import CategoriesTable from "./CategoriesTable";
 import CoursesTable from "./CoursesTable";
 import BlogManager from "./BlogManager";
 import DateFilter from "./DateFilter";
+import CommissionFilter from "./CommissionFilter";
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string, startDate?: string, endDate?: string }> }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string, startDate?: string, endDate?: string, commissionFilter?: string }> }) {
     const session = await getServerSession(authOptions);
-    const { tab, startDate, endDate } = await searchParams;
+    const { tab, startDate, endDate, commissionFilter } = await searchParams;
     const activeTab = tab || 'commissions';
 
     if (!session || session.user.role !== 'ADMIN') {
@@ -68,7 +69,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         }));
 
         // Apply date filter to commissions
-        commissions = allCommissions.filter((comm: any) => isDateInRange(comm.createdAt));
+        let filteredCommissions = allCommissions.filter((comm: any) => isDateInRange(comm.createdAt));
+
+        // Apply commission status filter
+        if (commissionFilter === 'pending') {
+            commissions = filteredCommissions.filter((comm: any) => comm.status === 'PENDING');
+        } else if (commissionFilter === 'paid') {
+            commissions = filteredCommissions.filter((comm: any) => comm.status === 'PAID');
+        } else {
+            commissions = filteredCommissions;
+        }
     } catch (error) {
         console.error("Error fetching commissions:", error);
     }
@@ -397,7 +407,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 {activeTab === 'commissions' ? (
                     <div className="bg-white rounded-xl shadow-md overflow-hidden">
                         <div className="p-6 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-900">Pending & Confirmed Commissions</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">Commissions</h2>
+                            <CommissionFilter />
                         </div>
 
                         <div className="overflow-x-auto">
