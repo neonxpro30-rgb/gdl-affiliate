@@ -14,7 +14,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         const body = await req.json();
 
         // Fields allowed to update
-        const { name, email, phone, bankName, accountNumber, ifscCode, upiId, role, password, packageId } = body;
+        const { name, email, phone, bankName, accountNumber, ifscCode, upiId, role, password, packageId, isActive } = body;
 
         const updateData: any = {
             name, email, phone,
@@ -22,6 +22,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             role,
             updatedAt: new Date().toISOString()
         };
+
+        // Handle isActive field (for activate/deactivate)
+        if (typeof isActive === 'boolean') {
+            updateData.isActive = isActive;
+        }
 
         // Remove undefined keys
         Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
@@ -32,13 +37,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         }
 
         if (packageId) {
-            // Also update the user's latest order to reflect this package? 
-            // Or just store 'currentPackageId' on user?
-            // For simplicity, let's assume we store 'currentPackageId' on user now, 
-            // or we just update the 'orders' collection. 
-            // But the user request implies direct control.
-            // Let's add 'packageId' to user document for easier access control.
+            // Store packageId on user document for easier access control
             updateData.packageId = packageId;
+
+            // Also update the user's latest SUCCESS order to reflect this package
+            const ordersSnapshot = await db.collection('orders')
+                .where('userId', '==', id)
+                .where('status', '==', 'SUCCESS')
+                .orderBy('createdAt', 'desc')
+                .limit(1)
+                .get();
+
+            if (!ordersSnapshot.empty) {
+                const latestOrderRef = ordersSnapshot.docs[0].ref;
+                await latestOrderRef.update({
+                    packageId: packageId,
+                    updatedAt: new Date().toISOString()
+                });
+            }
         }
 
         await db.collection('users').doc(id).update(updateData);

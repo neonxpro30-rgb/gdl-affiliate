@@ -206,7 +206,27 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     let users: any[] = [];
     if (activeTab === 'users') {
         const usersSnapshot = await db.collection('users').get();
-        const allUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const allUsers = await Promise.all(usersSnapshot.docs.map(async (doc) => {
+            const userData = doc.data();
+            let currentPackageId = userData.packageId || '';
+
+            // If no packageId on user, try to get from their latest SUCCESS order
+            if (!currentPackageId) {
+                const ordersSnapshot = await db.collection('orders')
+                    .where('userId', '==', doc.id)
+                    .where('status', '==', 'SUCCESS')
+                    .get();
+
+                if (!ordersSnapshot.empty) {
+                    // Get the most recent order
+                    const orders = ordersSnapshot.docs.map(d => d.data());
+                    orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                    currentPackageId = orders[0].packageId || '';
+                }
+            }
+
+            return { id: doc.id, ...userData, packageId: currentPackageId };
+        }));
         // Apply date filter to users based on createdAt
         users = allUsers.filter((user: any) => isDateInRange(user.createdAt));
     }

@@ -15,7 +15,8 @@ export async function POST(req: Request) {
         const isValidHash = verifyHash(data);
         if (!isValidHash) {
             console.error('Invalid Hash');
-            return NextResponse.redirect(new URL('/payment/failure?error=InvalidHash', req.url));
+            // Use 303 status for POST to GET redirect
+            return NextResponse.redirect(new URL('/payment/failure?error=InvalidHash', req.url), 303);
         }
 
         const orderId = data.txnid;
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
 
         if (!orderDoc.exists) {
             console.error('Order not found:', orderId);
-            return NextResponse.redirect(new URL('/payment/failure?error=OrderNotFound', req.url));
+            return NextResponse.redirect(new URL('/payment/failure?error=OrderNotFound', req.url), 303);
         }
 
         if (data.status === 'success') {
@@ -33,18 +34,19 @@ export async function POST(req: Request) {
             // Unified Processor handles: Order Update, User Activation, Commission, Emails
             await processSuccessfulPayment(orderId, data.mihpayid, data);
 
-            return NextResponse.redirect(new URL(`/dashboard?payment=success&orderId=${orderId}`, req.url));
+            // Use 303 status code (See Other) to properly redirect from POST to GET
+            return NextResponse.redirect(new URL(`/dashboard?payment=success&orderId=${orderId}`, req.url), 303);
         } else {
             await orderRef.update({
                 status: 'FAILED',
                 updatedAt: new Date().toISOString(),
                 paymentData: data
             });
-            return NextResponse.redirect(new URL('/payment/failure?error=TransactionFailed', req.url));
+            return NextResponse.redirect(new URL('/payment/failure?error=TransactionFailed', req.url), 303);
         }
 
     } catch (error) {
         console.error('PayU Response Error:', error);
-        return NextResponse.redirect(new URL('/payment/failure?error=ServerError', req.url));
+        return NextResponse.redirect(new URL('/payment/failure?error=ServerError', req.url), 303);
     }
 }

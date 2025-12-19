@@ -185,12 +185,27 @@ export default function UsersTable({ users }: { users: any[] }) {
                                             </div>
                                         ) : 'Not added'}
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-4 flex gap-2">
                                         <button
                                             onClick={() => handleEditClick(user)}
-                                            className="text-blue-600 hover:text-blue-800 font-medium mr-3"
+                                            className="text-blue-600 hover:text-blue-800 font-medium"
                                         >
                                             Edit
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm(`${user.isActive ? 'Deactivate' : 'Activate'} ${user.name}?`)) {
+                                                    await fetch(`/api/admin/users/${user.id}`, {
+                                                        method: 'PUT',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ isActive: !user.isActive }),
+                                                    });
+                                                    router.refresh();
+                                                }
+                                            }}
+                                            className={`font-medium ${user.isActive ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
+                                        >
+                                            {user.isActive ? 'Deactivate' : 'Activate'}
                                         </button>
                                         <button
                                             type="button"
@@ -245,23 +260,39 @@ export default function UsersTable({ users }: { users: any[] }) {
                             </select>
 
                             <div className="border-t pt-4 mt-4">
-                                <h3 className="font-bold mb-2">Advanced Settings</h3>
+                                <h3 className="font-bold mb-2">Account Status</h3>
+                                <label className="flex items-center space-x-2 cursor-pointer mb-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.isActive === true}
+                                        onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                                        className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-5 w-5"
+                                    />
+                                    <span className={`font-medium ${formData.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                        {formData.isActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                </label>
+
+                                <h3 className="font-bold mb-2">Password</h3>
                                 <input
                                     placeholder="New Password (leave empty to keep current)"
                                     type="password"
                                     value={formData.password || ''}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full border p-2 rounded mb-2 bg-white text-gray-900 border-gray-300"
+                                    className="w-full border p-2 rounded mb-4 bg-white text-gray-900 border-gray-300"
                                 />
+
+                                <h3 className="font-bold mb-2">Package</h3>
                                 <select
                                     value={formData.packageId || ''}
                                     onChange={e => setFormData({ ...formData, packageId: e.target.value })}
                                     className="w-full border p-2 rounded bg-white text-gray-900 border-gray-300"
                                 >
-                                    <option value="">-- Select Package --</option>
-                                    <option value="iNTdTLQDg9SEiiQgEBys">Silver Package</option>
-                                    <option value="qnMIC31N3hOVTtvC54ld">Gold Package</option>
-                                    <option value="u3jTxLpjNONM5nbzJprc">Diamond Package</option>
+                                    <option value="">-- No Package --</option>
+                                    <option value="MpGVLpGKOC2ZVIqNhPHP">Silicon Demo (₹19)</option>
+                                    <option value="iNTdTLQDg9SEiiQgEBys">Silver Package (₹799)</option>
+                                    <option value="qnMIC31N3hOVTtvC54ld">Gold Package (₹1299)</option>
+                                    <option value="u3jTxLpjNONM5nbzJprc">Diamond Package (₹3899)</option>
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1">Note: Changing package will update access immediately.</p>
                             </div>
