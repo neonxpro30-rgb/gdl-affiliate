@@ -1,8 +1,8 @@
 // AI Blog Generator using Gemini API
 // Automatically generates blog content for LearnPeak
 
-// Gemini API endpoint
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
+// Gemini API endpoint - using gemini-2.5-flash for better rate limits
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 // Blog topics relevant to LearnPeak
 const blogTopics = [
