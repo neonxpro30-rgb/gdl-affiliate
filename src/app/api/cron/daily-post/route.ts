@@ -3,18 +3,57 @@
 // Uses trending topics based on current news and events
 
 import { NextResponse } from 'next/server';
-import { generateBlogPost, getTrendingTopic, generateBlogImageUrl } from '@/lib/ai-blog-generator';
+import { generateBlogPost, getTrendingTopic } from '@/lib/ai-blog-generator';
 import { prisma } from '@/lib/prisma';
 
-// Helper to generate URL-friendly slug
+// Helper to generate URL-friendly slug with unique timestamp
 function generateSlug(title: string): string {
-    const timestamp = Date.now().toString(36); // Add unique suffix
+    const timestamp = Date.now().toString(36);
     return title
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
         .substring(0, 50) + '-' + timestamp;
+}
+
+// Check if similar title was posted recently (last 30 days)
+async function checkForDuplicateTitle(title: string): Promise<boolean> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get keywords from title (first 3 significant words)
+    const keywords = title
+        .toLowerCase()
+        .replace(/[^a-z\s]/g, '')
+        .split(' ')
+        .filter(w => w.length > 3)
+        .slice(0, 3);
+
+    if (keywords.length === 0) return false;
+
+    // Check if any post in last 30 days has similar title
+    const similarPosts = await prisma.post.findMany({
+        where: {
+            createdAt: { gte: thirtyDaysAgo },
+            OR: keywords.map(keyword => ({
+                title: { contains: keyword, mode: 'insensitive' as const }
+            }))
+        },
+        select: { title: true }
+    });
+
+    // If more than half the keywords match with an existing post, it's duplicate
+    for (const post of similarPosts) {
+        const existingKeywords = post.title.toLowerCase().split(' ').filter(w => w.length > 3);
+        const matchCount = keywords.filter(k => existingKeywords.includes(k)).length;
+        if (matchCount >= 2) {
+            console.log('⚠️ Similar post found:', post.title);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 export async function GET(request: Request) {
@@ -25,12 +64,12 @@ export async function GET(request: Request) {
 
         // Step 1: Get trending topic based on current news/events
         console.log('📰 Finding trending topic...');
-        const trendingTopic = await getTrendingTopic();
+        let trendingTopic = await getTrendingTopic();
         console.log('✅ Topic:', trendingTopic);
 
         // Step 2: Generate blog using AI
         console.log('✍️ Generating blog content...');
-        const result = await generateBlogPost(trendingTopic);
+        let result = await generateBlogPost(trendingTopic);
 
         if (!result.success || !result.blog) {
             console.error('❌ Failed to generate blog:', result.error);
@@ -40,21 +79,43 @@ export async function GET(request: Request) {
             }, { status: 500 });
         }
 
-        const blog = result.blog;
-        const imageUrl = result.imageUrl;
-        const slug = generateSlug(blog.title);
+        // Step 3: Check for duplicate title
+        let isDuplicate = await checkForDuplicateTitle(result.blog.title);
+        let retryCount = 0;
 
-        // Step 3: Check for duplicate (unlikely with timestamp slug but safe)
-        const existingPost = await prisma.post.findUnique({
-            where: { slug }
-        });
+        while (isDuplicate && retryCount < 3) {
+            console.log('🔄 Duplicate detected, generating new topic...');
+            retryCount++;
 
-        if (existingPost) {
-            console.log('⚠️ Slug collision, adding random suffix');
-            const newSlug = slug + '-' + Math.random().toString(36).substring(7);
+            // Get a different topic
+            trendingTopic = await getTrendingTopic();
+            result = await generateBlogPost(trendingTopic);
+
+            if (!result.success || !result.blog) {
+                break;
+            }
+
+            isDuplicate = await checkForDuplicateTitle(result.blog.title);
         }
 
-        // Step 4: Save and AUTO-PUBLISH
+        if (!result.success || !result.blog) {
+            return NextResponse.json({
+                success: false,
+                error: 'Failed to generate unique blog after retries'
+            }, { status: 500 });
+        }
+
+        const blog = result.blog;
+        const imageUrl = result.imageUrl;
+        let slug = generateSlug(blog.title);
+
+        // Step 4: Ensure slug is unique
+        const existingSlug = await prisma.post.findUnique({ where: { slug } });
+        if (existingSlug) {
+            slug = slug + '-' + Math.random().toString(36).substring(2, 7);
+        }
+
+        // Step 5: Save and AUTO-PUBLISH
         const savedPost = await prisma.post.create({
             data: {
                 title: blog.title,
@@ -62,7 +123,7 @@ export async function GET(request: Request) {
                 content: blog.content,
                 excerpt: blog.excerpt,
                 image: imageUrl || '',
-                published: true // AUTO-PUBLISH!
+                published: true
             }
         });
 
@@ -73,6 +134,7 @@ export async function GET(request: Request) {
         console.log('🔗 Slug:', savedPost.slug);
         console.log('🖼️ Image:', imageUrl?.substring(0, 50) + '...');
         console.log(`⏱️ Total time: ${duration}ms`);
+        console.log(`🔄 Retries for uniqueness: ${retryCount}`);
 
         return NextResponse.json({
             success: true,
@@ -87,6 +149,7 @@ export async function GET(request: Request) {
             },
             topic: trendingTopic,
             processingTimeMs: duration,
+            retriesForUniqueness: retryCount,
             publishedAt: new Date().toISOString()
         });
 
