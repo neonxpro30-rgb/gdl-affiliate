@@ -4,23 +4,62 @@
 // Gemini API endpoint - using gemini-2.5-flash for better rate limits
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-// Blog topics relevant to LearnPeak
+// Blog topics relevant to LearnPeak - diverse topics for daily variety
 const blogTopics = [
-    'affiliate marketing tips',
+    // Affiliate Marketing
+    'affiliate marketing tips for beginners',
     'how to start affiliate marketing in India',
-    'passive income strategies',
+    'best affiliate programs in India 2025',
+    'Amazon affiliate marketing guide',
+
+    // Freelancing
+    'how to start freelancing in India',
+    'best freelancing platforms for Indians',
+    'freelancing skills in high demand 2025',
+    'how to get first client as freelancer',
+    'freelancing vs full time job - which is better',
+    'Upwork and Fiverr tips for beginners',
+
+    // Dropshipping & E-commerce
+    'dropshipping business guide for India',
+    'how to start dropshipping with zero investment',
+    'Shopify vs WooCommerce for beginners',
+    'e-commerce business ideas India',
+    'Meesho reselling business tips',
+
+    // YouTube & Video
+    'how to start YouTube channel in 2025',
+    'YouTube monetization tips India',
+    'video editing tips for beginners',
+    'YouTube Shorts vs Instagram Reels',
+    'how to grow YouTube subscribers fast',
+
+    // Social Media
+    'Instagram growth strategies 2025',
+    'Facebook ads for small business',
+    'LinkedIn personal branding tips',
+    'Twitter marketing for beginners',
+    'social media manager career guide',
+
+    // Digital Skills
     'digital marketing for beginners',
-    'content creation tips',
-    'social media marketing guide',
+    'SEO basics everyone should know',
+    'content writing tips for blogs',
+    'graphic design career guide India',
+    'web development roadmap 2025',
+
+    // Passive Income
+    'passive income ideas for students',
     'earn money online legitimately',
+    'side hustle ideas for working professionals',
+    'multiple income streams guide',
+
+    // Career & Mindset
     'skill development for students',
-    'side hustle ideas India',
-    'personal branding tips',
-    'video editing for beginners',
-    'Instagram growth strategies',
-    'Facebook ads basics',
-    'freelancing tips India',
-    'online business ideas'
+    'personal branding on social media',
+    'work from home tips India',
+    'time management for entrepreneurs',
+    'networking tips for career growth'
 ];
 
 export interface GeneratedBlog {
