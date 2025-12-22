@@ -163,9 +163,20 @@ export default async function Home() {
 
           {/* Disclaimer & Copyright */}
           <div className="border-t border-gray-800 pt-8 text-center">
-            <p className="text-xs text-gray-400 max-w-4xl mx-auto leading-relaxed mb-4">
-              <strong>Disclaimer:</strong> Any payment made outside our official website or authenticated affiliate links is solely at the customer’s risk. LearnPeak holds no responsibility for such transactions.
+            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4 max-w-4xl mx-auto">
+              <p className="text-yellow-400 text-xs">🚧 <strong>Beta Mode:</strong> LearnPeak is in development.</p>
+            </div>
+            <p className="text-xs text-gray-400 max-w-4xl mx-auto leading-relaxed mb-2">
+              <strong className="text-gray-300">⚠️ Earnings Disclaimer:</strong> LearnPeak is an education platform, NOT an income opportunity. NO guarantee of earnings. Results depend on your skills and effort.
             </p>
+            <p className="text-xs text-gray-400 max-w-4xl mx-auto leading-relaxed mb-4">
+              <strong className="text-gray-300">Payment:</strong> Any payment outside our official website is at your own risk.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 text-xs text-gray-500 mb-4">
+              <Link href="/terms" className="hover:text-[#C57C8A] transition">Terms</Link>
+              <span>|</span>
+              <Link href="/company/about" className="hover:text-[#C57C8A] transition">About & Disclaimer</Link>
+            </div>
             <p className="text-gray-500 text-sm">&copy; 2024 LearnPeak. All rights reserved.</p>
           </div>
         </div>

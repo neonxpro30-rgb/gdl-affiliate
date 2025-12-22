@@ -60,8 +60,8 @@ export default function BlogReview({ slug }: BlogReviewProps) {
                 <button
                     onClick={() => setHelpful(true)}
                     className={`flex-1 py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2 ${helpful === true
-                            ? 'bg-green-500 text-white'
-                            : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-green-400'
                         }`}
                 >
                     👍 Yes, helpful!
@@ -69,8 +69,8 @@ export default function BlogReview({ slug }: BlogReviewProps) {
                 <button
                     onClick={() => setHelpful(false)}
                     className={`flex-1 py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2 ${helpful === false
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-400'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-400'
                         }`}
                 >
                     🤔 Could be better
@@ -87,12 +87,19 @@ export default function BlogReview({ slug }: BlogReviewProps) {
                             onClick={() => setRating(star)}
                             onMouseEnter={() => setHoveredRating(star)}
                             onMouseLeave={() => setHoveredRating(0)}
-                            className="text-3xl transition-transform hover:scale-110"
+                            className="text-4xl transition-transform hover:scale-110"
+                            style={{
+                                color: star <= (hoveredRating || rating) ? '#FFD700' : '#D1D5DB',
+                                textShadow: star <= (hoveredRating || rating) ? '0 0 5px rgba(255,215,0,0.5)' : 'none'
+                            }}
                         >
-                            {star <= (hoveredRating || rating) ? '⭐' : '☆'}
+                            ★
                         </button>
                     ))}
                 </div>
+                {rating > 0 && (
+                    <p className="text-sm text-gray-500 mt-2">You selected {rating} star{rating > 1 ? 's' : ''}</p>
+                )}
             </div>
 
             {/* Optional Feedback */}

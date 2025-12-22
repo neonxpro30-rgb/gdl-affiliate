@@ -203,10 +203,10 @@ export default async function BlogPostPage({ params }: Props) {
                             href="/signup"
                             className="bg-white text-[#732C3F] px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"
                         >
-                            Join LearnPeak Free
+                            Start Learning Now
                         </Link>
                         <Link
-                            href="/packages"
+                            href="/#packages"
                             className="border-2 border-white text-white px-8 py-3 rounded-full font-bold hover:bg-white/10 transition"
                         >
                             View Packages

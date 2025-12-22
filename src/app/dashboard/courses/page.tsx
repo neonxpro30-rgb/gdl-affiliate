@@ -78,6 +78,25 @@ export default async function CoursesPage() {
                         <p className="text-gray-600 mt-2">Select a category to start learning.</p>
                     </div>
 
+                    {/* Coming Soon Notice */}
+                    <div className="mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-2xl p-6">
+                        <div className="flex items-start gap-4">
+                            <div className="text-4xl">🚧</div>
+                            <div>
+                                <h3 className="text-xl font-bold text-yellow-800 mb-2">Courses Coming Soon!</h3>
+                                <p className="text-yellow-700 mb-3">
+                                    Our team is working hard to create high-quality courses for you.
+                                    All courses will be available here very soon!
+                                </p>
+                                <div className="flex flex-wrap gap-2 text-sm">
+                                    <span className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full">📚 Courses being prepared</span>
+                                    <span className="bg-green-200 text-green-800 px-3 py-1 rounded-full">✅ Your purchase is secure</span>
+                                    <span className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full">🔔 You will be notified</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {groupedCategories.map((category) => (
                             <div key={category.id} className={`bg-white rounded-xl shadow-sm border ${category.isUnlocked ? 'border-green-200' : 'border-gray-200'} overflow-hidden flex flex-col`}>

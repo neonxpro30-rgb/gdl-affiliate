@@ -50,8 +50,12 @@ export default function BlogComments({ slug }: BlogCommentsProps) {
 
             const data = await res.json();
             if (data.success) {
-                setSubmitted(true);
                 setFormData({ name: '', email: '', content: '' });
+                // Refresh comments to show the new one
+                await fetchComments();
+                setSubmitted(true);
+                // Reset after 3 seconds so user can comment again
+                setTimeout(() => setSubmitted(false), 3000);
             } else {
                 alert(data.error || 'Failed to submit comment');
             }
@@ -103,9 +107,9 @@ export default function BlogComments({ slug }: BlogCommentsProps) {
 
                 {submitted ? (
                     <div className="text-center py-6">
-                        <div className="text-4xl mb-2">✅</div>
-                        <p className="text-green-600 font-medium">Thank you for your comment!</p>
-                        <p className="text-gray-500 text-sm">It will appear after approval.</p>
+                        <div className="text-4xl mb-2">🎉</div>
+                        <p className="text-green-600 font-medium">Comment posted successfully!</p>
+                        <p className="text-gray-500 text-sm">Thanks for sharing your thoughts.</p>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
