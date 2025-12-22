@@ -72,23 +72,46 @@ export interface GeneratedBlog {
     generatedAt: Date;
 }
 
-// Build prompt for blog generation
+// Build prompt for blog generation with SEO focus
 function buildBlogPrompt(topic?: string): string {
     const selectedTopic = topic || blogTopics[Math.floor(Math.random() * blogTopics.length)];
     const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Check if topic is money/earning related
+    const isMoneyRelated = /earn|money|income|affiliate|freelanc|business|online|work from home|side hustle/i.test(selectedTopic);
 
     return `You are a professional content writer for LearnPeak (www.learnpeak.in), an Indian online education platform that teaches affiliate marketing, digital skills, and helps people build passive income.
 
 Write a complete, SEO-optimized blog post about: "${selectedTopic}"
 
+IMPORTANT SEO KEYWORDS TO NATURALLY INCLUDE:
+- how to earn money online
+- earn money online in India  
+- online earning
+- affiliate marketing
+- digital marketing
+- passive income
+- work from home
+- side income
+- LearnPeak
+
 Requirements:
-1. Language: English (simple, easy to understand)
-2. Tone: Professional, helpful, educational
-3. Length: 800-1200 words
-4. Include practical tips and actionable advice
-5. NO fake income claims, NO get-rich-quick promises
-6. Include relevant examples for Indian audience
-7. Naturally mention LearnPeak once or twice as a resource
+1. Language: English (simple, easy to understand for young Indians age 18-35)
+2. Tone: Professional, helpful, educational, motivational
+3. Length: 1000-1500 words (comprehensive but engaging)
+4. Include practical tips and actionable advice with steps
+5. NO fake income claims, NO get-rich-quick promises, be realistic
+6. Include relevant examples for Indian audience (mention Indian context, rupees, etc.)
+7. ${isMoneyRelated
+            ? 'IMPORTANT: Since this is about earning/money, naturally promote LearnPeak 2-3 times as the best platform to learn these skills. Mention that LearnPeak offers comprehensive courses with practical training.'
+            : 'Naturally mention LearnPeak once or twice as a trusted learning resource.'}
+8. End with a call-to-action encouraging readers to explore LearnPeak courses
+
+SEO TITLE TIPS:
+- Include "2025" or current year if relevant
+- Use power words like "Complete Guide", "Step-by-Step", "Ultimate"
+- Keep under 60 characters
+- Target: "how to earn money online" type searches
 
 Format your response EXACTLY like this:
 
@@ -96,22 +119,23 @@ TITLE: [Catchy, SEO-friendly title - max 60 characters]
 
 EXCERPT: [2-3 sentence summary for preview - max 160 characters]
 
-META_DESCRIPTION: [SEO meta description - max 155 characters]
+META_DESCRIPTION: [SEO meta description targeting "earn money online india" - max 155 characters]
 
-KEYWORDS: [comma-separated list of 5-7 relevant keywords]
+KEYWORDS: [comma-separated list of 8-10 relevant SEO keywords including "earn money online", "LearnPeak"]
 
 IMAGE_SUGGESTION: [describe the ideal featured image in one sentence]
 
 CONTENT:
 [Full blog content in HTML format with proper structure:
-- Use <h2> for main sections
+- Use <h2> for main sections (make them SEO-friendly)
 - Use <p> for paragraphs
-- Use <ul><li> for lists
-- Use <strong> for emphasis
-- Use <blockquote> for quotes
-- Include 4-6 sections minimum]
+- Use <ul><li> for lists with actionable tips
+- Use <strong> for emphasis and important keywords
+- Use <blockquote> for motivational quotes
+- Include 5-7 sections minimum
+- Add a conclusion with LearnPeak CTA]
 
-Remember: Write genuinely helpful content that provides real value to readers.`;
+Remember: Write genuinely helpful content that ranks on Google and provides real value to readers looking to improve their skills and income.`;
 }
 
 // Parse Gemini response into blog structure

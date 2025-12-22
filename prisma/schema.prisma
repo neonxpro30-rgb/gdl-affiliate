@@ -94,4 +94,29 @@ model Post {
   published Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  comments  BlogComment[]
+  reviews   BlogReview[]
+}
+
+// Blog Comments - public comments on blog posts
+model BlogComment {
+  id        String   @id @default(cuid())
+  postId    String
+  name      String   // Commenter's name
+  email     String   // Commenter's email (not displayed)
+  content   String   // Comment text
+  approved  Boolean  @default(false) // Admin approval required
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+// Blog Reviews - star ratings and feedback
+model BlogReview {
+  id        String   @id @default(cuid())
+  postId    String
+  rating    Int      // 1-5 stars
+  feedback  String?  // Optional feedback text
+  helpful   Boolean  @default(true) // Was this helpful?
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
