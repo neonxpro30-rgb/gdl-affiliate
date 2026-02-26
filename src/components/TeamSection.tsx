@@ -10,7 +10,7 @@ const teamMembers = [
         role: 'FOUNDER',
         name: 'Naksh Gupta',
         subName: '(Priyanshu Gupta)',
-        photo: 'https://res.cloudinary.com/dhahxfyvo/image/upload/v1764329854/gdl_profiles/user_KgvQCIZGzPW5SpXPknDV.jpg',
+        photo: '/images/founder-naksh.jpg',
         bio: 'Lead Editor in a premier photography team & Digital Marketing Expert. Visionary leader empowering individuals with practical digital skills.'
     },
     {
@@ -19,20 +19,6 @@ const teamMembers = [
         subName: '',
         photo: 'https://ui-avatars.com/api/?name=Dharam+Veer&background=random', // Placeholder
         bio: 'Dharam Veer is the Head Instructor at LearnPeak, having mastered all core guidance and methodologies. His expertise, leadership, and vision play a key role in building LearnPeak’s strong foundation and long-term potential.'
-    },
-    {
-        role: 'MANAGER',
-        name: 'Prakhar Mishra',
-        subName: '',
-        photo: 'https://res.cloudinary.com/dhahxfyvo/image/upload/v1764872452/gdl_profiles/user_HA4pgFbtsGBjKCjomJzb.jpg',
-        bio: 'Dedicated Operations Manager ensuring smooth platform experiences. Expert in student support and community management.'
-    },
-    {
-        role: 'INSTRUCTOR',
-        name: 'Himanshu',
-        subName: '',
-        photo: 'https://ui-avatars.com/api/?name=Himanshu&background=random', // Placeholder
-        bio: 'Himanshu is an experienced instructor with over 3 years of expertise in digital skills. He focuses on practical learning, up-to-date industry knowledge, and helping learners build real-world digital capabilities.'
     },
     {
         role: 'SOCIAL MEDIA HEAD',

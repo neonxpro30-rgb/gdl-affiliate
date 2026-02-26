@@ -58,7 +58,7 @@ export default async function Home() {
     "founder": {
       "@type": "Person",
       "name": "Naksh Gupta",
-      "image": "https://res.cloudinary.com/dhahxfyvo/image/upload/v1764329854/gdl_profiles/user_KgvQCIZGzPW5SpXPknDV.jpg",
+      "image": "https://learnpeak.in/images/founder-naksh.jpg",
       "jobTitle": "Founder",
       "sameAs": [
         "https://www.instagram.com/learnpeak.in",
@@ -177,7 +177,7 @@ export default async function Home() {
               <span>|</span>
               <Link href="/company/about" className="hover:text-[#C57C8A] transition">About & Disclaimer</Link>
             </div>
-            <p className="text-gray-500 text-sm">&copy; 2024 LearnPeak. All rights reserved.</p>
+            <p className="text-gray-500 text-sm">&copy; 2026 LearnPeak. All rights reserved.</p>
           </div>
         </div>
       </footer>

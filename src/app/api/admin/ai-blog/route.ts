@@ -2,7 +2,7 @@
 // Generates blog posts using Gemini AI
 
 import { NextResponse } from 'next/server';
-import { generateBlogPost, getTopicSuggestions, generateBlogImageUrl } from '@/lib/ai-blog-generator';
+import { generateBlogPost, getTopicSuggestions, generateBlogImageUrl, getTrendingTopic } from '@/lib/ai-blog-generator';
 import { prisma } from '@/lib/prisma';
 
 // Helper to generate URL-friendly slug
@@ -35,10 +35,16 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json().catch(() => ({}));
-        const { topic, autoPublish = false, autoSave = true } = body;
+        let { topic, autoPublish = false, autoSave = true } = body;
+
+        // Use the live trending topic generator if no topic was explicitly provided
+        if (!topic) {
+            console.log('🔄 No topic provided, fetching live trending finance news...');
+            topic = await getTrendingTopic();
+        }
 
         console.log('🚀 AI Blog Generation Started');
-        console.log('📝 Topic:', topic || 'Random');
+        console.log('📝 Topic:', topic);
 
         // Generate blog using AI
         const result = await generateBlogPost(topic);

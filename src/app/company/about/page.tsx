@@ -2,8 +2,30 @@ import React from 'react';
 import Link from 'next/link';
 
 export default function AboutUs() {
+    const nakshSchema = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Naksh Gupta",
+        "alternateName": "Priyanshu Gupta",
+        "jobTitle": "Founder",
+        "worksFor": {
+            "@type": "Organization",
+            "name": "LearnPeak"
+        },
+        "url": "https://learnpeak.in/company/about",
+        "image": "https://learnpeak.in/images/founder-naksh.jpg",
+        "sameAs": [
+            "https://www.linkedin.com/in/naksh-gupta-b51358394",
+            "https://www.instagram.com/learnpeak.in"
+        ]
+    };
+
     return (
         <div className="min-h-screen bg-[#F7E8EC] py-16 px-4 font-sans">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(nakshSchema) }}
+            />
             <div className="max-w-4xl mx-auto space-y-8">
 
                 {/* Beta/Test Mode Banner */}
@@ -151,8 +173,9 @@ export default function AboutUs() {
                     <div className="flex flex-col md:flex-row items-center gap-8">
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden shadow-lg shrink-0 border-4 border-[#732C3F]">
                             <img
-                                src="https://res.cloudinary.com/dhahxfyvo/image/upload/v1764329854/gdl_profiles/user_KgvQCIZGzPW5SpXPknDV.jpg"
-                                alt="Naksh Gupta"
+                                src="/images/founder-naksh.jpg"
+                                alt="Naksh Gupta Founder of LearnPeak"
+                                title="Naksh Gupta, Digital Marketing Expert and Founder of LearnPeak"
                                 className="w-full h-full object-cover"
                             />
                         </div>
@@ -163,6 +186,42 @@ export default function AboutUs() {
                                 Founder of LearnPeak with experience in digital marketing and content creation.
                                 His goal is to help individuals develop practical skills for the digital economy.
                             </p>
+                        </div>
+                    </div>
+
+                    {/* SEO Optimized Photo Gallery */}
+                    <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 aspect-[3/4] relative">
+                            <img
+                                src="/images/naksh/naksh-gupta-digital-marketing-expert.jpg"
+                                alt="Naksh Gupta Digital Marketing Expert India"
+                                title="Naksh Gupta - Digital Marketing Expert"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 aspect-[3/4] relative">
+                            <img
+                                src="/images/naksh/naksh-gupta-founder-learnpeak.jpg"
+                                alt="Naksh Gupta Founder of LearnPeak Education Platform"
+                                title="Naksh Gupta - Founder of LearnPeak"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 aspect-[3/4] relative">
+                            <img
+                                src="/images/naksh/naksh-gupta-entrepreneur-india.jpg"
+                                alt="Naksh Gupta Young Entrepreneur in India"
+                                title="Naksh Gupta - Indian Entrepreneur"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 aspect-[3/4] relative">
+                            <img
+                                src="/images/naksh/naksh-gupta-affiliate-marketing-coach.jpg"
+                                alt="Naksh Gupta Affiliate Marketing Coach and Mentor"
+                                title="Naksh Gupta - Affiliate Marketing Coach"
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                     </div>
                 </div>

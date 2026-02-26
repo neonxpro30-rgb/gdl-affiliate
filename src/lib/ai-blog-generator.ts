@@ -9,13 +9,13 @@ const blogTopics = [
     // Affiliate Marketing
     'affiliate marketing tips for beginners',
     'how to start affiliate marketing in India',
-    'best affiliate programs in India 2025',
+    'best affiliate programs in India 2026',
     'Amazon affiliate marketing guide',
 
     // Freelancing
     'how to start freelancing in India',
     'best freelancing platforms for Indians',
-    'freelancing skills in high demand 2025',
+    'freelancing skills in high demand 2026',
     'how to get first client as freelancer',
     'freelancing vs full time job - which is better',
     'Upwork and Fiverr tips for beginners',
@@ -28,14 +28,14 @@ const blogTopics = [
     'Meesho reselling business tips',
 
     // YouTube & Video
-    'how to start YouTube channel in 2025',
+    'how to start YouTube channel in 2026',
     'YouTube monetization tips India',
     'video editing tips for beginners',
     'YouTube Shorts vs Instagram Reels',
     'how to grow YouTube subscribers fast',
 
     // Social Media
-    'Instagram growth strategies 2025',
+    'Instagram growth strategies 2026',
     'Facebook ads for small business',
     'LinkedIn personal branding tips',
     'Twitter marketing for beginners',
@@ -46,7 +46,7 @@ const blogTopics = [
     'SEO basics everyone should know',
     'content writing tips for blogs',
     'graphic design career guide India',
-    'web development roadmap 2025',
+    'web development roadmap 2026',
 
     // Passive Income
     'passive income ideas for students',
@@ -106,9 +106,11 @@ Requirements:
             ? 'IMPORTANT: Since this is about earning/money, naturally promote LearnPeak 2-3 times as the best platform to learn these skills. Mention that LearnPeak offers comprehensive courses with practical training.'
             : 'Naturally mention LearnPeak once or twice as a trusted learning resource.'}
 8. End with a call-to-action encouraging readers to explore LearnPeak courses
+10. CRITICAL: For topics about platforms (YouTube, Instagram, Amazon etc.) or finance (Gold rates, Stocks, Crypto), ensure all advice aligns with STRICTLY LATEST 2026 GUIDELINES and LIVE INTERNET DATA.
+11. SAFETY CHECK: Use Google Search to find the latest real-time context on this topic. Cite any recent news, prices, or drops/gains to make the post highly credible.
 
 SEO TITLE TIPS:
-- Include "2025" or current year if relevant
+- Include "2026" or current year if relevant
 - Use power words like "Complete Guide", "Step-by-Step", "Ultimate"
 - Keep under 60 characters
 - Target: "how to earn money online" type searches
@@ -200,6 +202,7 @@ export async function generateBlogPost(topic?: string): Promise<{
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
+                tools: [{ googleSearch: {} }],
                 generationConfig: {
                     temperature: 0.8,
                     maxOutputTokens: 4096,
@@ -262,28 +265,29 @@ You are helping create a blog for LearnPeak, an Indian online education platform
 Based on current events, trends, or time of year, suggest ONE specific blog topic that would be highly relevant and timely RIGHT NOW.
 
 Consider:
-- Any major events happening in India (festivals, budget, elections, etc.)
-- Seasonal relevance (${monthName}, end of year if applicable)
-- Current digital marketing trends
-- Economic news affecting online earning
-- Technology updates relevant to content creators
-- Social media platform updates
+- **Live Finance News**: Today's gold rates in India, stock market index drops/gains, cryptocurrency updates, or new financial policies.
+- Connections between these real-world news events and the need for building stable passive income or learning digital skills with LearnPeak.
+- Example: If gold rates are dropping, connect it to why investing in skills is better than gold right now.
 
 Requirements:
-- Topic must be educational and helpful
-- Related to digital skills, online earning, or personal development
+- Topic must explicitly reference a live financial or market event happening TODAY in India.
+- Topic must connect this live news to digital skills, online earning, or LearnPeak.
 - NO fake promises or get-rich-quick themes
 - Should be interesting for young Indians aged 18-35
 
-Respond with ONLY the topic title, nothing else. Example format:
-How to Plan Your 2025 Digital Marketing Strategy`;
+Respond with ONLY the topic title, nothing else. Example formats:
+- Gold Rates Drop Today: Why Digital Skills are the Safest Investment
+- Sensex Hits New High: How to Build Your Own Passive Income Stream in 2026
+
+SAFETY CHECK: Use Google Search to find the most current live finance news right now. Do not hallucinate news. Focus on what is new and trending in 2026.`;
 
         const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.9, maxOutputTokens: 100 }
+                tools: [{ googleSearch: {} }],
+                generationConfig: { temperature: 0.9, maxOutputTokens: 500 }
             })
         });
 
@@ -292,13 +296,15 @@ How to Plan Your 2025 Digital Marketing Strategy`;
         }
 
         const data = await response.json();
+        console.log('Gemini API Raw Response:', JSON.stringify(data, null, 2));
         const topic = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
-        if (topic.length > 10 && topic.length < 100) {
+        if (topic.length > 10 && topic.length < 150) {
             console.log('📰 Trending topic found:', topic);
             return topic;
         }
 
+        console.error('Invalid trending topic length:', topic.length, 'Topic:', topic);
         return blogTopics[Math.floor(Math.random() * blogTopics.length)];
 
     } catch (error) {

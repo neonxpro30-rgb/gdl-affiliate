@@ -12,7 +12,7 @@ export default function TermsPage() {
         <div className="min-h-screen bg-[#F7E8EC] py-16 px-4 font-sans">
             <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
                 <h1 className="text-3xl font-bold text-[#1A0B12] mb-2">Terms & Conditions</h1>
-                <p className="text-gray-500 mb-8">Last Updated: December 2024</p>
+                <p className="text-gray-500 mb-8">Last Updated: February 2026</p>
 
                 <div className="space-y-8 text-gray-700 leading-relaxed">
 
