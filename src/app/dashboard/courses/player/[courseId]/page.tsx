@@ -5,6 +5,26 @@ import { db } from "@/lib/firebaseAdmin";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { Lock, ArrowLeft, PlayCircle } from "lucide-react";
 import Link from "next/link";
+import crypto from "crypto";
+
+// ─── Bunny.net Signed URL Generator (Server-side only) ───────────────────────
+// Generates a time-limited signed embed URL using HMAC-SHA256.
+// The token key NEVER reaches the client — it stays on the server.
+// Token expires in 2 hours (7200 seconds).
+function generateBunnySignedUrl(videoId: string): string {
+    const tokenKey = process.env.BUNNY_STREAM_TOKEN_KEY!;
+    const libraryId = process.env.BUNNY_STREAM_LIBRARY_ID || "627593";
+
+    // Expiry: 2 hours from now (Unix timestamp)
+    const expires = Math.floor(Date.now() / 1000) + 7200;
+
+    // Bunny.net token formula: SHA256(tokenKey + videoId + expires)
+    const hashInput = tokenKey + videoId + expires;
+    const token = crypto.createHash("sha256").update(hashInput).digest("hex");
+
+    return `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}?token=${token}&expires=${expires}&autoplay=false`;
+}
+// ───────────────────────────────────────────────────────────────────────────── 
 
 export default async function CoursePlayerPage({ params }: { params: Promise<{ courseId: string }> }) {
     const session = await getServerSession(authOptions);
@@ -105,6 +125,24 @@ export default async function CoursePlayerPage({ params }: { params: Promise<{ c
                                     }
                                 }
 
+                                // Bunny.net Stream — Server-side Signed URL (Token auth)
+                                // Extracts Video ID from any Bunny URL format and generates
+                                // a time-limited signed embed URL. Token key never reaches client.
+                                if (url.includes('mediadelivery.net') || url.includes('b-cdn.net') || url.startsWith('bunny:')) {
+                                    // Extract UUID-format Video ID from any Bunny URL
+                                    const uuidMatch = url.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+                                    if (uuidMatch) {
+                                        return generateBunnySignedUrl(uuidMatch[1]);
+                                    }
+                                    // Shorthand: bunny:libraryId/videoId
+                                    if (url.startsWith('bunny:')) {
+                                        const parts = url.replace('bunny:', '').split('/');
+                                        if (parts.length === 2) {
+                                            return generateBunnySignedUrl(parts[1]);
+                                        }
+                                    }
+                                }
+
                                 return url; // Fallback
                             };
 
@@ -116,7 +154,7 @@ export default async function CoursePlayerPage({ params }: { params: Promise<{ c
                                         src={embedUrl}
                                         className="w-full h-full"
                                         allowFullScreen
-                                        allow="autoplay; fullscreen; picture-in-picture"
+                                        allow="autoplay; fullscreen; picture-in-picture; accelerometer; gyroscope"
                                         title={course.title}
                                     />
                                 );
