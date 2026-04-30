@@ -22,9 +22,11 @@ export default function TermsAndConditions() {
                         If you create an account on our website, you are responsible for maintaining the security of your account and you are fully responsible for all activities that occur under the account and any other actions taken in connection with it.
                     </p>
 
-                    <h2 className="text-xl font-bold text-[#732C3F]">3. Course Content</h2>
+                    <h2 className="text-xl font-bold text-[#732C3F]">3. Course Content & Access</h2>
                     <p>
-                        The content provided in our courses is for educational purposes only. We make no guarantees regarding specific results or earnings.
+                        LearnPeak is a fully operational digital education platform. All course content is available immediately upon purchase in your personal dashboard.
+                        Content is provided for educational purposes only. We make no guarantees regarding specific results or earnings.
+                        Course content may be updated or expanded over time as part of your lifetime access.
                     </p>
 
                     <h2 className="text-xl font-bold text-[#732C3F]">4. Termination</h2>

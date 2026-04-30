@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     default: "LearnPeak - Master Digital Skills & Affiliate Marketing",
     template: "%s | LearnPeak"
   },
-  description: "Join LearnPeak to master high-income digital skills, affiliate marketing, and content creation. Start your journey to financial freedom today.",
-  keywords: ["affiliate marketing", "digital skills", "online courses", "learnpeak", "financial freedom", "content creation", "video editing", "social media marketing"],
+  description: "Join LearnPeak to master high-income digital skills, affiliate marketing, and content creation. Start building your career in the digital economy today.",
+  keywords: ["affiliate marketing", "digital skills", "online courses", "learnpeak", "career growth", "content creation", "video editing", "social media marketing"],
   authors: [{ name: "LearnPeak Team" }],
   creator: "LearnPeak",
   publisher: "LearnPeak",

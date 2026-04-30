@@ -28,17 +28,16 @@ export default function AboutUs() {
             />
             <div className="max-w-4xl mx-auto space-y-8">
 
-                {/* Beta/Test Mode Banner */}
-                <div className="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-6 text-center">
-                    <div className="text-3xl mb-2">🚧</div>
-                    <h2 className="text-xl font-bold text-yellow-800 mb-2">Platform in Beta/Test Mode</h2>
-                    <p className="text-yellow-700 mb-3">
-                        LearnPeak is currently in its early stages. We are continuously improving our courses, features, and user experience based on feedback.
+                {/* Active Platform Badge */}
+                <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-6 text-center">
+                    <div className="text-3xl mb-2">✅</div>
+                    <h2 className="text-xl font-bold text-green-800 mb-2">Active Digital Education Platform</h2>
+                    <p className="text-green-700 mb-3">
+                        LearnPeak is a fully operational platform. We continuously add new courses, update content, and improve the learning experience based on student feedback.
                     </p>
-                    <div className="bg-yellow-100 rounded-lg p-3 inline-block">
-                        <p className="text-yellow-800 font-medium">
-                            📚 <strong>Courses Status:</strong> Our courses are currently being prepared and will be available soon.
-                            Your purchase is secure and you will get lifetime access once courses are uploaded.
+                    <div className="bg-green-100 rounded-lg p-3 inline-block">
+                        <p className="text-green-800 font-medium">
+                            📚 <strong>Course Access:</strong> All courses are available immediately upon purchase through your personal dashboard. You get lifetime access to all course materials.
                         </p>
                     </div>
                 </div>
@@ -109,8 +108,8 @@ export default function AboutUs() {
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-red-200">
-                            <h3 className="font-bold mb-2">📋 No Refund After Course Access</h3>
-                            <p>Once you access the courses, <strong>refunds are not available</strong>. Please understand what you're purchasing before making payment.</p>
+                            <h3 className="font-bold mb-2">📋 Strict No-Refund Policy</h3>
+                            <p><strong>All sales are final.</strong> Due to the digital nature of our products, no refunds or cancellations will be issued once payment is processed. Please review all course details before purchasing. See our full <a href="/legal/refund-policy" className="underline font-bold">Refund Policy</a>.</p>
                         </div>
                     </div>
 

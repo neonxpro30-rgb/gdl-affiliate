@@ -78,20 +78,20 @@ export default async function CoursesPage() {
                         <p className="text-gray-600 mt-2">Select a category to start learning.</p>
                     </div>
 
-                    {/* Coming Soon Notice */}
-                    <div className="mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-2xl p-6">
+                    {/* Learning Dashboard Welcome */}
+                    <div className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-2xl p-6">
                         <div className="flex items-start gap-4">
-                            <div className="text-4xl">🚧</div>
+                            <div className="text-4xl">🎓</div>
                             <div>
-                                <h3 className="text-xl font-bold text-yellow-800 mb-2">Courses Coming Soon!</h3>
-                                <p className="text-yellow-700 mb-3">
-                                    Our team is working hard to create high-quality courses for you.
-                                    All courses will be available here very soon!
+                                <h3 className="text-xl font-bold text-green-800 mb-2">Welcome to Your Learning Dashboard</h3>
+                                <p className="text-green-700 mb-3">
+                                    Browse your courses below. Unlocked categories are ready for you to start learning.
+                                    New content is added regularly — enjoy lifetime access to all your purchased courses!
                                 </p>
                                 <div className="flex flex-wrap gap-2 text-sm">
-                                    <span className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full">📚 Courses being prepared</span>
-                                    <span className="bg-green-200 text-green-800 px-3 py-1 rounded-full">✅ Your purchase is secure</span>
-                                    <span className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full">🔔 You will be notified</span>
+                                    <span className="bg-green-200 text-green-800 px-3 py-1 rounded-full">✅ Lifetime Access</span>
+                                    <span className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full">📚 Learn at Your Pace</span>
+                                    <span className="bg-purple-200 text-purple-800 px-3 py-1 rounded-full">🔄 Regular Updates</span>
                                 </div>
                             </div>
                         </div>

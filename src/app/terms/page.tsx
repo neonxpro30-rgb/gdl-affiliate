@@ -32,16 +32,10 @@ export default function TermsPage() {
                             LearnPeak is an <strong>educational platform</strong> that provides courses on digital marketing,
                             affiliate marketing, content creation, video editing, and related skills.
                         </p>
-                        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-3">
-                            <p className="text-yellow-800">
-                                <strong>⚠️ Important:</strong> LearnPeak is currently in <strong>Beta/Test Mode</strong>.
-                                Features, courses, and functionality may change as we improve the platform.
-                            </p>
-                        </div>
-                        <div className="bg-blue-50 border border-blue-300 rounded-lg p-4">
-                            <p className="text-blue-800">
-                                <strong>📚 Courses Status:</strong> Our courses are currently being prepared and will be available soon.
-                                Your purchase is secure and you will receive lifetime access once courses are uploaded.
+                        <div className="bg-green-50 border border-green-300 rounded-lg p-4">
+                            <p className="text-green-800">
+                                <strong>✅ Active Platform:</strong> LearnPeak is a fully operational digital education platform.
+                                All purchased courses are immediately accessible through your personal dashboard upon successful payment.
                             </p>
                         </div>
                     </section>
@@ -68,17 +62,23 @@ export default function TermsPage() {
 
                     {/* Refund Policy */}
                     <section>
-                        <h2 className="text-xl font-bold text-[#732C3F] mb-3">4. Refund Policy</h2>
-                        <div className="bg-orange-50 border border-orange-300 rounded-lg p-4">
-                            <p className="mb-2"><strong>No Refunds After Course Access:</strong></p>
-                            <ul className="list-disc ml-6 space-y-1">
-                                <li>Once you have accessed any course content, <strong>refunds are not available</strong>.</li>
-                                <li>Digital products cannot be "returned" once accessed.</li>
-                                <li>Please make an informed decision before purchasing.</li>
-                            </ul>
-                            <p className="mt-3 text-sm text-orange-700">
-                                If you have questions, contact us BEFORE making a purchase.
+                        <h2 className="text-xl font-bold text-[#732C3F] mb-3">4. Refund & Cancellation Policy</h2>
+                        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5">
+                            <p className="font-bold text-red-800 text-lg mb-3">🚫 Strict No-Refund Policy</p>
+                            <p className="mb-3 text-red-900">
+                                <strong>ALL SALES ARE FINAL.</strong> LearnPeak operates a strict no-refund, no-cancellation policy on all purchases.
                             </p>
+                            <ul className="list-disc ml-6 space-y-2 text-red-900">
+                                <li>Once a payment is successfully processed, <strong>no refund will be issued under any circumstances</strong>.</li>
+                                <li>This policy applies to ALL packages — Silicon, Silver, Gold, and Diamond.</li>
+                                <li>Digital course content is delivered immediately upon purchase; hence it cannot be "returned".</li>
+                                <li>Requesting a chargeback or payment dispute without contacting us first is a violation of these terms.</li>
+                            </ul>
+                            <div className="mt-4 bg-red-100 rounded-lg p-3">
+                                <p className="text-red-800 text-sm font-medium">
+                                    ⚠️ We strongly encourage you to review the course details, watch available previews, and contact us with any questions <strong>BEFORE making a purchase</strong>. Contact: <a href="mailto:learnpeak.in@gmail.com" className="underline">learnpeak.in@gmail.com</a>
+                                </p>
+                            </div>
                         </div>
                     </section>
 

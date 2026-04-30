@@ -18,14 +18,16 @@ export default function HeroSection() {
                 {/* Left: Text Content */}
                 <div className="text-left">
                     <h1 className="text-4xl md:text-6xl font-extrabold text-[#1A0B12] mb-6 leading-tight">
-                        Empowering Education, <br />
-                        <span className="text-[#732C3F]">Transforming Lives</span>
+                        Learn Digital Skills, <br />
+                        <span className="text-[#732C3F]">Transform Your Career</span>
                     </h1>
-                    <p className="text-lg text-gray-700 mb-8 max-w-lg">
-                        Join thousands of students learning high-income skills. Choose a package and start your journey to financial freedom.
-                        <br />
-                        <span className="font-bold text-[#732C3F] mt-2 block">Earn 80% Commission and Passive Income!</span>
+                    <p className="text-lg text-gray-700 mb-4 max-w-lg">
+                        Join thousands of students mastering high-income digital skills — affiliate marketing, content creation, social media & more. Access your courses instantly after purchase.
                     </p>
+                    <div className="inline-flex items-center gap-2 bg-[#F7E8EC] border border-[#C57C8A] text-[#732C3F] text-sm font-semibold px-4 py-2 rounded-full mb-8">
+                        <span>💰</span>
+                        <span>Refer friends &amp; earn up to 80% commission — not guaranteed, results vary.</span>
+                    </div>
                     <div className="flex gap-4">
                         <Link href="/signup" className="bg-[#732C3F] text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-[#5a2231] transition shadow-lg hover:shadow-xl">
                             Get Started

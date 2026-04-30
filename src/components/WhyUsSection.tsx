@@ -30,14 +30,14 @@ export default function WhyUsSection() {
                         </p>
                     </div>
 
-                    {/* 3. Commission */}
+                    {/* 3. Referral */}
                     <div className="text-center p-6 rounded-2xl hover:bg-gray-50 transition duration-300">
                         <div className="w-20 h-20 mx-auto mb-6 relative bg-green-50 rounded-full flex items-center justify-center text-green-600 transition-transform active:scale-95 animate-float cursor-pointer">
                             <Wallet size={40} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-xl font-bold mb-3 text-gray-800">High Commission</h3>
+                        <h3 className="text-xl font-bold mb-3 text-gray-800">Referral Rewards</h3>
                         <p className="text-gray-600 text-sm leading-relaxed">
-                            Join us and earn a decent amount of commission for your professional journey.
+                            Share your learning journey and earn referral rewards when others join through you. Results may vary.
                         </p>
                     </div>
 

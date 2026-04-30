@@ -136,6 +136,7 @@ export default async function Home() {
                 <li><Link href="/legal/privacy-policy" className="hover:text-[#C57C8A] transition">Privacy Policy</Link></li>
                 <li><Link href="/legal/terms" className="hover:text-[#C57C8A] transition">Terms & Conditions</Link></li>
                 <li><Link href="/legal/disclaimer" className="hover:text-[#C57C8A] transition">Disclaimer</Link></li>
+                <li><Link href="/legal/shipping-policy" className="hover:text-[#C57C8A] transition">Shipping Policy</Link></li>
               </ul>
             </div>
 
@@ -162,10 +163,10 @@ export default async function Home() {
           </div>
 
           {/* Disclaimer & Copyright */}
-          <div className="border-t border-gray-800 pt-8 text-center">
-            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4 max-w-4xl mx-auto">
-              <p className="text-yellow-400 text-xs">🚧 <strong>Beta Mode:</strong> LearnPeak is in development.</p>
-            </div>
+            <div className="border-t border-gray-800 pt-8 text-center">
+                            <div className="bg-green-900/30 border border-green-700 rounded-lg p-3 mb-4 max-w-4xl mx-auto">
+                              <p className="text-green-400 text-xs">✅ <strong>Secure Platform:</strong> LearnPeak is a live, operational digital education platform. All courses are accessible immediately upon purchase.</p>
+                            </div>
             <p className="text-xs text-gray-400 max-w-4xl mx-auto leading-relaxed mb-2">
               <strong className="text-gray-300">⚠️ Earnings Disclaimer:</strong> LearnPeak is an education platform, NOT an income opportunity. NO guarantee of earnings. Results depend on your skills and effort.
             </p>
