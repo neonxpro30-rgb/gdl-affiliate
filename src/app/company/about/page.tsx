@@ -229,7 +229,7 @@ export default function AboutUs() {
                 <div className="bg-gray-100 rounded-2xl p-6 text-center">
                     <p className="text-gray-600 mb-4">Have questions before joining?</p>
                     <div className="flex flex-wrap justify-center gap-4">
-                        <Link href="/contact" className="bg-[#732C3F] text-white px-6 py-2 rounded-full hover:bg-[#5a2231] transition">
+                        <Link href="/company/contact" className="bg-[#732C3F] text-white px-6 py-2 rounded-full hover:bg-[#5a2231] transition">
                             Contact Us
                         </Link>
                         <Link href="/terms" className="border-2 border-[#732C3F] text-[#732C3F] px-6 py-2 rounded-full hover:bg-[#732C3F] hover:text-white transition">
