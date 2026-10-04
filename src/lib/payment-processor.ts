@@ -48,15 +48,13 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
             const soldPackagePrice = soldPackage?.price || 0;
             const soldPackageName = soldPackage?.name || '';
 
-            // Determine Commission Amount
+            // Determine Commission Amount (single-tier only: direct commission, no passive/upline payouts)
             let directCommission = 0;
-            let passiveCommission = 0;
             let packageMismatch = false; // Flag for when referrer package < sold package
 
             if (soldPackageName.includes('Silicon')) {
                 // Fixed commission for Silicon (Exception)
                 directCommission = 17;
-                passiveCommission = 0;
             } else {
                 // Fetch Referrer's Active Package Price
                 const referrerOrdersSnapshot = await db.collection('orders')
@@ -84,19 +82,13 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
                     packageMismatch = true;
                 }
 
-                // Commission calculation
+                // Commission calculation (single-tier: direct only, no passive/upline)
                 // If base amount is Silicon price (₹19), use fixed ₹17 commission
                 if (baseAmount === 19) {
                     directCommission = 17;
-                    passiveCommission = 0; // No passive for Silicon-based commission
                 } else {
-                    // 70% Direct, 10% Passive (of base amount)
+                    // 70% Direct commission of the commission-locked base amount
                     directCommission = baseAmount * 0.70;
-
-                    // Passive only if referrer has an upline
-                    if (referrerData.referrerId) {
-                        passiveCommission = baseAmount * 0.10;
-                    }
                 }
             }
 
@@ -130,27 +122,8 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
                 }
             }
 
-            // Save Passive Referral (User A)
-            if (passiveCommission > 0 && referrerData.referrerId) {
-                const existingPassive = await db.collection('referrals')
-                    .where('referredUserId', '==', orderData.userId)
-                    .where('type', '==', 'PASSIVE')
-                    .limit(1)
-                    .get();
-
-                if (existingPassive.empty) {
-                    await db.collection('referrals').add({
-                        referrerId: referrerData.referrerId,
-                        sourceUserId: userData.referrerId,
-                        referredUserId: orderData.userId,
-                        amount: passiveCommission,
-                        type: 'PASSIVE',
-                        status: 'PENDING',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    });
-                }
-            }
+            // NOTE: No passive/upline referral is created — single-tier referral policy.
+            // (Removed 2026-10-04: 10% passive commission to upline discontinued.)
         }
     }
 
