@@ -109,8 +109,8 @@ export default function GameHero() {
         {/* top status row */}
         <div className="mb-8 flex items-center justify-center gap-3 font-mono text-[11px] tracking-[0.25em] text-rose-200/80">
           <span className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-950/60 px-4 py-1.5">
-            <span className="animate-blink inline-block h-2 w-2 rounded-full bg-red-500" />
-            LIVE
+            <span className="animate-blink inline-block h-2 w-2 rounded-full bg-rose-400" />
+            PRESS START
           </span>
           <span className="hidden sm:inline">PLAYER 1 // READY</span>
         </div>
