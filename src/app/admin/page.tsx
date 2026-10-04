@@ -10,12 +10,14 @@ import CoursesTable from "./CoursesTable";
 import BlogManager from "./BlogManager";
 import DateFilter from "./DateFilter";
 import CommissionFilter from "./CommissionFilter";
+import PendingFilter from "./PendingFilter";
+import { transitionAllExpiredPendings } from "@/lib/pendingCommission";
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string, startDate?: string, endDate?: string, commissionFilter?: string }> }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string, startDate?: string, endDate?: string, commissionFilter?: string, pendingFilter?: string }> }) {
     const session = await getServerSession(authOptions);
-    const { tab, startDate, endDate, commissionFilter } = await searchParams;
+    const { tab, startDate, endDate, commissionFilter, pendingFilter } = await searchParams;
     const activeTab = tab || 'commissions';
 
     if (!session || session.user.role !== 'ADMIN') {
@@ -216,6 +218,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     let pendings: any[] = [];
     if (activeTab === 'pendings') {
         try {
+            // Run the lazy expiry transition first so admin never shows a
+            // stale PENDING for a window that already lapsed (user dashboard
+            // would show DONATED for the same doc).
+            await transitionAllExpiredPendings();
             const pendingsSnapshot = await db.collection('pendings').get();
             const allPendings = await Promise.all(pendingsSnapshot.docs.map(async (doc) => {
                 const data = doc.data();
@@ -226,7 +232,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 }
                 return { id: doc.id, ...data, referrer };
             }));
-            pendings = allPendings
+            const statusFiltered = pendingFilter
+                ? allPendings.filter((p: any) => p.status === pendingFilter.toUpperCase())
+                : allPendings;
+            pendings = statusFiltered
                 .filter((p: any) => isDateInRange(p.createdAt))
                 .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         } catch (error) {
@@ -514,6 +523,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                                         }`}>
                                                         {comm.type || 'DIRECT'}
                                                     </span>
+                                                    {comm.fromPending && (
+                                                        <span className="ml-1 px-2 py-1 rounded text-xs font-bold bg-amber-100 text-amber-900" title="Claimed from Upgrade Bonus pending">
+                                                            ⭐ Bonus
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="p-4 text-gray-600 text-sm">
                                                     {comm.type === 'PASSIVE' ? comm.sourceUser.name : '-'}
@@ -665,7 +679,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <div className="bg-white rounded-xl shadow-md overflow-hidden">
                         <div className="p-6 border-b border-gray-200">
                             <h2 className="text-xl font-bold text-gray-900">Upgrade Bonus Pendings Ledger</h2>
-                            <p className="text-sm text-gray-500">Held commission differences from higher-package sales. PENDING = within 7-day claim window · DONATED = window lapsed, given to children&apos;s education charity · CLAIMED = credited to affiliate.</p>
+                            <p className="text-sm text-gray-500 mb-4">Held commission differences from higher-package sales. PENDING = within 7-day claim window · DONATED = window lapsed, given to children&apos;s education charity · CLAIMED = credited to affiliate.</p>
+                            <PendingFilter />
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left min-w-[1000px]">

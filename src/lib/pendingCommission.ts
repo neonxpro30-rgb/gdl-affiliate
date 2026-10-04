@@ -28,7 +28,7 @@ export interface PendingDoc {
     immediateAmount: number; // what commission-lock paid immediately
     createdAt: string;
     expiresAt: string;       // createdAt + 7 days
-    status: PendingStatus;   // PENDING | PAYABLE | CLAIMED
+    status: PendingStatus;   // PENDING | DONATED | CLAIMED
     claimedAt?: string;
     upgradeOrderId?: string;
 }
@@ -97,10 +97,10 @@ export async function createPendingForSale(args: {
 
 /** Lazy transition: PENDING past expiresAt -> DONATED to charity.
  *  Each donation is recorded in the transparent charity_donations ledger.
- *  The money is earmarked for charity — never company income. */
+ *  The money is earmarked for charity — never company income.
+ *  Uses a Firestore transaction per doc so concurrent runs can never
+ *  double-transition the same pending or write duplicate charity records. */
 export async function transitionExpiredPendings(referrerId: string): Promise<number> {
-    const now = new Date();
-    const nowIso = now.toISOString();
     const snap = await db.collection('pendings')
         .where('referrerId', '==', referrerId)
         .where('status', '==', 'PENDING')
@@ -108,25 +108,58 @@ export async function transitionExpiredPendings(referrerId: string): Promise<num
     let moved = 0;
     for (const doc of snap.docs) {
         const data = doc.data();
-        if (data.expiresAt && data.expiresAt <= nowIso) {
-            await doc.ref.update({
-                status: 'DONATED',
-                donatedAt: nowIso,
-                updatedAt: nowIso,
-            });
-            // Transparent, auditable charity record
-            await db.collection('charity_donations').add({
-                pendingId: doc.id,
-                referrerId,
-                amount: data.pendingAmount || 0,
-                cause: CHARITY_CAUSE,
-                donatedAt: nowIso,
-                createdAt: nowIso,
-            });
-            moved++;
+        if (data.expiresAt && data.expiresAt <= new Date().toISOString()) {
+            if (await transitionOneExpired(doc.ref, doc.id, referrerId)) moved++;
         }
     }
     return moved;
+}
+
+/** Admin variant: transition ALL expired pendings across every referrer. */
+export async function transitionAllExpiredPendings(): Promise<number> {
+    const snap = await db.collection('pendings')
+        .where('status', '==', 'PENDING')
+        .get();
+    const nowIso = new Date().toISOString();
+    let moved = 0;
+    for (const doc of snap.docs) {
+        const data = doc.data();
+        if (data.expiresAt && data.expiresAt <= nowIso) {
+            if (await transitionOneExpired(doc.ref, doc.id, data.referrerId)) moved++;
+        }
+    }
+    return moved;
+}
+
+/** Single-doc expiry transition inside a Firestore transaction.
+ *  Returns true only if this call performed the transition. */
+async function transitionOneExpired(
+    ref: FirebaseFirestore.DocumentReference,
+    pendingId: string,
+    referrerId: string,
+): Promise<boolean> {
+    return db.runTransaction(async (tx) => {
+        const fresh = await tx.get(ref);
+        if (!fresh.exists) return false;
+        const f = fresh.data() as PendingDoc;
+        // Re-check inside the transaction: a concurrent claim or an
+        // earlier transition run may have already moved this doc.
+        if (f.status !== 'PENDING') return false;
+        if (!(f.expiresAt && f.expiresAt <= new Date().toISOString())) return false;
+
+        const t = new Date().toISOString();
+        tx.update(ref, { status: 'DONATED', donatedAt: t, updatedAt: t });
+        // Transparent, auditable charity record
+        tx.set(db.collection('charity_donations').doc(), {
+            pendingId,
+            referrerId,
+            amount: f.pendingAmount || 0,
+            cause: CHARITY_CAUSE,
+            donatedAt: t,
+            createdAt: t,
+        });
+        return true;
+    });
 }
 
 /** Running total donated to charity across all users. */
@@ -199,37 +232,43 @@ export async function getUserPendings(referrerId: string): Promise<{ pendings: P
  */
 export async function claimPending(pendingId: string, referrerId: string): Promise<{ amount: number }> {
     const ref = db.collection('pendings').doc(pendingId);
-    const doc = await ref.get();
-    if (!doc.exists) throw new Error('Pending not found');
-    const p = doc.data() as PendingDoc;
 
-    if (p.referrerId !== referrerId) throw new Error('Not your pending');
-    if (p.status === 'CLAIMED') throw new Error('Already claimed');
+    // Tier check first: upgrades only move tiers UP, so a pass here cannot
+    // go stale in a harmful way. The status/expiry re-check happens inside
+    // the transaction below, which is what guards the double-claim race.
+    const currentTier = await getUserTierRank(referrerId);
 
-    const effective = resolvePendingStatus(p.status, p.expiresAt);
-    if (effective === 'DONATED') throw new Error('ALREADY_DONATED');
-    if (effective === 'PENDING') {
-        const currentTier = await getUserTierRank(referrerId);
+    return db.runTransaction(async (tx) => {
+        const doc = await tx.get(ref);
+        if (!doc.exists) throw new Error('Pending not found');
+        const p = doc.data() as PendingDoc;
+
+        if (p.referrerId !== referrerId) throw new Error('Not your pending');
+        if (p.status === 'CLAIMED') throw new Error('Already claimed');
+
+        const effective = resolvePendingStatus(p.status, p.expiresAt);
+        if (effective === 'DONATED') throw new Error('ALREADY_DONATED');
+        if (effective !== 'PENDING') throw new Error('Not claimable');
         if (!canClaimByTier(currentTier, p.soldTier)) {
             throw new Error('UPGRADE_REQUIRED');
         }
-    }
 
-    const nowIso = new Date().toISOString();
-    await ref.update({ status: 'CLAIMED', claimedAt: nowIso, updatedAt: nowIso });
+        const nowIso = new Date().toISOString();
+        tx.update(ref, { status: 'CLAIMED', claimedAt: nowIso, updatedAt: nowIso });
 
-    // Credit via the existing payout pipeline (admin approves -> PAID)
-    await db.collection('referrals').add({
-        referrerId,
-        referredUserId: p.buyerUserId,
-        amount: p.pendingAmount,
-        type: 'DIRECT',
-        status: 'PENDING',
-        fromPending: true,
-        pendingId,
-        createdAt: nowIso,
-        updatedAt: nowIso,
+        // Credit via the existing payout pipeline (admin approves -> PAID)
+        tx.set(db.collection('referrals').doc(), {
+            referrerId,
+            referredUserId: p.buyerUserId,
+            amount: p.pendingAmount,
+            type: 'DIRECT',
+            status: 'PENDING',
+            fromPending: true,
+            pendingId,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+        });
+
+        return { amount: p.pendingAmount };
     });
-
-    return { amount: p.pendingAmount };
 }

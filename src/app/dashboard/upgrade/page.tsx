@@ -6,8 +6,6 @@ import { useState, useEffect } from "react";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { ArrowUpCircle } from "lucide-react";
 
-const TIER_RANK: Record<string, number> = { silicon: 0, silver: 1, gold: 2, diamond: 3 };
-
 function tierOf(name: string): number {
     const n = (name || '').toLowerCase();
     if (n.includes('diamond')) return 3;

@@ -23,14 +23,14 @@ function formatCountdown(ms: number): string {
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
-const TIER_FOR_PACKAGE: Record<string, string> = {
-    'silicon demo': 'Silver Package',
-    'silver package': 'Gold Package',
-    'gold package': 'Diamond Package',
-};
-
+/**
+ * Claim rule is ownedTier >= soldTier, so the upgrade target IS the sold
+ * package's own tier — never one above it. (Telling the user to buy a
+ * costlier tier than needed would be dishonest.)
+ */
 function upgradeTarget(soldPackageName: string): string {
-    return TIER_FOR_PACKAGE[(soldPackageName || '').toLowerCase()] || 'a higher package';
+    const name = (soldPackageName || '').trim();
+    return name || 'a higher package';
 }
 
 /**
