@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """LearnPeak courses v2 migration (locked by Naksh 2026-10-04, approved 2026-10-05).
 
-Usage:  TOKEN=$(gcloud auth print-access-token) python3 lp_migrate.py [--apply]
+Usage:  python3 lp_migrate.py [--apply]
 Without --apply it only prints the plan. Idempotent: matches on (title, category).
+Self-auths via `gcloud auth print-access-token` (Cloud Shell).
+Descriptions are 100% English per Naksh's locked website rule (2026-10-05).
 """
 import json, os, subprocess, sys, urllib.request, urllib.error
 
@@ -21,33 +23,33 @@ NOW = "2026-10-05T02:00:00.000Z"
 V2 = {
     "Silicon Package": [
         ("Affiliate Marketing ABCs",
-         "Affiliate marketing kya hai, kaise kaam karta hai, aur LearnPeak ka referral system - 30 minute me poora foundation."),
+         "What affiliate marketing is, how it works, and how LearnPeak's referral system pays you - the complete foundation in 30 minutes."),
         ("Profile Makeover in 30 Minutes",
-         "WhatsApp, Instagram aur social profiles ko buyer-ready banao - photo, bio, link setup, step by step."),
+         "Turn your WhatsApp, Instagram and social profiles buyer-ready - photo, bio and link setup, step by step."),
         ("First Affiliate Link Launchpad",
-         "Apna pehla LearnPeak affiliate link generate karo aur share karna seekho - pehla practical win."),
-        ("First 10 Leads - Taste",
-         "Bina ad kharch kiye pehle 10 leads laane ka starter method - taste of the system, poora system Silver me."),
+         "Generate your first LearnPeak affiliate link and learn how to share it - your first practical win."),
+        ("First 10 Leads \u2014 Taste",
+         "A starter method to bring your first 10 leads without spending on ads - a taste of the system; the full system is inside Silver."),
         ("Roadmap Reveal & Referral Kickstart",
-         "Aage ka poora roadmap (Silver lock dikhega) + referral se pehli income ka kickstart plan."),
+         "The complete roadmap ahead (Silver shown locked) plus your kickstart plan for first referral income."),
     ],
     "Silver Package": [
         ("Organic Affiliate Marketing Mastery",
-         "9-module flagship course: mindset, profile setup, daily rituals, organic leads, presentation, prospecting, follow-up, objection handling."),
+         "The 9-module flagship course: mindset, profile setup, daily rituals, organic lead generation, presentation, prospecting, follow-up and objection handling."),
         ("First Money Sales Script",
-         "Pehli sale close karne ka ready-to-use DM/chat script."),
+         "A ready-to-use DM and chat script to close your first sale."),
         ("Content Creation Mastery",
-         "Content ideas, formats aur posting system jo leads laaye."),
+         "Content ideas, formats and a posting system that brings leads."),
         ("Video Creation Mastery",
-         "Mobile se professional videos banao - shooting se upload tak."),
+         "Shoot professional videos on your phone - from shooting to upload."),
     ],
     "Gold Package": [
         ("Advanced Affiliate Marketing",
-         "Automation, systems, scaling aur team-building - Silver ke baad ka growth engine."),
+         "Automation, systems, scaling and team-building - the growth engine after Silver."),
         ("Personal Branding & Authority Mastery",
-         "Apni authority aur personal brand banao jo premium sales laaye."),
+         "Build your authority and personal brand that brings premium sales."),
         ("Advanced Video Editing & Reels Mastery",
-         "Reels aur advanced mobile editing - viral-format video system."),
+         "Reels and advanced mobile editing - a viral-format video system."),
     ],
 }
 
@@ -76,6 +78,11 @@ def S(s):
     return {"stringValue": s}
 
 
+def rel(name):
+    # "projects/P/databases/(default)/documents/courses/abc" -> "courses/abc"
+    return name.split("/documents/", 1)[1]
+
+
 def main():
     print("MODE:", "APPLY" if APPLY else "DRY-RUN (use --apply to execute)")
     print("TOKEN:", "ok" if TOKEN else "MISSING")
@@ -94,14 +101,13 @@ def main():
         for title, desc in items:
             key = (title, cat)
             if key in have:
-                # ensure description matches v2 (patch if different)
                 cur = None
                 for d in courses:
                     if d["name"] == have[key]:
                         cur = d["fields"].get("description", {}).get("stringValue", "")
                 if cur != desc:
                     ops.append(("PATCH course desc", title,
-                                f"/{have[key]}?updateMask.fieldPaths=description&updateMask.fieldPaths=updatedAt",
+                                f"/{rel(have[key])}?updateMask.fieldPaths=description&updateMask.fieldPaths=updatedAt",
                                 {"fields": {"description": S(desc), "updatedAt": S(NOW)}}))
                 else:
                     ops.append(("SKIP (already v2)", title, None, None))
@@ -121,7 +127,7 @@ def main():
         cur = [v.get("stringValue") for v in
                f.get("courses", {}).get("arrayValue", {}).get("values", [])]
         if cur != want:
-            ops.append(("PATCH package courses", pname, f"/{d['name']}?updateMask.fieldPaths=courses",
+            ops.append(("PATCH package courses", pname, f"/{rel(d['name'])}?updateMask.fieldPaths=courses",
                         {"fields": {"courses": {"arrayValue": {"values": [S(t) for t in want]}}}}))
         else:
             ops.append(("SKIP (package ok)", pname, None, None))
