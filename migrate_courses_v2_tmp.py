@@ -4,12 +4,18 @@
 Usage:  TOKEN=$(gcloud auth print-access-token) python3 lp_migrate.py [--apply]
 Without --apply it only prints the plan. Idempotent: matches on (title, category).
 """
-import json, os, sys, urllib.request, urllib.error
+import json, os, subprocess, sys, urllib.request, urllib.error
 
 PROJECT = "gdl-database-b32f4"
 BASE = f"https://firestore.googleapis.com/v1/projects/{PROJECT}/databases/(default)/documents"
 APPLY = "--apply" in sys.argv
-TOKEN = os.environ.get("TOKEN", "")
+try:
+    TOKEN = subprocess.check_output(
+        ["gcloud", "auth", "print-access-token"], timeout=30).decode().strip()
+except Exception as e:
+    TOKEN = os.environ.get("TOKEN", "")
+    if not TOKEN:
+        print("Could not get token:", e); sys.exit(1)
 NOW = "2026-10-05T02:00:00.000Z"
 
 V2 = {
@@ -71,9 +77,10 @@ def S(s):
 
 
 def main():
-    if not TOKEN:
-        print("Set TOKEN env var first."); sys.exit(1)
     print("MODE:", "APPLY" if APPLY else "DRY-RUN (use --apply to execute)")
+    print("TOKEN:", "ok" if TOKEN else "MISSING")
+    if not TOKEN:
+        sys.exit(1)
     ops = []
 
     courses = api("GET", "/courses?pageSize=200").get("documents", [])
