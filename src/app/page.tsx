@@ -135,6 +135,7 @@ export default async function Home() {
                 <li><Link href="/blog" className="hover:text-[#C57C8A] transition">Blog</Link></li>
                 <li><Link href="/legal/privacy-policy" className="hover:text-[#C57C8A] transition">Privacy Policy</Link></li>
                 <li><Link href="/legal/terms" className="hover:text-[#C57C8A] transition">Terms & Conditions</Link></li>
+                <li><Link href="/legal/affiliate-terms" className="hover:text-[#C57C8A] transition">Affiliate Terms</Link></li>
                 <li><Link href="/legal/disclaimer" className="hover:text-[#C57C8A] transition">Disclaimer</Link></li>
                 <li><Link href="/legal/shipping-policy" className="hover:text-[#C57C8A] transition">Shipping Policy</Link></li>
               </ul>

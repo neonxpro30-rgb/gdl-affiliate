@@ -48,8 +48,8 @@ export default function HeroSection() {
                         <div className="w-16 h-16 mx-auto mb-4 relative">
                             <Image src="/images/icon-mission.png" alt="Mission" fill className="object-contain" />
                         </div>
-                        <h3 className="font-bold text-gray-800 mb-1">Mission</h3>
-                        <p className="text-xs text-gray-500">Empowering education, transforming lives</p>
+                        <h3 className="font-bold text-gray-800 mb-1">Skill-First</h3>
+                        <p className="text-xs text-gray-500">No fluff. Just skills that work in the real world.</p>
                     </div>
 
                     {/* Vision */}
@@ -57,8 +57,8 @@ export default function HeroSection() {
                         <div className="w-16 h-16 mx-auto mb-4 relative">
                             <Image src="/images/icon-vision.png" alt="Vision" fill className="object-contain" />
                         </div>
-                        <h3 className="font-bold text-gray-800 mb-1">Vision</h3>
-                        <p className="text-xs text-gray-500">Innovative learning for success</p>
+                        <h3 className="font-bold text-gray-800 mb-1">Learn Your Way</h3>
+                        <p className="text-xs text-gray-500">Bite-sized lessons, made for your phone.</p>
                     </div>
 
                     {/* Demo */}
@@ -66,8 +66,8 @@ export default function HeroSection() {
                         <div className="w-16 h-16 mx-auto mb-4 relative">
                             <Image src="/images/icon-demo.png" alt="Demo" fill className="object-contain" />
                         </div>
-                        <h3 className="font-bold text-gray-800 mb-1">Demo</h3>
-                        <p className="text-xs text-gray-500">Experience excellence with our demo</p>
+                        <h3 className="font-bold text-gray-800 mb-1">Try for ₹19</h3>
+                        <p className="text-xs text-gray-500">Taste the Silicon Demo before you commit.</p>
                     </div>
                 </div>
             </div>
