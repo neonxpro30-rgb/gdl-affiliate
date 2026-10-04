@@ -188,7 +188,7 @@ export default function GameHero() {
 
         {/* trust pill (kept as-is per standing instruction) */}
         <p className="mx-auto mt-8 inline-block rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] text-white/60">
-          Refer friends &amp; earn up to 80% commission — not guaranteed, results vary.
+          Refer friends &amp; earn up to 70% commission — not guaranteed, results vary.
         </p>
       </div>
     </section>

@@ -26,7 +26,7 @@ export default function HeroSection() {
                     </p>
                     <div className="inline-flex items-center gap-2 bg-[#F7E8EC] border border-[#C57C8A] text-[#732C3F] text-sm font-semibold px-4 py-2 rounded-full mb-8">
                         <span>💰</span>
-                        <span>Refer friends &amp; earn up to 80% commission — not guaranteed, results vary.</span>
+                        <span>Refer friends &amp; earn up to 70% commission — not guaranteed, results vary.</span>
                     </div>
                     <div className="flex gap-4">
                         <Link href="/signup" className="bg-[#732C3F] text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-[#5a2231] transition shadow-lg hover:shadow-xl">
