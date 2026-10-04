@@ -73,7 +73,7 @@ export default function DashboardPage() {
     const [claimMsg, setClaimMsg] = useState('');
     const [copied, setCopied] = useState(false);
 
-    // Live countdown clock for chest fuses
+    // Live countdown clock for pending expiries
     const [now, setNow] = useState(() => Date.now());
     const [fetchedAt, setFetchedAt] = useState(() => Date.now());
     useEffect(() => {
@@ -224,7 +224,7 @@ export default function DashboardPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || data.error || 'Claim failed');
-            setClaimMsg(`Chest unlocked! ₹${Number(data.amount).toFixed(2)} claimed — it will appear in your pending payout.`);
+            setClaimMsg(`₹${Number(data.amount).toFixed(2)} claimed — it will appear in your pending payout.`);
             // Refresh pendings
             const r = await fetch('/api/user/pendings');
             if (r.ok) {
@@ -235,7 +235,7 @@ export default function DashboardPage() {
             }
         } catch (err: any) {
             setClaimMsg(err.message === 'UPGRADE_REQUIRED'
-                ? 'Please upgrade to the required level first to unlock this chest.'
+                ? 'Please upgrade to the required package first to claim this bonus.'
                 : err.message === 'ALREADY_DONATED'
                     ? "This bonus was donated to children's education after the 7-day window."
                     : `Claim failed: ${err.message}`);
@@ -261,10 +261,7 @@ export default function DashboardPage() {
     if (status === 'loading') {
         return (
             <div className="min-h-screen bg-[#1A0B12] flex items-center justify-center">
-                <p className="font-mono text-xs tracking-[0.3em] text-rose-300/70">
-                    <span className="animate-blink inline-block h-2 w-2 rounded-full bg-rose-400 mr-3" />
-                    LOADING PLAYER DATA…
-                </p>
+                <p className="text-sm text-rose-200/70">Loading…</p>
             </div>
         );
     }
@@ -278,31 +275,20 @@ export default function DashboardPage() {
     const referralLink = `https://learnpeak.in/signup?ref=${displayUser.referralCode || ''}`;
 
     return (
-        <div className="scanlines min-h-screen bg-[#1A0B12] text-white relative overflow-hidden">
-            {/* ambient glows */}
-            <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-[#732C3F]/50 blur-[120px]" />
-            <div className="pointer-events-none absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-rose-500/10 blur-[100px]" />
+        <div className="min-h-screen bg-[#1A0B12] text-white relative overflow-hidden">
+            {/* soft ambient glow */}
+            <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#732C3F]/30 blur-[120px]" />
 
             <DashboardNavbar user={displayUser} />
 
             <div className="relative max-w-md md:max-w-4xl mx-auto px-4 pt-6 pb-24">
 
-                {/* status row */}
-                <div className="mb-5 flex items-center justify-center gap-3 font-mono text-[11px] tracking-[0.25em] text-rose-200/80">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-950/60 px-4 py-1.5">
-                        <span className="animate-blink inline-block h-2 w-2 rounded-full bg-rose-400" />
-                        MISSION CONTROL
-                    </span>
-                    <span className="hidden sm:inline">PLAYER 1 // ONLINE</span>
-                </div>
-
-                {/* ============ 1. PLAYER CARD ============ */}
-                <section className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6 shadow-[0_0_60px_rgba(115,44,63,0.35)] relative overflow-hidden">
-                    <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-rose-500/20 blur-[80px]" />
+                {/* ============ 1. PROFILE CARD ============ */}
+                <section className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6 relative overflow-hidden">
                     <div className="relative flex items-center gap-4">
-                        {/* avatar in glowing ring */}
+                        {/* avatar in ring */}
                         <div className="relative shrink-0">
-                            <div className="animate-xp-glow rounded-full bg-gradient-to-br from-rose-400 via-[#732C3F] to-pink-300 p-[3px]">
+                            <div className="rounded-full bg-gradient-to-br from-rose-400 via-[#732C3F] to-pink-300 p-[3px]">
                                 <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-[#1A0B12] flex items-center justify-center">
                                     {displayUser.photoURL ? (
                                         <img src={displayUser.photoURL} alt={displayUser.name} className="w-full h-full object-cover" />
@@ -322,25 +308,24 @@ export default function DashboardPage() {
                             <p className="text-rose-200/80 text-sm font-medium mt-0.5">
                                 {ownedTier ? `${ownedTier.name} Package` : packageName}
                             </p>
-                            {/* XP bar */}
+                            {/* level progress */}
                             <div className="mt-3">
-                                <div className="mb-1.5 flex items-center justify-between font-mono text-[10px] tracking-[0.2em] text-rose-200/70">
+                                <div className="mb-1.5 flex items-center justify-between text-[10px] tracking-[0.2em] text-rose-200/70">
                                     <span>{ownedTier && ownedTier.rank < 4 ? `NEXT: LVL ${ownedTier.rank + 1} ${TIERS[ownedTier.rank].name.toUpperCase()}` : ownedTier ? 'MAX LEVEL REACHED' : 'LEVEL'}</span>
-                                    <span className="text-rose-300">XP {xpPct}%</span>
                                 </div>
-                                <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+                                <div className="h-2 overflow-hidden rounded-full bg-white/10">
                                     <div
-                                        className="animate-xp-glow h-full rounded-full bg-gradient-to-r from-[#732C3F] via-rose-400 to-pink-300 transition-all duration-700"
+                                        className="h-full rounded-full bg-gradient-to-r from-[#732C3F] via-rose-400 to-pink-300 transition-all duration-700"
                                         style={{ width: `${xpPct}%` }}
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {/* player tag */}
+                    {/* referral code */}
                     <div className="relative mt-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3">
                         <div className="min-w-0">
-                            <p className="font-mono text-[10px] tracking-[0.25em] text-rose-200/60">PLAYER TAG</p>
+                            <p className="text-[10px] tracking-[0.25em] text-rose-200/60">REFERRAL CODE</p>
                             <p className="font-mono text-base md:text-lg font-bold text-white tracking-wider truncate">{displayUser.referralCode}</p>
                         </div>
                         <button
@@ -353,31 +338,30 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                {/* ============ 2. SUPPORT SQUAD ============ */}
+                {/* ============ 2. MENTOR & MANAGER ============ */}
                 <section className="mt-5 grid grid-cols-2 gap-3">
                     <button
                         onClick={openMentorModal}
                         className="rounded-2xl border border-rose-900/50 bg-[#241019]/80 px-4 py-3.5 text-left transition hover:border-rose-400/60 hover:bg-rose-950/50 active:scale-[0.98]"
                     >
-                        <p className="font-mono text-[10px] tracking-[0.25em] text-rose-300/70">🧭 GUIDE</p>
-                        <p className="mt-1 font-bold text-white text-sm md:text-base">Mentor Details</p>
+                        <p className="font-bold text-white text-sm md:text-base">Mentor</p>
+                        <p className="text-xs text-rose-200/60 mt-0.5">View details</p>
                     </button>
                     <button
                         onClick={openManagerModal}
                         className="rounded-2xl border border-rose-900/50 bg-[#241019]/80 px-4 py-3.5 text-left transition hover:border-rose-400/60 hover:bg-rose-950/50 active:scale-[0.98]"
                     >
-                        <p className="font-mono text-[10px] tracking-[0.25em] text-rose-300/70">🎧 SUPPORT</p>
-                        <p className="mt-1 font-bold text-white text-sm md:text-base">Manager Details</p>
+                        <p className="font-bold text-white text-sm md:text-base">Manager</p>
+                        <p className="text-xs text-rose-200/60 mt-0.5">View details</p>
                     </button>
                 </section>
 
-                {/* ============ 3. TOTAL LOOT ============ */}
+                {/* ============ 3. EARNINGS ============ */}
                 <section className="mt-8">
-                    <SectionLabel>💰 Total Loot</SectionLabel>
+                    <SectionLabel>Total Earnings</SectionLabel>
                     <div className="rounded-3xl border border-rose-900/60 bg-gradient-to-br from-[#2b1220] to-[#732C3F] p-6 text-center relative overflow-hidden">
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,113,133,0.18),transparent_70%)]" />
                         <div className="relative">
-                            <p className="font-mono text-[10px] tracking-[0.3em] text-rose-200/70">ALL-TIME EARNINGS</p>
+                            <p className="text-[10px] tracking-[0.3em] text-rose-200/70">ALL-TIME</p>
                             <p className="font-display mt-2 text-5xl md:text-6xl bg-gradient-to-r from-rose-200 via-rose-400 to-pink-300 bg-clip-text text-transparent tabular-nums">
                                 <CountUp end={stats.allTime} prefix="₹" />
                             </p>
@@ -399,13 +383,13 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                {/* ============ 4. VAULT ============ */}
+                {/* ============ 4. PAYOUTS ============ */}
                 <section className="mt-8">
-                    <SectionLabel>🔒 Vault</SectionLabel>
+                    <SectionLabel>Payouts</SectionLabel>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-2xl border border-amber-400/30 bg-amber-950/40 p-5 text-center">
                             <Wallet className="w-5 h-5 mx-auto text-amber-300/80" />
-                            <p className="mt-2 font-mono text-[10px] tracking-[0.2em] text-amber-200/70">IN TRANSIT</p>
+                            <p className="mt-2 text-[10px] tracking-[0.2em] text-amber-200/70">PENDING</p>
                             <p className="mt-1 text-2xl md:text-3xl font-extrabold text-amber-200 tabular-nums">
                                 <CountUp end={stats.pending} prefix="₹" />
                             </p>
@@ -413,7 +397,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/40 p-5 text-center">
                             <Trophy className="w-5 h-5 mx-auto text-emerald-300/80" />
-                            <p className="mt-2 font-mono text-[10px] tracking-[0.2em] text-emerald-200/70">SECURED</p>
+                            <p className="mt-2 text-[10px] tracking-[0.2em] text-emerald-200/70">RECEIVED</p>
                             <p className="mt-1 text-2xl md:text-3xl font-extrabold text-emerald-200 tabular-nums">
                                 <CountUp end={stats.paid} prefix="₹" />
                             </p>
@@ -422,9 +406,9 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                {/* ============ 5. SQUAD INVITE ============ */}
+                {/* ============ 5. INVITE & EARN ============ */}
                 <section className="mt-8">
-                    <SectionLabel>📩 Squad Invite</SectionLabel>
+                    <SectionLabel>Invite & Earn</SectionLabel>
                     <div className="rounded-2xl border border-rose-900/60 bg-[#241019]/90 p-5">
                         <p className="text-sm text-rose-100/80 leading-relaxed">
                             Share your invite link. When a friend joins through it, you earn commission on their package.
@@ -434,7 +418,7 @@ export default function DashboardPage() {
                         </div>
                         <button
                             onClick={() => copyInvite(referralLink)}
-                            className="animate-xp-glow mt-3 w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 font-bold text-white transition hover:brightness-110 active:scale-[0.99] inline-flex items-center justify-center gap-2"
+                            className="mt-3 w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 font-bold text-white transition hover:brightness-110 active:scale-[0.99] inline-flex items-center justify-center gap-2"
                         >
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                             {copied ? 'Invite Link Copied!' : 'Copy Invite Link'}
@@ -442,22 +426,21 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                {/* ============ 6. LOCKED CHESTS (Upgrade Bonus) ============ */}
+                {/* ============ 6. UPGRADE BONUS ============ */}
                 {(activePendings.length > 0 || donatedPendings.length > 0) && (
                     <section className="mt-8">
-                        <SectionLabel>🎁 Locked Chests {activePendings.length > 0 && <span className="text-amber-300">({activePendings.length})</span>}</SectionLabel>
+                        <SectionLabel>Upgrade Bonus {activePendings.length > 0 && <span className="text-amber-300">({activePendings.length})</span>}</SectionLabel>
 
                         {activePendings.length > 0 && (
                             <>
                                 <div className="rounded-2xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-950/60 to-[#241019] p-5 text-center relative overflow-hidden">
-                                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.12),transparent_70%)]" />
                                     <div className="relative">
-                                        <p className="font-mono text-[10px] tracking-[0.3em] text-amber-200/70">BONUS LOCKED IN CHESTS</p>
+                                        <p className="text-[10px] tracking-[0.3em] text-amber-200/70">BONUS WAITING</p>
                                         <p className="font-display mt-1 text-4xl md:text-5xl text-amber-300 tabular-nums">
                                             <CountUp end={bonusTotal} prefix="₹" />
                                         </p>
                                         <p className="mt-2 text-xs text-amber-100/70 leading-relaxed">
-                                            Commission held from your higher-level sales.<br />Upgrade your level to unlock it.
+                                            Commission held from your higher-package sales.<br />Upgrade to claim it.
                                         </p>
                                     </div>
                                 </div>
@@ -488,8 +471,8 @@ export default function DashboardPage() {
                                                             {' · '}You got <span className="font-semibold text-rose-200">₹{Number(p.immediateAmount).toFixed(2)}</span>
                                                         </p>
                                                         <p className="mt-1 text-xs">
-                                                            <span className="font-mono text-[10px] tracking-[0.15em] text-amber-300/90">
-                                                                🔒 REQUIRES {reqTier ? `${reqTier.lvl} ${reqTier.medal} ${reqTier.name.toUpperCase()}` : 'LEVEL UPGRADE'}
+                                                            <span className="text-[10px] tracking-[0.15em] text-amber-300/90">
+                                                                REQUIRES {reqTier ? `${reqTier.name.toUpperCase()} PACKAGE` : 'PACKAGE UPGRADE'}
                                                             </span>
                                                         </p>
                                                         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-100/60">
@@ -511,17 +494,17 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => handleClaim(p.id)}
                                                             disabled={claiming === p.id}
-                                                            className="animate-xp-glow w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 py-3 font-bold text-[#1A0B12] transition hover:brightness-110 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                                                            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 py-3 font-bold text-[#1A0B12] transition hover:brightness-110 disabled:opacity-50 inline-flex items-center justify-center gap-2"
                                                         >
                                                             <Zap className="w-4 h-4" />
-                                                            {claiming === p.id ? 'Unlocking…' : `Unlock ₹${Number(p.pendingAmount).toFixed(2)}`}
+                                                            {claiming === p.id ? 'Claiming…' : `Claim ₹${Number(p.pendingAmount).toFixed(2)}`}
                                                         </button>
                                                     ) : (
                                                         <a
                                                             href="/dashboard/upgrade"
                                                             className="block w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 text-center font-bold text-white transition hover:brightness-110"
                                                         >
-                                                            Level Up to Unlock
+                                                            Upgrade to Claim
                                                         </a>
                                                     )}
                                                 </div>
@@ -551,14 +534,14 @@ export default function DashboardPage() {
                     </section>
                 )}
 
-                {/* ============ 7. GOOD KARMA ============ */}
+                {/* ============ 7. GIVING BACK ============ */}
                 {charityTotal > 0 && (
                     <section className="mt-8">
-                        <SectionLabel>🌱 Good Karma</SectionLabel>
+                        <SectionLabel>Giving Back</SectionLabel>
                         <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/30 p-5 text-center">
                             <Heart className="w-6 h-6 mx-auto text-emerald-300" />
                             <p className="mt-2 text-sm text-emerald-100/80 leading-relaxed">
-                                LearnPeak players have donated{' '}
+                                LearnPeak affiliates have donated{' '}
                                 <span className="font-extrabold text-emerald-300 text-lg tabular-nums">
                                     ₹{Number(charityTotal).toFixed(2)}
                                 </span>{' '}

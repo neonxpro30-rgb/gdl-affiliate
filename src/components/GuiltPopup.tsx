@@ -87,9 +87,9 @@ export default function GuiltPopup({ pendings }: { pendings: PendingItem[] }) {
 
                 <div className="relative">
                     <div className="flex items-center gap-2 mb-3">
-                        <span className="inline-flex items-center gap-1.5 bg-amber-400/15 border border-amber-400/40 text-amber-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide font-mono">
+                        <span className="inline-flex items-center gap-1.5 bg-amber-400/15 border border-amber-400/40 text-amber-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
                             <Gift className="w-3.5 h-3.5" />
-                            Locked Chest
+                            Upgrade Bonus
                         </span>
                     </div>
 
@@ -100,19 +100,19 @@ export default function GuiltPopup({ pendings }: { pendings: PendingItem[] }) {
                     <p className="text-rose-100/70 text-sm leading-relaxed mb-4">
                         You worked hard to make this sale, and we&apos;re embarrassed that only part of
                         your commission reached you. <span className="font-extrabold text-amber-300">₹{total.toFixed(2)}</span> is
-                        locked in your chest{active.length > 1 ? 's' : ''}, waiting to be claimed.
+                        waiting in your Upgrade Bonus.
                     </p>
 
                     <div className="bg-black/40 border border-amber-400/30 rounded-xl p-4 mb-4 flex items-center justify-between">
                         <div>
-                            <p className="font-mono text-[10px] text-amber-200/70 tracking-[0.2em] uppercase">Fuse burns out in</p>
+                            <p className="text-[10px] text-amber-200/70 tracking-[0.2em] uppercase">Expires in</p>
                             <p className="text-2xl font-extrabold text-amber-300 tabular-nums mt-1">
                                 <Clock className="inline w-5 h-5 mr-1 -mt-1" />
                                 {formatCountdown(liveMsLeft)}
                             </p>
                         </div>
                         <div className="text-right">
-                            <p className="font-mono text-[10px] text-amber-200/70 tracking-[0.2em] uppercase">To unlock</p>
+                            <p className="text-[10px] text-amber-200/70 tracking-[0.2em] uppercase">To claim</p>
                             <p className="text-sm font-bold text-white mt-1">Upgrade to {target}</p>
                         </div>
                     </div>
@@ -120,9 +120,9 @@ export default function GuiltPopup({ pendings }: { pendings: PendingItem[] }) {
                     <div className="flex gap-3">
                         <a
                             href="/dashboard/upgrade"
-                            className="animate-xp-glow flex-1 bg-gradient-to-r from-amber-500 to-amber-400 text-center py-3 rounded-xl font-bold text-[#1A0B12] hover:brightness-110 transition"
+                            className="flex-1 bg-gradient-to-r from-amber-500 to-amber-400 text-center py-3 rounded-xl font-bold text-[#1A0B12] hover:brightness-110 transition"
                         >
-                            Unlock My Bonus
+                            Claim My Bonus
                         </a>
                         <button
                             onClick={dismiss}
