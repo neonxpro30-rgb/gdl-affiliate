@@ -21,17 +21,17 @@ const anton = Anton({
 export const metadata: Metadata = {
   metadataBase: new URL('https://learnpeak.in'),
   title: {
-    default: "LearnPeak - Master Digital Skills & Affiliate Marketing",
+    default: "LearnPeak – Video Editing, Content Creation & Affiliate Marketing Courses",
     template: "%s | LearnPeak"
   },
-  description: "Join LearnPeak to master high-income digital skills, affiliate marketing, and content creation. Start building your career in the digital economy today.",
-  keywords: ["affiliate marketing", "digital skills", "online courses", "learnpeak", "career growth", "content creation", "video editing", "social media marketing"],
+  description: "LearnPeak turns learning into a game — master video editing, content creation, personal branding & affiliate marketing across 4 skill levels starting at just ₹19. Lifetime access, Hindi-friendly lessons.",
+  keywords: ["affiliate marketing", "affiliate marketing course india", "digital skills", "online courses", "learnpeak", "career growth", "content creation", "content creation course", "video editing", "video editing course india", "reels editing course", "social media marketing", "personal branding course", "freelancing course", "online courses hindi", "learn video editing online"],
   authors: [{ name: "LearnPeak Team" }],
   creator: "LearnPeak",
   publisher: "LearnPeak",
   openGraph: {
-    title: "LearnPeak - Master Digital Skills & Affiliate Marketing",
-    description: "Unlock your potential with premium courses in affiliate marketing and digital skills.",
+    title: "LearnPeak – Skill Seekh, Level Up",
+    description: "Master video editing, content creation & affiliate marketing across 4 game-like skill levels — starting at just ₹19 with lifetime access.",
     url: 'https://learnpeak.in',
     siteName: 'LearnPeak',
     images: [
@@ -47,8 +47,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "LearnPeak - Master Digital Skills",
-    description: "Join LearnPeak to master high-income digital skills and affiliate marketing.",
+    title: "LearnPeak – Skill Seekh, Level Up",
+    description: "Master video editing, content creation & affiliate marketing across 4 game-like skill levels — starting at just ₹19 with lifetime access.",
     images: ['/logo-poster.jpg'],
   },
   robots: {

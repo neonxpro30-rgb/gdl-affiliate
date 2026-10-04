@@ -17,10 +17,10 @@ export default function HeroSection() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
                 {/* Left: Text Content */}
                 <div className="text-left">
-                    <h1 className="text-4xl md:text-6xl font-extrabold text-[#1A0B12] mb-6 leading-tight">
+                    <h2 className="text-4xl md:text-6xl font-extrabold text-[#1A0B12] mb-6 leading-tight">
                         Learn Digital Skills, <br />
                         <span className="text-[#732C3F]">Transform Your Career</span>
-                    </h1>
+                    </h2>
                     <p className="text-lg text-gray-700 mb-4 max-w-lg">
                         Join thousands of students mastering high-income digital skills — affiliate marketing, content creation, social media & more. Access your courses instantly after purchase.
                     </p>
