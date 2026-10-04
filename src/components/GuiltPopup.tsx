@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Clock } from 'lucide-react';
+import { X, Clock, Gift } from 'lucide-react';
 
 interface PendingItem {
     id: string;
@@ -74,65 +74,69 @@ export default function GuiltPopup({ pendings }: { pendings: PendingItem[] }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative border-t-4 border-amber-500">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[2px]">
+            <div className="scanlines relative bg-[#241019] rounded-2xl shadow-[0_0_60px_rgba(251,191,36,0.25)] max-w-md w-full p-6 border-2 border-amber-400/50 overflow-hidden">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.08),transparent_70%)]" />
                 <button
                     onClick={dismiss}
                     aria-label="Dismiss"
-                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
+                    className="absolute top-3 right-3 text-rose-200/50 hover:text-white transition z-10"
                 >
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="flex items-center gap-2 mb-3">
-                    <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                        Upgrade Bonus
-                    </span>
-                </div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    We&apos;re sorry you didn&apos;t get the full amount.
-                </h3>
-
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                    You worked hard to make this sale, and we&apos;re embarrassed that only part of
-                    your commission reached you. <span className="font-bold text-gray-900">₹{total.toFixed(2)}</span> is
-                    waiting in your Upgrade Bonus.
-                </p>
-
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-center justify-between">
-                    <div>
-                        <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">Expires in</p>
-                        <p className="text-2xl font-extrabold text-amber-800 tabular-nums">
-                            <Clock className="inline w-5 h-5 mr-1 -mt-1" />
-                            {formatCountdown(liveMsLeft)}
-                        </p>
+                <div className="relative">
+                    <div className="flex items-center gap-2 mb-3">
+                        <span className="inline-flex items-center gap-1.5 bg-amber-400/15 border border-amber-400/40 text-amber-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide font-mono">
+                            <Gift className="w-3.5 h-3.5" />
+                            Locked Chest
+                        </span>
                     </div>
-                    <div className="text-right">
-                        <p className="text-xs text-amber-700 font-medium uppercase tracking-wide">To claim</p>
-                        <p className="text-sm font-bold text-gray-900">Upgrade to {target}</p>
+
+                    <h3 className="font-display text-2xl uppercase tracking-wide text-white mb-3">
+                        We&apos;re sorry you didn&apos;t get the full amount.
+                    </h3>
+
+                    <p className="text-rose-100/70 text-sm leading-relaxed mb-4">
+                        You worked hard to make this sale, and we&apos;re embarrassed that only part of
+                        your commission reached you. <span className="font-extrabold text-amber-300">₹{total.toFixed(2)}</span> is
+                        locked in your chest{active.length > 1 ? 's' : ''}, waiting to be claimed.
+                    </p>
+
+                    <div className="bg-black/40 border border-amber-400/30 rounded-xl p-4 mb-4 flex items-center justify-between">
+                        <div>
+                            <p className="font-mono text-[10px] text-amber-200/70 tracking-[0.2em] uppercase">Fuse burns out in</p>
+                            <p className="text-2xl font-extrabold text-amber-300 tabular-nums mt-1">
+                                <Clock className="inline w-5 h-5 mr-1 -mt-1" />
+                                {formatCountdown(liveMsLeft)}
+                            </p>
+                        </div>
+                        <div className="text-right">
+                            <p className="font-mono text-[10px] text-amber-200/70 tracking-[0.2em] uppercase">To unlock</p>
+                            <p className="text-sm font-bold text-white mt-1">Upgrade to {target}</p>
+                        </div>
                     </div>
-                </div>
 
-                <div className="flex gap-3">
-                    <a
-                        href="/dashboard/upgrade"
-                        className="flex-1 bg-[#732C3F] text-white text-center py-3 rounded-xl font-bold hover:bg-[#5a2231] transition"
-                    >
-                        Upgrade Now
-                    </a>
-                    <button
-                        onClick={dismiss}
-                        className="px-5 py-3 rounded-xl font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
-                    >
-                        Later
-                    </button>
-                </div>
+                    <div className="flex gap-3">
+                        <a
+                            href="/dashboard/upgrade"
+                            className="animate-xp-glow flex-1 bg-gradient-to-r from-amber-500 to-amber-400 text-center py-3 rounded-xl font-bold text-[#1A0B12] hover:brightness-110 transition"
+                        >
+                            Unlock My Bonus
+                        </a>
+                        <button
+                            onClick={dismiss}
+                            className="px-5 py-3 rounded-xl font-medium text-rose-200/60 hover:text-white hover:bg-white/5 transition"
+                        >
+                            Later
+                        </button>
+                    </div>
 
-                <p className="text-[11px] text-gray-400 mt-3 text-center">
-                    Upgrade within 7 days of the sale to claim the full bonus.
-                    Unclaimed amounts support children&apos;s education.
-                </p>
+                    <p className="text-[11px] text-rose-100/40 mt-3 text-center">
+                        Upgrade within 7 days of the sale to claim the full bonus.
+                        Unclaimed amounts support children&apos;s education.
+                    </p>
+                </div>
             </div>
         </div>
     );

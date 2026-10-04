@@ -3,11 +3,26 @@
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect } from "react";
-import { User } from 'lucide-react';
+import { User, Copy, Check, Clock, Zap, Gift, Heart, Trophy, Wallet } from 'lucide-react';
 import DashboardNavbar from "@/components/DashboardNavbar";
 import ManagerModal from "./ManagerModal";
 import CountUp from "@/components/CountUp";
 import GuiltPopup from "@/components/GuiltPopup";
+
+/* ------------------------------------------------------------------ */
+/* Tier helpers — LVL 1..4 mapped from owned / sold package names       */
+/* ------------------------------------------------------------------ */
+const TIERS = [
+    { rank: 1, key: 'SILICON', name: 'Silicon', medal: '🥉', lvl: 'LVL 1' },
+    { rank: 2, key: 'SILVER', name: 'Silver', medal: '🥈', lvl: 'LVL 2' },
+    { rank: 3, key: 'GOLD', name: 'Gold', medal: '🥇', lvl: 'LVL 3' },
+    { rank: 4, key: 'DIAMOND', name: 'Diamond', medal: '💎', lvl: 'LVL 4' },
+];
+
+function tierOfName(name: string | undefined | null) {
+    const n = String(name || '').toUpperCase();
+    return TIERS.find(t => n.includes(t.key)) || null;
+}
 
 function formatExpiry(iso: string): string {
     try {
@@ -16,6 +31,26 @@ function formatExpiry(iso: string): string {
             day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true,
         });
     } catch { return iso; }
+}
+
+function formatCountdown(ms: number): string {
+    if (ms <= 0) return 'Fuse out';
+    const totalSec = Math.floor(ms / 1000);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    if (d > 0) return `${d}d ${pad(h)}h ${pad(m)}m`;
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+    return (
+        <p className="font-mono text-[11px] tracking-[0.3em] text-rose-300/80 mb-3 uppercase">
+            {children}
+        </p>
+    );
 }
 
 export default function DashboardPage() {
@@ -36,6 +71,15 @@ export default function DashboardPage() {
     const [charityTotal, setCharityTotal] = useState(0);
     const [claiming, setClaiming] = useState<string | null>(null);
     const [claimMsg, setClaimMsg] = useState('');
+    const [copied, setCopied] = useState(false);
+
+    // Live countdown clock for chest fuses
+    const [now, setNow] = useState(() => Date.now());
+    const [fetchedAt, setFetchedAt] = useState(() => Date.now());
+    useEffect(() => {
+        const t = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(t);
+    }, []);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -99,6 +143,7 @@ export default function DashboardPage() {
                     const data = await res.json();
                     setPendings(data.pendings || []);
                     setCharityTotal(data.charityTotal || 0);
+                    setFetchedAt(Date.now());
                 }
             } catch (error) {
                 console.error("Error fetching pendings:", error);
@@ -179,17 +224,18 @@ export default function DashboardPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || data.error || 'Claim failed');
-            setClaimMsg(`₹${Number(data.amount).toFixed(2)} claimed! It will appear in your Pending Amount.`);
+            setClaimMsg(`Chest unlocked! ₹${Number(data.amount).toFixed(2)} claimed — it will appear in your pending payout.`);
             // Refresh pendings
             const r = await fetch('/api/user/pendings');
             if (r.ok) {
                 const d = await r.json();
                 setPendings(d.pendings || []);
                 setCharityTotal(d.charityTotal || 0);
+                setFetchedAt(Date.now());
             }
         } catch (err: any) {
             setClaimMsg(err.message === 'UPGRADE_REQUIRED'
-                ? 'Please upgrade to the required package tier first.'
+                ? 'Please upgrade to the required level first to unlock this chest.'
                 : err.message === 'ALREADY_DONATED'
                     ? "This bonus was donated to children's education after the 7-day window."
                     : `Claim failed: ${err.message}`);
@@ -198,180 +244,290 @@ export default function DashboardPage() {
         }
     };
 
+    const copyInvite = async (link: string) => {
+        try {
+            await navigator.clipboard.writeText(link);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            /* clipboard unavailable */
+        }
+    };
+
     const activePendings = pendings.filter(p => p.effectiveStatus === 'PENDING');
     const donatedPendings = pendings.filter(p => p.effectiveStatus === 'DONATED');
     const bonusTotal = activePendings.reduce((s, p) => s + (p.pendingAmount || 0), 0);
 
     if (status === 'loading') {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+        return (
+            <div className="min-h-screen bg-[#1A0B12] flex items-center justify-center">
+                <p className="font-mono text-xs tracking-[0.3em] text-rose-300/70">
+                    <span className="animate-blink inline-block h-2 w-2 rounded-full bg-rose-400 mr-3" />
+                    LOADING PLAYER DATA…
+                </p>
+            </div>
+        );
     }
 
     if (!session) return null;
 
     // Use userProfile if available, otherwise fallback to session.user
     const displayUser = userProfile || session.user;
+    const ownedTier = tierOfName(packageName);
+    const xpPct = ownedTier ? ownedTier.rank * 25 : 0;
+    const referralLink = `https://learnpeak.in/signup?ref=${displayUser.referralCode || ''}`;
 
     return (
-        <div className="min-h-screen bg-[#FFFBF0]"> {/* Creamy background */}
+        <div className="scanlines min-h-screen bg-[#1A0B12] text-white relative overflow-hidden">
+            {/* ambient glows */}
+            <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-[#732C3F]/50 blur-[120px]" />
+            <div className="pointer-events-none absolute top-1/3 -left-24 h-72 w-72 rounded-full bg-rose-500/10 blur-[100px]" />
+
             <DashboardNavbar user={displayUser} />
 
-            <div className="max-w-md md:max-w-7xl mx-auto p-4 pb-24">
+            <div className="relative max-w-md md:max-w-4xl mx-auto px-4 pt-6 pb-24">
 
-                {/* 1. Purple Gradient Header Card */}
-                <div className="bg-gradient-to-br from-[#B28DFF] to-[#D8B4FE] rounded-[2rem] p-6 mb-8 shadow-lg relative overflow-hidden">
-                    {/* Decorative Circle */}
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
+                {/* status row */}
+                <div className="mb-5 flex items-center justify-center gap-3 font-mono text-[11px] tracking-[0.25em] text-rose-200/80">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-rose-400/40 bg-rose-950/60 px-4 py-1.5">
+                        <span className="animate-blink inline-block h-2 w-2 rounded-full bg-rose-400" />
+                        MISSION CONTROL
+                    </span>
+                    <span className="hidden sm:inline">PLAYER 1 // ONLINE</span>
+                </div>
 
-                    <div className="flex items-center gap-6 relative z-10">
-                        <div className="w-20 h-20 md:w-24 md:h-24 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/50 overflow-hidden">
-                            {displayUser.photoURL ? (
-                                <img src={displayUser.photoURL} alt={displayUser.name} className="w-full h-full object-cover" />
-                            ) : (
-                                <User size={40} className="text-white md:w-12 md:h-12" />
+                {/* ============ 1. PLAYER CARD ============ */}
+                <section className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6 shadow-[0_0_60px_rgba(115,44,63,0.35)] relative overflow-hidden">
+                    <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-rose-500/20 blur-[80px]" />
+                    <div className="relative flex items-center gap-4">
+                        {/* avatar in glowing ring */}
+                        <div className="relative shrink-0">
+                            <div className="animate-xp-glow rounded-full bg-gradient-to-br from-rose-400 via-[#732C3F] to-pink-300 p-[3px]">
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-[#1A0B12] flex items-center justify-center">
+                                    {displayUser.photoURL ? (
+                                        <img src={displayUser.photoURL} alt={displayUser.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User size={36} className="text-rose-300" />
+                                    )}
+                                </div>
+                            </div>
+                            {ownedTier && (
+                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-[#1A0B12] border border-rose-400/50 px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-widest text-rose-300 whitespace-nowrap">
+                                    {ownedTier.medal} {ownedTier.lvl}
+                                </div>
                             )}
                         </div>
-                        <div>
-                            <h1 className="text-3xl md:text-4xl font-serif text-white tracking-wide">{displayUser.name}</h1>
-                            <p className="text-white/90 font-medium text-lg md:text-xl">{packageName}</p>
-                            <div className="mt-2 inline-flex items-center bg-white/20 px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
-                                <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-wide mr-2">Unique ID:</span>
-                                <span className="font-mono text-sm md:text-base font-bold text-white">{displayUser.referralCode}</span>
+                        <div className="min-w-0 flex-1">
+                            <h1 className="font-display text-2xl md:text-3xl uppercase tracking-wide truncate">{displayUser.name}</h1>
+                            <p className="text-rose-200/80 text-sm font-medium mt-0.5">
+                                {ownedTier ? `${ownedTier.name} Package` : packageName}
+                            </p>
+                            {/* XP bar */}
+                            <div className="mt-3">
+                                <div className="mb-1.5 flex items-center justify-between font-mono text-[10px] tracking-[0.2em] text-rose-200/70">
+                                    <span>{ownedTier && ownedTier.rank < 4 ? `NEXT: LVL ${ownedTier.rank + 1} ${TIERS[ownedTier.rank].name.toUpperCase()}` : ownedTier ? 'MAX LEVEL REACHED' : 'LEVEL'}</span>
+                                    <span className="text-rose-300">XP {xpPct}%</span>
+                                </div>
+                                <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+                                    <div
+                                        className="animate-xp-glow h-full rounded-full bg-gradient-to-r from-[#732C3F] via-rose-400 to-pink-300 transition-all duration-700"
+                                        style={{ width: `${xpPct}%` }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                    {/* player tag */}
+                    <div className="relative mt-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                        <div className="min-w-0">
+                            <p className="font-mono text-[10px] tracking-[0.25em] text-rose-200/60">PLAYER TAG</p>
+                            <p className="font-mono text-base md:text-lg font-bold text-white tracking-wider truncate">{displayUser.referralCode}</p>
+                        </div>
+                        <button
+                            onClick={() => copyInvite(displayUser.referralCode || '')}
+                            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-rose-400/40 bg-rose-950/60 px-3 py-2 text-xs font-bold text-rose-200 transition hover:border-rose-300 hover:text-white"
+                        >
+                            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                            {copied ? 'Copied' : 'Copy'}
+                        </button>
+                    </div>
+                </section>
 
-                {/* 2. Action Buttons */}
-                <div className="flex flex-row justify-between gap-3 mb-8">
+                {/* ============ 2. SUPPORT SQUAD ============ */}
+                <section className="mt-5 grid grid-cols-2 gap-3">
                     <button
                         onClick={openMentorModal}
-                        className="bg-[#2D0A31] text-white px-2 py-3 rounded-xl flex-1 text-center shadow-md flex items-center justify-center font-medium text-xs md:text-base hover:bg-[#3d0e42] transition-all transform hover:scale-[1.02]"
+                        className="rounded-2xl border border-rose-900/50 bg-[#241019]/80 px-4 py-3.5 text-left transition hover:border-rose-400/60 hover:bg-rose-950/50 active:scale-[0.98]"
                     >
-                        View Mentor Details
+                        <p className="font-mono text-[10px] tracking-[0.25em] text-rose-300/70">🧭 GUIDE</p>
+                        <p className="mt-1 font-bold text-white text-sm md:text-base">Mentor Details</p>
                     </button>
-
                     <button
                         onClick={openManagerModal}
-                        className="bg-[#2D0A31] text-white px-2 py-3 rounded-xl flex-1 text-center shadow-md flex items-center justify-center font-medium text-xs md:text-base hover:bg-[#3d0e42] transition-all transform hover:scale-[1.02]"
+                        className="rounded-2xl border border-rose-900/50 bg-[#241019]/80 px-4 py-3.5 text-left transition hover:border-rose-400/60 hover:bg-rose-950/50 active:scale-[0.98]"
                     >
-                        View Manager Details
+                        <p className="font-mono text-[10px] tracking-[0.25em] text-rose-300/70">🎧 SUPPORT</p>
+                        <p className="mt-1 font-bold text-white text-sm md:text-base">Manager Details</p>
                     </button>
-                </div>
+                </section>
 
-                {/* 3. Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                    {/* Today's Earning */}
-                    <div className="bg-[#E6D4FF] rounded-xl p-5 shadow-sm border-l-4 border-purple-500 hover:shadow-md transition-shadow">
-                        <h3 className="text-gray-900 font-serif text-lg">Today's Earning</h3>
-                        <p className="text-3xl font-bold text-gray-900 mt-1">
-                            <CountUp end={stats.today} prefix="₹ " />
-                        </p>
+                {/* ============ 3. TOTAL LOOT ============ */}
+                <section className="mt-8">
+                    <SectionLabel>💰 Total Loot</SectionLabel>
+                    <div className="rounded-3xl border border-rose-900/60 bg-gradient-to-br from-[#2b1220] to-[#732C3F] p-6 text-center relative overflow-hidden">
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,113,133,0.18),transparent_70%)]" />
+                        <div className="relative">
+                            <p className="font-mono text-[10px] tracking-[0.3em] text-rose-200/70">ALL-TIME EARNINGS</p>
+                            <p className="font-display mt-2 text-5xl md:text-6xl bg-gradient-to-r from-rose-200 via-rose-400 to-pink-300 bg-clip-text text-transparent tabular-nums">
+                                <CountUp end={stats.allTime} prefix="₹" />
+                            </p>
+                            <div className="mt-5 grid grid-cols-3 gap-2">
+                                {[
+                                    { label: 'TODAY', value: stats.today },
+                                    { label: 'LAST 7 DAYS', value: stats.sevenDays },
+                                    { label: 'LAST 30 DAYS', value: stats.thirtyDays },
+                                ].map(s => (
+                                    <div key={s.label} className="rounded-xl bg-black/30 border border-white/10 px-2 py-3">
+                                        <p className="font-mono text-[9px] tracking-[0.2em] text-rose-200/60">{s.label}</p>
+                                        <p className="mt-1 text-lg md:text-xl font-extrabold text-white tabular-nums">
+                                            <CountUp end={s.value} prefix="₹" />
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
+                </section>
 
-                    {/* Last 7 Days */}
-                    <div className="bg-[#E6D4FF] rounded-xl p-5 shadow-sm border-l-4 border-purple-500 hover:shadow-md transition-shadow">
-                        <h3 className="text-gray-900 font-serif text-lg">Last 7 Days Earning</h3>
-                        <p className="text-3xl font-bold text-gray-900 mt-1">
-                            <CountUp end={stats.sevenDays} prefix="₹ " />
-                        </p>
+                {/* ============ 4. VAULT ============ */}
+                <section className="mt-8">
+                    <SectionLabel>🔒 Vault</SectionLabel>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-2xl border border-amber-400/30 bg-amber-950/40 p-5 text-center">
+                            <Wallet className="w-5 h-5 mx-auto text-amber-300/80" />
+                            <p className="mt-2 font-mono text-[10px] tracking-[0.2em] text-amber-200/70">IN TRANSIT</p>
+                            <p className="mt-1 text-2xl md:text-3xl font-extrabold text-amber-200 tabular-nums">
+                                <CountUp end={stats.pending} prefix="₹" />
+                            </p>
+                            <p className="mt-1 text-[11px] text-amber-200/60">Pending payout</p>
+                        </div>
+                        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/40 p-5 text-center">
+                            <Trophy className="w-5 h-5 mx-auto text-emerald-300/80" />
+                            <p className="mt-2 font-mono text-[10px] tracking-[0.2em] text-emerald-200/70">SECURED</p>
+                            <p className="mt-1 text-2xl md:text-3xl font-extrabold text-emerald-200 tabular-nums">
+                                <CountUp end={stats.paid} prefix="₹" />
+                            </p>
+                            <p className="mt-1 text-[11px] text-emerald-200/60">Transferred to you</p>
+                        </div>
                     </div>
+                </section>
 
-                    {/* Last 30 Days */}
-                    <div className="bg-[#E6D4FF] rounded-xl p-5 shadow-sm border-l-4 border-purple-500 hover:shadow-md transition-shadow">
-                        <h3 className="text-gray-900 font-serif text-lg">Last 30 Days Earning</h3>
-                        <p className="text-3xl font-bold text-gray-900 mt-1">
-                            <CountUp end={stats.thirtyDays} prefix="₹ " />
+                {/* ============ 5. SQUAD INVITE ============ */}
+                <section className="mt-8">
+                    <SectionLabel>📩 Squad Invite</SectionLabel>
+                    <div className="rounded-2xl border border-rose-900/60 bg-[#241019]/90 p-5">
+                        <p className="text-sm text-rose-100/80 leading-relaxed">
+                            Share your invite link. When a friend joins through it, you earn commission on their package.
                         </p>
+                        <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/40 border border-white/10 px-3 py-2.5">
+                            <p className="flex-1 truncate font-mono text-xs text-rose-100/90">{referralLink}</p>
+                        </div>
+                        <button
+                            onClick={() => copyInvite(referralLink)}
+                            className="animate-xp-glow mt-3 w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 font-bold text-white transition hover:brightness-110 active:scale-[0.99] inline-flex items-center justify-center gap-2"
+                        >
+                            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copied ? 'Invite Link Copied!' : 'Copy Invite Link'}
+                        </button>
                     </div>
+                </section>
 
-                    {/* All Time Earning */}
-                    <div className="bg-[#E6D4FF] rounded-xl p-5 shadow-sm border-l-4 border-purple-500 hover:shadow-md transition-shadow">
-                        <h3 className="text-gray-900 font-serif text-lg">All Time Earning</h3>
-                        <p className="text-3xl font-bold text-gray-900 mt-1">
-                            <CountUp end={stats.allTime} prefix="₹ " />
-                        </p>
-                    </div>
-                </div>
-
-                {/* 4. Payment Status Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 mt-8">
-                    <div className="bg-[#D9D9D9] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-                        <h3 className="text-gray-800 font-medium text-sm md:text-base mb-2">Pending Amount</h3>
-                        <p className="text-2xl md:text-3xl font-bold text-gray-900">
-                            <CountUp end={stats.pending} prefix="₹ " />
-                        </p>
-                    </div>
-
-                    <div className="bg-[#C1E1C1] rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-                        <h3 className="text-gray-800 font-medium text-sm md:text-base mb-2">Transferred Amount</h3>
-                        <p className="text-2xl md:text-3xl font-bold text-gray-900">
-                            <CountUp end={stats.paid} prefix="₹ " />
-                        </p>
-                    </div>
-                </div>
-
-                {/* 5. Upgrade Bonus (pending commission held for tier-matched upgrade) */}
+                {/* ============ 6. LOCKED CHESTS (Upgrade Bonus) ============ */}
                 {(activePendings.length > 0 || donatedPendings.length > 0) && (
-                    <div className="mt-8">
+                    <section className="mt-8">
+                        <SectionLabel>🎁 Locked Chests {activePendings.length > 0 && <span className="text-amber-300">({activePendings.length})</span>}</SectionLabel>
+
                         {activePendings.length > 0 && (
                             <>
-                                <div className="bg-amber-100 border-2 border-amber-400 rounded-xl p-6 text-center shadow-sm">
-                                    <h3 className="text-amber-900 font-bold text-sm md:text-base mb-1 uppercase tracking-wide">
-                                        ⭐ Upgrade Bonus
-                                    </h3>
-                                    <p className="text-3xl md:text-4xl font-extrabold text-amber-800">
-                                        <CountUp end={bonusTotal} prefix="₹ " />
-                                    </p>
-                                    <p className="text-amber-700 text-xs md:text-sm mt-2">
-                                        Commission held from your higher-package sales. Upgrade to claim it.
-                                    </p>
+                                <div className="rounded-2xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-950/60 to-[#241019] p-5 text-center relative overflow-hidden">
+                                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.12),transparent_70%)]" />
+                                    <div className="relative">
+                                        <p className="font-mono text-[10px] tracking-[0.3em] text-amber-200/70">BONUS LOCKED IN CHESTS</p>
+                                        <p className="font-display mt-1 text-4xl md:text-5xl text-amber-300 tabular-nums">
+                                            <CountUp end={bonusTotal} prefix="₹" />
+                                        </p>
+                                        <p className="mt-2 text-xs text-amber-100/70 leading-relaxed">
+                                            Commission held from your higher-level sales.<br />Upgrade your level to unlock it.
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {claimMsg && (
-                                    <div className="mt-3 bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-xl">
+                                    <div className="mt-3 rounded-xl border border-sky-400/30 bg-sky-950/50 px-4 py-3 text-sm text-sky-200">
                                         {claimMsg}
                                     </div>
                                 )}
 
                                 <div className="mt-4 space-y-3">
-                                    {activePendings.map((p: any) => (
-                                        <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
-                                            <div className="flex justify-between items-start gap-3">
-                                                <div>
-                                                    <p className="font-bold text-gray-900 text-sm md:text-base">
-                                                        {p.soldPackageName} sale
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">
-                                                        Bonus: <span className="font-bold text-amber-700">₹{Number(p.pendingAmount).toFixed(2)}</span>
-                                                        {' · '}Received: ₹{Number(p.immediateAmount).toFixed(2)}
-                                                    </p>
-                                                    <p className="text-xs mt-1">
-                                                        <span className="text-amber-700 font-medium">
-                                                            Claim by upgrading · expires {formatExpiry(p.expiresAt)} IST
-                                                        </span>
-                                                    </p>
+                                    {activePendings.map((p: any) => {
+                                        const reqTier = tierOfName(p.soldPackageName);
+                                        const full = Number(p.pendingAmount || 0) + Number(p.immediateAmount || 0);
+                                        const msLeft = Math.max(0, (p.msLeft || 0) - (now - fetchedAt));
+                                        return (
+                                            <div key={p.id} className="rounded-2xl border border-amber-400/30 bg-[#241019]/90 p-4 relative overflow-hidden">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <Gift className="w-4 h-4 text-amber-300 shrink-0" />
+                                                            <p className="font-bold text-white text-sm md:text-base truncate">
+                                                                {p.soldPackageName} sale
+                                                            </p>
+                                                        </div>
+                                                        <p className="mt-1.5 text-xs text-rose-100/70">
+                                                            Full commission <span className="font-bold text-white">₹{full.toFixed(2)}</span>
+                                                            {' · '}You got <span className="font-semibold text-rose-200">₹{Number(p.immediateAmount).toFixed(2)}</span>
+                                                        </p>
+                                                        <p className="mt-1 text-xs">
+                                                            <span className="font-mono text-[10px] tracking-[0.15em] text-amber-300/90">
+                                                                🔒 REQUIRES {reqTier ? `${reqTier.lvl} ${reqTier.medal} ${reqTier.name.toUpperCase()}` : 'LEVEL UPGRADE'}
+                                                            </span>
+                                                        </p>
+                                                        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-100/60">
+                                                            <Clock className="w-3.5 h-3.5 text-amber-300" />
+                                                            <span className="font-mono tabular-nums font-bold text-amber-200">
+                                                                {formatCountdown(msLeft)}
+                                                            </span>
+                                                            <span className="text-rose-100/50">· ends {formatExpiry(p.expiresAt)} IST</span>
+                                                        </p>
+                                                    </div>
+                                                    <div className="shrink-0 text-right">
+                                                        <p className="font-display text-2xl text-amber-300 tabular-nums">
+                                                            ₹{Number(p.pendingAmount).toFixed(2)}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col gap-2 shrink-0">
+                                                <div className="mt-3">
                                                     {p.canClaim ? (
                                                         <button
                                                             onClick={() => handleClaim(p.id)}
                                                             disabled={claiming === p.id}
-                                                            className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition disabled:opacity-50"
+                                                            className="animate-xp-glow w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 py-3 font-bold text-[#1A0B12] transition hover:brightness-110 disabled:opacity-50 inline-flex items-center justify-center gap-2"
                                                         >
-                                                            {claiming === p.id ? 'Claiming...' : 'Claim ₹' + Number(p.pendingAmount).toFixed(2)}
+                                                            <Zap className="w-4 h-4" />
+                                                            {claiming === p.id ? 'Unlocking…' : `Unlock ₹${Number(p.pendingAmount).toFixed(2)}`}
                                                         </button>
                                                     ) : (
                                                         <a
                                                             href="/dashboard/upgrade"
-                                                            className="bg-[#732C3F] hover:bg-[#5a2231] text-white text-sm font-bold px-4 py-2 rounded-lg transition text-center"
+                                                            className="block w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 text-center font-bold text-white transition hover:brightness-110"
                                                         >
-                                                            Upgrade to Claim
+                                                            Level Up to Unlock
                                                         </a>
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </>
                         )}
@@ -379,12 +535,12 @@ export default function DashboardPage() {
                         {donatedPendings.length > 0 && (
                             <div className="mt-4 space-y-3">
                                 {donatedPendings.map((p: any) => (
-                                    <div key={p.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200 opacity-80">
-                                        <p className="font-bold text-gray-700 text-sm md:text-base">
+                                    <div key={p.id} className="rounded-2xl border border-white/10 bg-black/30 p-4 opacity-70">
+                                        <p className="font-bold text-white/70 text-sm md:text-base">
                                             {p.soldPackageName} sale
                                         </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            🌱 <span className="font-medium text-green-700">
+                                        <p className="mt-1 text-xs text-white/50">
+                                            🌱 <span className="font-medium text-emerald-300/90">
                                                 ₹{Number(p.pendingAmount).toFixed(2)} donated to children&apos;s education
                                             </span>
                                         </p>
@@ -392,13 +548,24 @@ export default function DashboardPage() {
                                 ))}
                             </div>
                         )}
+                    </section>
+                )}
 
-                        {charityTotal > 0 && (
-                            <p className="text-center text-xs text-gray-500 mt-4">
-                                💛 LearnPeak affiliates have donated <span className="font-bold text-green-700">₹{Number(charityTotal).toFixed(2)}</span> to children&apos;s education so far.
+                {/* ============ 7. GOOD KARMA ============ */}
+                {charityTotal > 0 && (
+                    <section className="mt-8">
+                        <SectionLabel>🌱 Good Karma</SectionLabel>
+                        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/30 p-5 text-center">
+                            <Heart className="w-6 h-6 mx-auto text-emerald-300" />
+                            <p className="mt-2 text-sm text-emerald-100/80 leading-relaxed">
+                                LearnPeak players have donated{' '}
+                                <span className="font-extrabold text-emerald-300 text-lg tabular-nums">
+                                    ₹{Number(charityTotal).toFixed(2)}
+                                </span>{' '}
+                                to children&apos;s education so far.
                             </p>
-                        )}
-                    </div>
+                        </div>
+                    </section>
                 )}
 
             </div>
