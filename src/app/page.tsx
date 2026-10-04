@@ -2,10 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Instagram, Youtube, Linkedin, Facebook } from "lucide-react";
 
-import HomeCarousel from "@/components/HomeCarousel";
+import GameHero from "@/components/GameHero";
+import WinWall from "@/components/WinWall";
+import LevelMap from "@/components/LevelMap";
 import HeroSection from "@/components/HeroSection";
 import WhyUsSection from "@/components/WhyUsSection";
-import PackagesSection from "@/components/PackagesSection";
 import TeamSection from "@/components/TeamSection";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -69,6 +70,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-[#F7E8EC] font-sans">
+      <div className="grain-overlay" aria-hidden />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -77,14 +79,17 @@ export default async function Home() {
       />
 
 
-      {/* 1. Carousel Section */}
-      <HomeCarousel />
+      {/* 1. Game Hero (quiz entry) */}
+      <GameHero />
+
+      {/* 1b. Win-wall marquee */}
+      <WinWall />
 
       {/* 2. Hero Section (Mission/Vision/Demo) */}
       <HeroSection />
 
-      {/* 3. Popular Packages */}
-      <PackagesSection />
+      {/* 3. Level Map (packages as game levels) */}
+      <LevelMap />
 
       {/* 4. Why LearnPeak */}
       <WhyUsSection />
