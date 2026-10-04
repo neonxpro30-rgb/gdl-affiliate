@@ -55,7 +55,7 @@ export default async function Home() {
       "https://www.linkedin.com/in/naksh-gupta-b51358394",
       "https://www.facebook.com/share/17pkX8BC3z/"
     ],
-    "description": "LearnPeak is a skill-first learning platform where mastering video editing, content creation, personal branding and affiliate marketing feels like a game — 4 levels, lifetime access, Hindi-friendly lessons.",
+    "description": "LearnPeak is a skill-first learning platform where mastering video editing, content creation, personal branding and affiliate marketing feels like a game — 4 levels, lifetime access, beginner-friendly lessons.",
     "founder": {
       "@type": "Person",
       "name": "Naksh Gupta",

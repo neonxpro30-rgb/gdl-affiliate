@@ -7,27 +7,27 @@ type Question = { q: string; options: Option[] };
 
 const QUESTIONS: Question[] = [
   {
-    q: "Roz kitna time de sakta hai?",
+    q: "How much time can you give daily?",
     options: [
       { label: "30 min", points: 1 },
-      { label: "1–2 ghante", points: 2 },
-      { label: "3+ ghante", points: 3 },
+      { label: "1–2 hours", points: 2 },
+      { label: "3+ hours", points: 3 },
     ],
   },
   {
-    q: "Tera camera setup kya hai?",
+    q: "What's your camera setup?",
     options: [
-      { label: "📱 Sirf phone", points: 1 },
+      { label: "📱 Just my phone", points: 1 },
       { label: "📱 Phone + tripod", points: 2 },
       { label: "🎥 Full setup", points: 3 },
     ],
   },
   {
-    q: "Pehla mission kya hai?",
+    q: "What's your first mission?",
     options: [
-      { label: "🎬 Reels banana", points: 1 },
-      { label: "🤝 Sales close karna", points: 2 },
-      { label: "👑 Brand banana", points: 3 },
+      { label: "🎬 Making reels", points: 1 },
+      { label: "🤝 Closing sales", points: 2 },
+      { label: "👑 Building a brand", points: 3 },
     ],
   },
 ];
@@ -43,25 +43,25 @@ const LEVELS: Record<string, Level> = {
   SILICON: {
     name: "SILICON",
     tagline: "LVL 1 · TUTORIAL MODE",
-    reason: "Pehle ₹19 me full taste kar — game samajh, phir level badha. Smart players tutorial skip nahi karte.",
+    reason: "Taste everything for ₹19 first — understand the game, then level up. Smart players never skip the tutorial.",
     medal: "🥉",
   },
   SILVER: {
     name: "SILVER",
     tagline: "LVL 2 · MAIN QUEST",
-    reason: "Roz ka time + phone = reels se start, sales script se close. Tere liye perfect entry level hai.",
+    reason: "Your daily time + phone = start with reels, close with sales scripts. The perfect entry level for you.",
     medal: "🥈",
   },
   GOLD: {
     name: "GOLD",
     tagline: "LVL 3 · BOSS TERRITORY",
-    reason: "Tu serious hai — advanced skills + community unlock. Boss fight ki taiyari yahin se hoti hai.",
+    reason: "You're serious — advanced skills + community unlock. This is where boss-fight prep happens.",
     medal: "🥇",
   },
   DIAMOND: {
     name: "DIAMOND",
     tagline: "LVL 4 · FINAL BOSS",
-    reason: "Full time, full setup, full ambition — 1:1 mentorship ke saath seedha final boss.",
+    reason: "Full time, full setup, full ambition — straight to the final boss with 1:1 mentorship.",
     medal: "💎",
   },
 };
@@ -117,7 +117,7 @@ export default function GameHero() {
 
         {/* poster headline */}
         <h1 className="font-display uppercase leading-[0.95] tracking-wide">
-          <span className="block text-[clamp(2.6rem,9vw,6.5rem)]">Skill seekh.</span>
+          <span className="block text-[clamp(2.6rem,9vw,6.5rem)]">Learn skills.</span>
           <span className="block bg-gradient-to-r from-rose-300 via-rose-400 to-pink-300 bg-clip-text text-[clamp(2.6rem,9vw,6.5rem)] text-transparent">
             Level up.
           </span>
@@ -125,8 +125,8 @@ export default function GameHero() {
         </h1>
 
         <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-rose-100/80 md:text-base">
-          Ye koi course website nahi hai — ye tera <span className="font-semibold text-white">creator game</span> hai.
-          4 levels. 0 bakwaas. Bas skills jo real world me kaam aati hain.
+          This isn&apos;t a course website — it&apos;s your <span className="font-semibold text-white">creator game</span>.
+          4 levels. Zero fluff. Just skills that work in the real world.
         </p>
 
         {/* quiz console */}
@@ -165,7 +165,7 @@ export default function GameHero() {
               <div className="text-5xl">{level.medal}</div>
               <p className="mt-3 font-mono text-[11px] tracking-[0.25em] text-rose-300">{level.tagline}</p>
               <h2 className="font-display mt-2 text-4xl uppercase tracking-wide md:text-5xl">
-                Tera level: <span className="bg-gradient-to-r from-rose-300 to-pink-300 bg-clip-text text-transparent">{level.name}</span>
+                Your level: <span className="bg-gradient-to-r from-rose-300 to-pink-300 bg-clip-text text-transparent">{level.name}</span>
               </h2>
               <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-rose-100/80">{level.reason}</p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -173,13 +173,13 @@ export default function GameHero() {
                   href="#packages"
                   className="animate-xp-glow rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 px-8 py-3.5 font-bold text-white transition hover:brightness-110"
                 >
-                  ⚡ Level Start Karo
+                  ⚡ Start Your Level
                 </a>
                 <button
                   onClick={reset}
                   className="rounded-xl border border-rose-900/60 px-8 py-3.5 font-semibold text-rose-200 transition hover:border-rose-400 hover:text-white"
                 >
-                  ↻ Dobara khelo
+                  ↻ Play again
                 </button>
               </div>
             </div>

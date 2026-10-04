@@ -9,10 +9,10 @@ const ROW_ONE = [
 ];
 
 const ROW_TWO = [
-  "SKILL SEEKH",
+  "LEARN SKILLS",
   "LEVEL UP",
   "REPEAT",
-  "NO BAKWAAS",
+  "ZERO FLUFF",
   "CREATOR GAME",
   "MISSION MODE",
 ];

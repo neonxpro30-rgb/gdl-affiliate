@@ -39,10 +39,10 @@ const SKILLS: Record<string, string[]> = {
 };
 
 const BOSS: Record<string, string> = {
-  SILICON: "🎮 TUTORIAL LEVEL — ₹19 me full taste, phir game badha",
+  SILICON: "🎮 TUTORIAL LEVEL — taste everything for ₹19, then scale up",
   SILVER: "⚡ UNLOCK — sales scripts + content systems",
-  GOLD: "🔓 BOSS UNLOCK — Community access, sirf Gold se",
-  DIAMOND: "👑 FINAL BOSS — 1:1 Mentorship, sirf Diamond me",
+  GOLD: "🔓 BOSS UNLOCK — community access, only from Gold",
+  DIAMOND: "👑 FINAL BOSS — 1:1 mentorship, only in Diamond",
 };
 
 const MEDAL: Record<string, string> = {
@@ -103,8 +103,8 @@ export default async function LevelMap() {
           The Level Map
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#732C3F]/80 md:text-base">
-          4 levels. Zyada mat soch — jahan hai wahan se start kar, game khud aage badhayega.
-          Har level <span className="font-semibold">lifetime access</span> ke saath.
+          4 levels. Don&apos;t overthink it — start where you are and the game takes you forward.
+          Every level includes <span className="font-semibold">lifetime access</span>.
         </p>
       </div>
 
@@ -174,7 +174,7 @@ export default async function LevelMap() {
       </div>
 
       <p className="mx-auto mt-6 max-w-xl text-center text-xs leading-relaxed text-[#732C3F]/60">
-        Har level apne dum pe khada hai — jis level ka game chahiye, wahi uthao. Upgrade ka option hamesha khula hai.
+        Every level stands on its own — pick the game you want to play. Upgrades are always open.
       </p>
     </section>
   );
