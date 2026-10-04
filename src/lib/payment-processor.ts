@@ -51,6 +51,8 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
             // Determine Commission Amount (single-tier only: direct commission, no passive/upline payouts)
             let directCommission = 0;
             let packageMismatch = false; // Flag for when referrer package < sold package
+            let referrerPackageId: string | null = null; // Referrer's owned package (for pending tier tracking)
+            let referrerPackageName = '';
 
             if (soldPackageName.includes('Silicon')) {
                 // Fixed commission for Silicon (Exception)
@@ -69,8 +71,10 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
                     const latestOrder = orders[0];
 
                     if (latestOrder.packageId) {
+                        referrerPackageId = latestOrder.packageId;
                         const rPkgDoc = await db.collection('packages').doc(latestOrder.packageId).get();
                         referrerPackagePrice = rPkgDoc.data()?.price || 0;
+                        referrerPackageName = rPkgDoc.data()?.name || '';
                     }
                 }
 
@@ -102,7 +106,7 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
                     .get();
 
                 if (existingRef.empty) {
-                    await db.collection('referrals').add({
+                    const newReferralRef = await db.collection('referrals').add({
                         referrerId: userData.referrerId,
                         referredUserId: orderData.userId,
                         amount: directCommission,
@@ -112,6 +116,31 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                     });
+
+                    // --- Pending Commission (Upgrade Bonus) ---
+                    // ADDITIVE ONLY: existing payout logic above is untouched.
+                    // When the referrer sold a HIGHER package than they own,
+                    // the commission difference is held in a pending bucket:
+                    // claimable within 7 days via tier-matched upgrade.
+                    // Unclaimed after 7 days: donated to children's education charity.
+                    if (packageMismatch) {
+                        try {
+                            const { createPendingForSale } = await import('@/lib/pendingCommission');
+                            await createPendingForSale({
+                                referrerId: userData.referrerId,
+                                referralId: newReferralRef.id,
+                                buyerUserId: orderData.userId,
+                                soldPackageId: orderData.packageId,
+                                soldPackageName,
+                                soldPackagePrice,
+                                ownedPackageIdAtSale: referrerPackageId,
+                                ownedPackageNameAtSale: referrerPackageName,
+                                directCommission,
+                            });
+                        } catch (err) {
+                            console.error('Pending creation failed (non-blocking):', err);
+                        }
+                    }
 
                     // Send Email to Mentor (User B)
                     if (referrerData.email && referrerData.name) {
@@ -131,6 +160,25 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
     if (userData?.email && userData?.name) {
         const { sendWelcomeEmail } = await import('@/lib/email');
         sendWelcomeEmail(userData.email, userData.name).catch(err => console.error("Email send failed:", err));
+    }
+
+    // --- Upgrade Bonus check (non-blocking, observability only) ---
+    // After any successful purchase, surface claimable pendings for the buyer.
+    // Claimability itself is evaluated live by /api/user/pendings.
+    if (orderData.userId) {
+        import('@/lib/pendingCommission').then(async ({ getUserPendings }) => {
+            try {
+                const { pendings, currentTier } = await getUserPendings(orderData.userId);
+                const claimable = pendings.filter(p => p.canClaim);
+                if (claimable.length > 0) {
+                    console.log(
+                        `Upgrade Bonus: user ${orderData.userId} (tier ${currentTier}) can now claim ${claimable.length} pending(s) totaling ₹${claimable.reduce((s, p) => s + p.pendingAmount, 0)}`
+                    );
+                }
+            } catch (err) {
+                console.error('Pending check failed (non-blocking):', err);
+            }
+        }).catch(() => { /* ignore */ });
     }
 
     return { success: true };

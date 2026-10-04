@@ -212,6 +212,52 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         }
     }
 
+    // Fetch All Pendings (only if tab is pendings)
+    let pendings: any[] = [];
+    if (activeTab === 'pendings') {
+        try {
+            const pendingsSnapshot = await db.collection('pendings').get();
+            const allPendings = await Promise.all(pendingsSnapshot.docs.map(async (doc) => {
+                const data = doc.data();
+                let referrer = { name: 'Unknown', referralCode: '-' };
+                if (data.referrerId) {
+                    const referrerDoc = await db.collection('users').doc(data.referrerId).get();
+                    if (referrerDoc.exists) referrer = referrerDoc.data() as any;
+                }
+                return { id: doc.id, ...data, referrer };
+            }));
+            pendings = allPendings
+                .filter((p: any) => isDateInRange(p.createdAt))
+                .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        } catch (error) {
+            console.error("Error fetching pendings:", error);
+        }
+    }
+
+    // Fetch Charity Donations ledger (only if tab is charity)
+    let charityDonations: any[] = [];
+    let charityTotal = 0;
+    if (activeTab === 'charity') {
+        try {
+            const snap = await db.collection('charity_donations').get();
+            const rows = await Promise.all(snap.docs.map(async (doc) => {
+                const data = doc.data();
+                let referrerName = 'Unknown';
+                if (data.referrerId) {
+                    const u = await db.collection('users').doc(data.referrerId).get();
+                    if (u.exists) referrerName = (u.data() as any)?.name || 'Unknown';
+                }
+                return { id: doc.id, ...data, referrerName };
+            }));
+            charityDonations = rows
+                .filter((r: any) => isDateInRange(r.donatedAt || r.createdAt))
+                .sort((a: any, b: any) => new Date(b.donatedAt).getTime() - new Date(a.donatedAt).getTime());
+            charityTotal = charityDonations.reduce((s: number, r: any) => s + (r.amount || 0), 0);
+        } catch (error) {
+            console.error("Error fetching charity donations:", error);
+        }
+    }
+
     // Fetch All Users (only if tab is users)
     let users: any[] = [];
     if (activeTab === 'users') {
@@ -395,6 +441,18 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                         className={`px-4 py-2 rounded-lg font-medium text-sm md:text-base ${activeTab === 'leaderboard' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'}`}
                     >
                         Leaderboard
+                    </a>
+                    <a
+                        href="/admin?tab=pendings"
+                        className={`px-4 py-2 rounded-lg font-medium text-sm md:text-base ${activeTab === 'pendings' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'}`}
+                    >
+                        Pendings (Upgrade Bonus)
+                    </a>
+                    <a
+                        href="/admin?tab=charity"
+                        className={`px-4 py-2 rounded-lg font-medium text-sm md:text-base ${activeTab === 'charity' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'}`}
+                    >
+                        🌱 Charity
                     </a>
                     <a
                         href="/admin?tab=blog"
@@ -596,6 +654,115 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                                 <td className="p-4 text-blue-700 font-bold">₹{user.week}</td>
                                                 <td className="p-4 text-purple-700 font-bold">₹{user.month}</td>
                                                 <td className="p-4 text-gray-900 font-extrabold">₹{user.total}</td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ) : activeTab === 'pendings' ? (
+                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div className="p-6 border-b border-gray-200">
+                            <h2 className="text-xl font-bold text-gray-900">Upgrade Bonus Pendings Ledger</h2>
+                            <p className="text-sm text-gray-500">Held commission differences from higher-package sales. PENDING = within 7-day claim window · DONATED = window lapsed, given to children&apos;s education charity · CLAIMED = credited to affiliate.</p>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left min-w-[1000px]">
+                                <thead className="bg-gray-50 text-gray-700 uppercase text-xs">
+                                    <tr>
+                                        <th className="p-4">Referrer</th>
+                                        <th className="p-4">Sold Package</th>
+                                        <th className="p-4">Owned At Sale</th>
+                                        <th className="p-4">Immediate Paid</th>
+                                        <th className="p-4">Pending Amount</th>
+                                        <th className="p-4">Status</th>
+                                        <th className="p-4">Expires</th>
+                                        <th className="p-4">Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {pendings.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={8} className="p-8 text-center text-gray-500">
+                                                No pendings found.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        pendings.map((p: any) => (
+                                            <tr key={p.id} className="hover:bg-gray-50">
+                                                <td className="p-4 font-medium text-gray-900">
+                                                    {p.referrer.name}
+                                                    <span className="block text-xs text-gray-500 font-mono">{p.referrer.referralCode || ''}</span>
+                                                </td>
+                                                <td className="p-4 text-gray-900">{p.soldPackageName || '-'}</td>
+                                                <td className="p-4 text-gray-600 text-sm">
+                                                    {['Silicon Demo', 'Silver Package', 'Gold Package', 'Diamond Package'][p.ownedTierAtSale] || '-'}
+                                                </td>
+                                                <td className="p-4 text-gray-700">₹{Number(p.immediateAmount || 0).toFixed(2)}</td>
+                                                <td className="p-4 text-amber-700 font-bold">₹{Number(p.pendingAmount || 0).toFixed(2)}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                        p.status === 'PENDING' ? 'bg-amber-100 text-amber-900' :
+                                                        p.status === 'DONATED' ? 'bg-green-100 text-green-900' :
+                                                        'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                        {p.status}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-gray-700 text-sm">
+                                                    {p.expiresAt ? new Date(p.expiresAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'}
+                                                </td>
+                                                <td className="p-4 text-gray-700 text-sm">
+                                                    {p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : '-'}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ) : activeTab === 'charity' ? (
+                    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div className="p-6 border-b border-gray-200">
+                            <h2 className="text-xl font-bold text-gray-900">🌱 Charity Donations Ledger</h2>
+                            <p className="text-sm text-gray-500">
+                                Unclaimed Upgrade Bonuses donated to children&apos;s education and food.
+                                This money is earmarked for charity — never company income.
+                            </p>
+                            <p className="text-2xl font-extrabold text-green-700 mt-3">
+                                Total donated: ₹{charityTotal.toFixed(2)}
+                            </p>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left min-w-[800px]">
+                                <thead className="bg-gray-50 text-gray-700 uppercase text-xs">
+                                    <tr>
+                                        <th className="p-4">From Affiliate</th>
+                                        <th className="p-4">Amount</th>
+                                        <th className="p-4">Cause</th>
+                                        <th className="p-4">Donated At</th>
+                                        <th className="p-4">Pending Ref</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {charityDonations.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="p-8 text-center text-gray-500">
+                                                No donations yet.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        charityDonations.map((d: any) => (
+                                            <tr key={d.id} className="hover:bg-gray-50">
+                                                <td className="p-4 font-medium text-gray-900">{d.referrerName}</td>
+                                                <td className="p-4 text-green-700 font-bold">₹{Number(d.amount || 0).toFixed(2)}</td>
+                                                <td className="p-4 text-gray-600 text-sm">{d.cause || "children's education and food"}</td>
+                                                <td className="p-4 text-gray-700 text-sm">
+                                                    {d.donatedAt ? new Date(d.donatedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                                                </td>
+                                                <td className="p-4 text-gray-500 text-xs font-mono">{d.pendingId || '-'}</td>
                                             </tr>
                                         ))
                                     )}

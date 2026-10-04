@@ -7,6 +7,16 @@ import { User } from 'lucide-react';
 import DashboardNavbar from "@/components/DashboardNavbar";
 import ManagerModal from "./ManagerModal";
 import CountUp from "@/components/CountUp";
+import GuiltPopup from "@/components/GuiltPopup";
+
+function formatExpiry(iso: string): string {
+    try {
+        return new Date(iso).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true,
+        });
+    } catch { return iso; }
+}
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
@@ -22,6 +32,10 @@ export default function DashboardPage() {
     const [mentor, setMentor] = useState({ name: 'Loading...', phone: '', email: '', referralCode: '' });
 
     const [userProfile, setUserProfile] = useState<any>(null);
+    const [pendings, setPendings] = useState<any[]>([]);
+    const [charityTotal, setCharityTotal] = useState(0);
+    const [claiming, setClaiming] = useState<string | null>(null);
+    const [claimMsg, setClaimMsg] = useState('');
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -78,11 +92,25 @@ export default function DashboardPage() {
             }
         }
 
+        async function fetchPendings() {
+            try {
+                const res = await fetch('/api/user/pendings');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPendings(data.pendings || []);
+                    setCharityTotal(data.charityTotal || 0);
+                }
+            } catch (error) {
+                console.error("Error fetching pendings:", error);
+            }
+        }
+
         if (session) {
             fetchUserProfile();
             fetchStats();
             fetchPackage();
             fetchMentor();
+            fetchPendings();
         }
     }, [session, status]);
 
@@ -139,6 +167,40 @@ export default function DashboardPage() {
             data: { ...mentor, whatsappLink: '' }
         });
     };
+
+    const handleClaim = async (pendingId: string) => {
+        setClaiming(pendingId);
+        setClaimMsg('');
+        try {
+            const res = await fetch('/api/user/pendings/claim', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pendingId }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || data.error || 'Claim failed');
+            setClaimMsg(`₹${Number(data.amount).toFixed(2)} claimed! It will appear in your Pending Amount.`);
+            // Refresh pendings
+            const r = await fetch('/api/user/pendings');
+            if (r.ok) {
+                const d = await r.json();
+                setPendings(d.pendings || []);
+                setCharityTotal(d.charityTotal || 0);
+            }
+        } catch (err: any) {
+            setClaimMsg(err.message === 'UPGRADE_REQUIRED'
+                ? 'Please upgrade to the required package tier first.'
+                : err.message === 'ALREADY_DONATED'
+                    ? "This bonus was donated to children's education after the 7-day window."
+                    : `Claim failed: ${err.message}`);
+        } finally {
+            setClaiming(null);
+        }
+    };
+
+    const activePendings = pendings.filter(p => p.effectiveStatus === 'PENDING');
+    const donatedPendings = pendings.filter(p => p.effectiveStatus === 'DONATED');
+    const bonusTotal = activePendings.reduce((s, p) => s + (p.pendingAmount || 0), 0);
 
     if (status === 'loading') {
         return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -248,7 +310,100 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {/* 5. Upgrade Bonus (pending commission held for tier-matched upgrade) */}
+                {(activePendings.length > 0 || donatedPendings.length > 0) && (
+                    <div className="mt-8">
+                        {activePendings.length > 0 && (
+                            <>
+                                <div className="bg-amber-100 border-2 border-amber-400 rounded-xl p-6 text-center shadow-sm">
+                                    <h3 className="text-amber-900 font-bold text-sm md:text-base mb-1 uppercase tracking-wide">
+                                        ⭐ Upgrade Bonus
+                                    </h3>
+                                    <p className="text-3xl md:text-4xl font-extrabold text-amber-800">
+                                        <CountUp end={bonusTotal} prefix="₹ " />
+                                    </p>
+                                    <p className="text-amber-700 text-xs md:text-sm mt-2">
+                                        Commission held from your higher-package sales. Upgrade to claim it.
+                                    </p>
+                                </div>
+
+                                {claimMsg && (
+                                    <div className="mt-3 bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-xl">
+                                        {claimMsg}
+                                    </div>
+                                )}
+
+                                <div className="mt-4 space-y-3">
+                                    {activePendings.map((p: any) => (
+                                        <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
+                                            <div className="flex justify-between items-start gap-3">
+                                                <div>
+                                                    <p className="font-bold text-gray-900 text-sm md:text-base">
+                                                        {p.soldPackageName} sale
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                        Bonus: <span className="font-bold text-amber-700">₹{Number(p.pendingAmount).toFixed(2)}</span>
+                                                        {' · '}Received: ₹{Number(p.immediateAmount).toFixed(2)}
+                                                    </p>
+                                                    <p className="text-xs mt-1">
+                                                        <span className="text-amber-700 font-medium">
+                                                            Claim by upgrading · expires {formatExpiry(p.expiresAt)} IST
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                                <div className="flex flex-col gap-2 shrink-0">
+                                                    {p.canClaim ? (
+                                                        <button
+                                                            onClick={() => handleClaim(p.id)}
+                                                            disabled={claiming === p.id}
+                                                            className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-lg transition disabled:opacity-50"
+                                                        >
+                                                            {claiming === p.id ? 'Claiming...' : 'Claim ₹' + Number(p.pendingAmount).toFixed(2)}
+                                                        </button>
+                                                    ) : (
+                                                        <a
+                                                            href="/dashboard/upgrade"
+                                                            className="bg-[#732C3F] hover:bg-[#5a2231] text-white text-sm font-bold px-4 py-2 rounded-lg transition text-center"
+                                                        >
+                                                            Upgrade to Claim
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {donatedPendings.length > 0 && (
+                            <div className="mt-4 space-y-3">
+                                {donatedPendings.map((p: any) => (
+                                    <div key={p.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200 opacity-80">
+                                        <p className="font-bold text-gray-700 text-sm md:text-base">
+                                            {p.soldPackageName} sale
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            🌱 <span className="font-medium text-green-700">
+                                                ₹{Number(p.pendingAmount).toFixed(2)} donated to children&apos;s education
+                                            </span>
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {charityTotal > 0 && (
+                            <p className="text-center text-xs text-gray-500 mt-4">
+                                💛 LearnPeak affiliates have donated <span className="font-bold text-green-700">₹{Number(charityTotal).toFixed(2)}</span> to children&apos;s education so far.
+                            </p>
+                        )}
+                    </div>
+                )}
+
             </div>
+
+            <GuiltPopup pendings={pendings} />
 
             <ManagerModal
                 isOpen={modalConfig.isOpen}

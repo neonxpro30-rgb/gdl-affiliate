@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
-import { Menu, User, LogOut, BookOpen, LayoutDashboard, Copy, Check } from 'lucide-react';
+import { Menu, User, LogOut, BookOpen, LayoutDashboard, Copy, Check, ArrowUpCircle } from 'lucide-react';
 
 export default function DashboardNavbar({ user }: { user: any }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -73,6 +73,15 @@ export default function DashboardNavbar({ user }: { user: any }) {
                                 className="flex items-center px-4 py-3 hover:bg-[#732C3F] text-[#C57C8A] hover:text-white transition"
                             >
                                 <BookOpen className="w-4 h-4 mr-3" /> My Courses
+                            </Link>
+
+                            {/* Upgrade Package */}
+                            <Link
+                                href="/dashboard/upgrade"
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center px-4 py-3 hover:bg-[#732C3F] text-[#C57C8A] hover:text-white transition"
+                            >
+                                <ArrowUpCircle className="w-4 h-4 mr-3" /> Upgrade Package
                             </Link>
 
                             {/* Profile & Bank */}
