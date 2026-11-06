@@ -3,11 +3,11 @@
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useState, useEffect } from "react";
-import { User, Copy, Check, Clock, Zap, Gift, Heart, Trophy, Wallet } from 'lucide-react';
+import { User, Copy, Check, Trophy, Wallet } from 'lucide-react';
 import DashboardNavbar from "@/components/DashboardNavbar";
 import ManagerModal from "./ManagerModal";
 import CountUp from "@/components/CountUp";
-import GuiltPopup from "@/components/GuiltPopup";
+import AffiliatePanel from "@/components/AffiliatePanel";
 
 /* ------------------------------------------------------------------ */
 /* Tier helpers — LVL 1..4 mapped from owned / sold package names       */
@@ -22,27 +22,6 @@ const TIERS = [
 function tierOfName(name: string | undefined | null) {
     const n = String(name || '').toUpperCase();
     return TIERS.find(t => n.includes(t.key)) || null;
-}
-
-function formatExpiry(iso: string): string {
-    try {
-        return new Date(iso).toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true,
-        });
-    } catch { return iso; }
-}
-
-function formatCountdown(ms: number): string {
-    if (ms <= 0) return 'Fuse out';
-    const totalSec = Math.floor(ms / 1000);
-    const d = Math.floor(totalSec / 86400);
-    const h = Math.floor((totalSec % 86400) / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    const pad = (n: number) => String(n).padStart(2, '0');
-    if (d > 0) return `${d}d ${pad(h)}h ${pad(m)}m`;
-    return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -67,19 +46,9 @@ export default function DashboardPage() {
     const [mentor, setMentor] = useState({ name: 'Loading...', phone: '', email: '', referralCode: '' });
 
     const [userProfile, setUserProfile] = useState<any>(null);
+    // Legacy Upgrade Bonus records (pre-relaunch) — read-only history only.
     const [pendings, setPendings] = useState<any[]>([]);
-    const [charityTotal, setCharityTotal] = useState(0);
-    const [claiming, setClaiming] = useState<string | null>(null);
-    const [claimMsg, setClaimMsg] = useState('');
     const [copied, setCopied] = useState(false);
-
-    // Live countdown clock for pending expiries
-    const [now, setNow] = useState(() => Date.now());
-    const [fetchedAt, setFetchedAt] = useState(() => Date.now());
-    useEffect(() => {
-        const t = setInterval(() => setNow(Date.now()), 1000);
-        return () => clearInterval(t);
-    }, []);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -142,8 +111,6 @@ export default function DashboardPage() {
                 if (res.ok) {
                     const data = await res.json();
                     setPendings(data.pendings || []);
-                    setCharityTotal(data.charityTotal || 0);
-                    setFetchedAt(Date.now());
                 }
             } catch (error) {
                 console.error("Error fetching pendings:", error);
@@ -213,37 +180,6 @@ export default function DashboardPage() {
         });
     };
 
-    const handleClaim = async (pendingId: string) => {
-        setClaiming(pendingId);
-        setClaimMsg('');
-        try {
-            const res = await fetch('/api/user/pendings/claim', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pendingId }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || data.error || 'Claim failed');
-            setClaimMsg(`₹${Number(data.amount).toFixed(2)} claimed — it will appear in your pending payout.`);
-            // Refresh pendings
-            const r = await fetch('/api/user/pendings');
-            if (r.ok) {
-                const d = await r.json();
-                setPendings(d.pendings || []);
-                setCharityTotal(d.charityTotal || 0);
-                setFetchedAt(Date.now());
-            }
-        } catch (err: any) {
-            setClaimMsg(err.message === 'UPGRADE_REQUIRED'
-                ? 'Please upgrade to the required package first to claim this bonus.'
-                : err.message === 'ALREADY_DONATED'
-                    ? "This bonus was donated to children's education after the 7-day window."
-                    : `Claim failed: ${err.message}`);
-        } finally {
-            setClaiming(null);
-        }
-    };
-
     const copyInvite = async (link: string) => {
         try {
             await navigator.clipboard.writeText(link);
@@ -254,9 +190,7 @@ export default function DashboardPage() {
         }
     };
 
-    const activePendings = pendings.filter(p => p.effectiveStatus === 'PENDING');
-    const donatedPendings = pendings.filter(p => p.effectiveStatus === 'DONATED');
-    const bonusTotal = activePendings.reduce((s, p) => s + (p.pendingAmount || 0), 0);
+    const legacyPendings = pendings;
 
     if (status === 'loading') {
         return (
@@ -411,7 +345,7 @@ export default function DashboardPage() {
                     <SectionLabel>Invite & Earn</SectionLabel>
                     <div className="rounded-2xl border border-rose-900/60 bg-[#241019]/90 p-5">
                         <p className="text-sm text-rose-100/80 leading-relaxed">
-                            Share your invite link. When a friend joins through it, you earn commission on their package.
+                            Share your invite link. When a friend buys a course through it, you earn a flat 30% commission — no purchase needed to earn, ever.
                         </p>
                         <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/40 border border-white/10 px-3 py-2.5">
                             <p className="flex-1 truncate font-mono text-xs text-rose-100/90">{referralLink}</p>
@@ -426,134 +360,34 @@ export default function DashboardPage() {
                     </div>
                 </section>
 
-                {/* ============ 6. UPGRADE BONUS ============ */}
-                {(activePendings.length > 0 || donatedPendings.length > 0) && (
+                {/* ============ 6. AFFILIATE (NEW FLAT MODEL) ============ */}
+                <AffiliatePanel />
+
+                {/* ============ 7. LEGACY UPGRADE BONUS (READ-ONLY HISTORY) ============ */}
+                {legacyPendings.length > 0 && (
                     <section className="mt-8">
-                        <SectionLabel>Upgrade Bonus {activePendings.length > 0 && <span className="text-amber-300">({activePendings.length})</span>}</SectionLabel>
-
-                        {activePendings.length > 0 && (
-                            <>
-                                <div className="rounded-2xl border-2 border-amber-400/50 bg-gradient-to-br from-amber-950/60 to-[#241019] p-5 text-center relative overflow-hidden">
-                                    <div className="relative">
-                                        <p className="text-[10px] tracking-[0.3em] text-amber-200/70">BONUS WAITING</p>
-                                        <p className="font-display mt-1 text-4xl md:text-5xl text-amber-300 tabular-nums">
-                                            <CountUp end={bonusTotal} prefix="₹" />
-                                        </p>
-                                        <p className="mt-2 text-xs text-amber-100/70 leading-relaxed">
-                                            Commission held from your higher-package sales.<br />Upgrade to claim it.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {claimMsg && (
-                                    <div className="mt-3 rounded-xl border border-sky-400/30 bg-sky-950/50 px-4 py-3 text-sm text-sky-200">
-                                        {claimMsg}
-                                    </div>
-                                )}
-
-                                <div className="mt-4 space-y-3">
-                                    {activePendings.map((p: any) => {
-                                        const reqTier = tierOfName(p.soldPackageName);
-                                        const full = Number(p.pendingAmount || 0) + Number(p.immediateAmount || 0);
-                                        const msLeft = Math.max(0, (p.msLeft || 0) - (now - fetchedAt));
-                                        return (
-                                            <div key={p.id} className="rounded-2xl border border-amber-400/30 bg-[#241019]/90 p-4 relative overflow-hidden">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <Gift className="w-4 h-4 text-amber-300 shrink-0" />
-                                                            <p className="font-bold text-white text-sm md:text-base truncate">
-                                                                {p.soldPackageName} sale
-                                                            </p>
-                                                        </div>
-                                                        <p className="mt-1.5 text-xs text-rose-100/70">
-                                                            Full commission <span className="font-bold text-white">₹{full.toFixed(2)}</span>
-                                                            {' · '}You got <span className="font-semibold text-rose-200">₹{Number(p.immediateAmount).toFixed(2)}</span>
-                                                        </p>
-                                                        <p className="mt-1 text-xs">
-                                                            <span className="text-[10px] tracking-[0.15em] text-amber-300/90">
-                                                                REQUIRES {reqTier ? `${reqTier.name.toUpperCase()} PACKAGE` : 'PACKAGE UPGRADE'}
-                                                            </span>
-                                                        </p>
-                                                        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-rose-100/60">
-                                                            <Clock className="w-3.5 h-3.5 text-amber-300" />
-                                                            <span className="font-mono tabular-nums font-bold text-amber-200">
-                                                                {formatCountdown(msLeft)}
-                                                            </span>
-                                                            <span className="text-rose-100/50">· ends {formatExpiry(p.expiresAt)} IST</span>
-                                                        </p>
-                                                    </div>
-                                                    <div className="shrink-0 text-right">
-                                                        <p className="font-display text-2xl text-amber-300 tabular-nums">
-                                                            ₹{Number(p.pendingAmount).toFixed(2)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="mt-3">
-                                                    {p.canClaim ? (
-                                                        <button
-                                                            onClick={() => handleClaim(p.id)}
-                                                            disabled={claiming === p.id}
-                                                            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 py-3 font-bold text-[#1A0B12] transition hover:brightness-110 disabled:opacity-50 inline-flex items-center justify-center gap-2"
-                                                        >
-                                                            <Zap className="w-4 h-4" />
-                                                            {claiming === p.id ? 'Claiming…' : `Claim ₹${Number(p.pendingAmount).toFixed(2)}`}
-                                                        </button>
-                                                    ) : (
-                                                        <a
-                                                            href="/dashboard/upgrade"
-                                                            className="block w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 text-center font-bold text-white transition hover:brightness-110"
-                                                        >
-                                                            Upgrade to Claim
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-
-                        {donatedPendings.length > 0 && (
-                            <div className="mt-4 space-y-3">
-                                {donatedPendings.map((p: any) => (
-                                    <div key={p.id} className="rounded-2xl border border-white/10 bg-black/30 p-4 opacity-70">
-                                        <p className="font-bold text-white/70 text-sm md:text-base">
-                                            {p.soldPackageName} sale
-                                        </p>
-                                        <p className="mt-1 text-xs text-white/50">
-                                            🌱 <span className="font-medium text-emerald-300/90">
-                                                ₹{Number(p.pendingAmount).toFixed(2)} donated to children&apos;s education
-                                            </span>
-                                        </p>
+                        <SectionLabel>Upgrade Bonus — Ended</SectionLabel>
+                        <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                            <p className="text-sm text-rose-100/70 leading-relaxed">
+                                The Upgrade Bonus program ended with the LearnPeak relaunch. Bonuses that were
+                                pending before the change are being settled under the old terms — nothing is
+                                cancelled silently. New sales earn the flat commission shown above.
+                            </p>
+                            <div className="mt-3 space-y-2">
+                                {legacyPendings.map((p: any) => (
+                                    <div key={p.id} className="flex items-center justify-between rounded-lg bg-black/25 border border-white/5 px-3 py-2 text-xs">
+                                        <span className="truncate text-rose-100/80">{p.soldPackageName} sale</span>
+                                        <span className="shrink-0 font-mono tabular-nums">₹{Number(p.pendingAmount || 0).toFixed(2)} · {p.effectiveStatus || p.status}</span>
                                     </div>
                                 ))}
                             </div>
-                        )}
-                    </section>
-                )}
-
-                {/* ============ 7. GIVING BACK ============ */}
-                {charityTotal > 0 && (
-                    <section className="mt-8">
-                        <SectionLabel>Giving Back</SectionLabel>
-                        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/30 p-5 text-center">
-                            <Heart className="w-6 h-6 mx-auto text-emerald-300" />
-                            <p className="mt-2 text-sm text-emerald-100/80 leading-relaxed">
-                                LearnPeak affiliates have donated{' '}
-                                <span className="font-extrabold text-emerald-300 text-lg tabular-nums">
-                                    ₹{Number(charityTotal).toFixed(2)}
-                                </span>{' '}
-                                to children&apos;s education so far.
-                            </p>
                         </div>
                     </section>
                 )}
 
             </div>
 
-            <GuiltPopup pendings={pendings} />
+            
 
             <ManagerModal
                 isOpen={modalConfig.isOpen}
