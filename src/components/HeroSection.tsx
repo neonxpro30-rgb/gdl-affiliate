@@ -22,7 +22,7 @@ export default function HeroSection() {
                         <span className="text-[#732C3F]">Transform Your Career</span>
                     </h2>
                     <p className="text-lg text-gray-700 mb-4 max-w-lg">
-                        Join thousands of students mastering high-income digital skills — affiliate marketing, content creation, social media & more. Access your courses instantly after purchase.
+                        Master high-income digital skills — affiliate marketing, content creation, social media & more. Access your courses instantly after purchase.
                     </p>
                     <div className="inline-flex items-center gap-2 bg-[#F7E8EC] border border-[#C57C8A] text-[#732C3F] text-sm font-semibold px-4 py-2 rounded-full mb-8">
                         <span>💰</span>
