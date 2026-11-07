@@ -15,9 +15,11 @@ export async function GET() {
         // The user's package = the HIGHEST tier they own across all SUCCESS
         // orders (a later small purchase must not downgrade them)
         const { getLegacyTopPackage } = await import("@/lib/access");
-        const { packageId } = await getLegacyTopPackage(userId);
+        const { packageId, price } = await getLegacyTopPackage(userId);
 
         if (!packageId) {
+            // Demo-only buyer: the ₹19 demo is the Silicon package
+            if (price >= 19) return NextResponse.json({ name: "Silicon Package" });
             return NextResponse.json({ name: "No Package" });
         }
 
