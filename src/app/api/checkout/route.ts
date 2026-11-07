@@ -52,13 +52,9 @@ export async function POST(req: Request) {
             updatedAt: now,
         });
 
-        if (appliedCoupon) {
-            const cSnap = await db.collection('coupons').where('code', '==', appliedCoupon).limit(1).get();
-            if (!cSnap.empty) {
-                const c = cSnap.docs[0];
-                await c.ref.update({ uses: (c.data().uses || 0) + 1 });
-            }
-        }
+        // Coupon usage is counted on successful payment, not here
+        // (audit #29) — abandoned/failed checkouts must not burn uses.
+        // See processSuccessfulPayment in src/lib/payment-processor.ts.
 
         return NextResponse.json({ orderId: orderRef.id, amount });
     } catch (error) {

@@ -19,6 +19,16 @@ export async function POST(req: Request) {
             }
         });
 
+        // Escape user input before it lands in the HTML email (audit
+        // #30) — an unescaped submission could inject markup/links into
+        // the support inbox.
+        const escapeHtml = (v: string) => v
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
         const mailOptions = {
             from: `"LearnPeak Support" <${process.env.EMAIL_USER}>`,
             to: 'learnpeak.in@gmail.com', // Always send to this support email
@@ -33,16 +43,17 @@ export async function POST(req: Request) {
             `,
             html: `
                 <h3>New Contact Request</h3>
-                <p><strong>Name:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Phone:</strong> ${phone || 'Not Provided'}</p>
+                <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+                <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+                <p><strong>Phone:</strong> ${escapeHtml(phone || 'Not Provided')}</p>
                 <p><strong>Message:</strong></p>
-                <p>${message.replace(/\n/g, '<br>')}</p>
+                <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
             `
         };
 
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.log("Mock Email Sent (Missing Credentials):", mailOptions);
+            // Never log the submission body (audit #30).
+            console.log("Mock Email Sent (Missing Credentials): contact form submission received.");
             return NextResponse.json({ message: 'Message simulated (configure credentials to send real email)' });
         }
 

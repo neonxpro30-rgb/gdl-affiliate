@@ -74,20 +74,21 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Post ID or slug required' }, { status: 400 });
         }
 
-        // Create comment (auto-approved for now, can add moderation later)
+        // Create comment unapproved (audit #30) — it becomes public only
+        // after moderation; the GET handler serves approved rows only.
         const comment = await prisma.blogComment.create({
             data: {
                 postId: finalPostId,
                 name: name.trim(),
                 email: email.trim().toLowerCase(),
                 content: content.trim(),
-                approved: true // Auto-approve for now
+                approved: false
             }
         });
 
         return NextResponse.json({
             success: true,
-            message: 'Comment posted successfully!',
+            message: 'Comment submitted — it will appear after approval.',
             commentId: comment.id
         });
 
