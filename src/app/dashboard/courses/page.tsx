@@ -4,6 +4,12 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/firebaseAdmin";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import CategoryThumb from "@/components/CategoryThumb";
+import {
+    META_ADS_ENTRY,
+    META_ADS_ROUTE_ID,
+    categoryDisplay,
+    userUnlocksCategory,
+} from "@/lib/catalog-display";
 import { Lock, PlayCircle, CheckCircle } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +21,7 @@ export default async function CoursesPage() {
 
         // 1. User's highest owned legacy package tier (across ALL orders —
         //    never just the latest one; see getLegacyTopPackage)
-        const { getLegacyTopPackage } = await import('@/lib/access');
+        const { getLegacyTopPackage, userOwnsProduct } = await import('@/lib/access');
         const { price: purchasedPackagePrice } = await getLegacyTopPackage(session.user.id);
 
         // 2. Fetch Categories
@@ -27,34 +33,31 @@ export default async function CoursesPage() {
         const courses = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
 
         // 4. Map Courses to Categories & Determine Access
-        // Access Logic:
+        // Legacy access logic (price tiers):
         // Silicon (19) -> Access Silicon
         // Silver (799) -> Access Silicon + Silver
         // Gold (1299) -> Access Silicon + Silver + Gold
         // Diamond (3899) -> Access All
+        // Relaunch: the four categories are display-mapped to the new
+        // courses (see src/lib/catalog-display.ts) and ALSO unlock via the
+        // mapped product / bundle. Legacy access never regresses.
 
-        const groupedCategories = categories.map(category => {
+        const groupedCategories = await Promise.all(categories.map(async (category) => {
             const categoryCourses = courses.filter(c => c.category === category.title);
-
-            // Determine if unlocked
-            // This logic assumes category titles match package names or we need a mapping.
-            // For now, we'll use a simple price-based mapping or name matching if prices are standard.
-            // Better approach: Assign a "minPackagePrice" to each category in Admin, but for now hardcode based on title.
-
-            let requiredPrice = 0;
-            if (category.title.includes('Silicon')) requiredPrice = 19;
-            else if (category.title.includes('Silver')) requiredPrice = 799;
-            else if (category.title.includes('Gold')) requiredPrice = 1299;
-            else if (category.title.includes('Diamond')) requiredPrice = 3899;
-
-            const isUnlocked = purchasedPackagePrice >= requiredPrice;
+            const display = categoryDisplay(category.title);
+            const isUnlocked = await userUnlocksCategory(session.user.id, category.title, purchasedPackagePrice);
 
             return {
                 ...category,
                 courses: categoryCourses,
+                display,
+                displayName: display?.displayName ?? category.title,
                 isUnlocked
             };
-        });
+        }));
+
+        // Fifth course (Meta Ads) has no DB category — synthetic card below.
+        const metaAdsOwned = await userOwnsProduct(session.user.id, META_ADS_ENTRY.productSlug);
 
         // NEW catalog courses (productSlug-based, post-relaunch)
         const { hasFullCourseAccess, hasLessonAccess } = await import('@/lib/access');
@@ -122,7 +125,7 @@ export default async function CoursesPage() {
                             <div key={category.id} className="lpd-card lpd-card-hover overflow-hidden flex flex-col">
                                 {/* Category Image */}
                                 <div className="h-48 bg-[#FFE9F3] relative overflow-hidden">
-                                    <CategoryThumb image={category.image} title={category.title} />
+                                    <CategoryThumb image={category.image} title={category.displayName} tapeLabel={category.display?.tapeLabel} />
                                     <div className="absolute top-4 right-4">
                                         {category.isUnlocked ? (
                                             <span className="lpd-badge lpd-badge-mint shadow-sm">
@@ -137,20 +140,38 @@ export default async function CoursesPage() {
                                 </div>
 
                                 <div className="p-6 flex-grow">
-                                    <h2 className="text-xl font-bold text-[#1E1530] mb-2">{category.title}</h2>
-                                    <p className="text-sm text-[#6B5F80] mb-4">{category.courses.length} Courses</p>
-
-                                    <div className="space-y-3">
-                                        {category.courses.slice(0, 3).map((course: any) => (
-                                            <div key={course.id} className="flex items-center text-sm text-[#3B3150]">
-                                                <PlayCircle className="w-4 h-4 mr-2 shrink-0 text-[#D93C78]" />
-                                                <span className="truncate">{course.title}</span>
+                                    <h2 className="text-xl font-bold text-[#1E1530] mb-2">{category.displayName}</h2>
+                                    {category.display ? (
+                                        <>
+                                            <p className="text-sm text-[#6B5F80] mb-4">{category.display.lessons.length} Lessons</p>
+                                            <div className="space-y-3">
+                                                {category.display.lessons.slice(0, 3).map((lesson: string) => (
+                                                    <div key={lesson} className="flex items-center text-sm text-[#3B3150]">
+                                                        <PlayCircle className="w-4 h-4 mr-2 shrink-0 text-[#D93C78]" />
+                                                        <span className="truncate">{lesson}</span>
+                                                    </div>
+                                                ))}
+                                                {category.display.lessons.length > 3 && (
+                                                    <p className="text-xs text-[#6B5F80] italic">+ {category.display.lessons.length - 3} more</p>
+                                                )}
                                             </div>
-                                        ))}
-                                        {category.courses.length > 3 && (
-                                            <p className="text-xs text-[#6B5F80] italic">+ {category.courses.length - 3} more</p>
-                                        )}
-                                    </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm text-[#6B5F80] mb-4">{category.courses.length} Courses</p>
+                                            <div className="space-y-3">
+                                                {category.courses.slice(0, 3).map((course: any) => (
+                                                    <div key={course.id} className="flex items-center text-sm text-[#3B3150]">
+                                                        <PlayCircle className="w-4 h-4 mr-2 shrink-0 text-[#D93C78]" />
+                                                        <span className="truncate">{course.title}</span>
+                                                    </div>
+                                                ))}
+                                                {category.courses.length > 3 && (
+                                                    <p className="text-xs text-[#6B5F80] italic">+ {category.courses.length - 3} more</p>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="p-4 border-t border-[rgba(59,49,80,.14)] bg-[#FFF8FB] mt-auto">
@@ -166,6 +187,50 @@ export default async function CoursesPage() {
                                 </div>
                             </div>
                         ))}
+
+                        {/* Meta Ads for Photographers — synthetic card (no DB category) */}
+                        <div className="lpd-card lpd-card-hover overflow-hidden flex flex-col">
+                            <div className="h-48 bg-[#FFE9F3] relative overflow-hidden">
+                                <CategoryThumb image={null} title={META_ADS_ENTRY.displayName} tapeLabel={META_ADS_ENTRY.tapeLabel} />
+                                <div className="absolute top-4 right-4">
+                                    {metaAdsOwned ? (
+                                        <span className="lpd-badge lpd-badge-mint shadow-sm">
+                                            <CheckCircle className="w-3 h-3" /> Unlocked
+                                        </span>
+                                    ) : (
+                                        <span className="lpd-badge lpd-badge-lock shadow-sm">
+                                            <Lock className="w-3 h-3" /> Locked
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="p-6 flex-grow">
+                                <h2 className="text-xl font-bold text-[#1E1530] mb-2">{META_ADS_ENTRY.displayName}</h2>
+                                <p className="text-sm text-[#6B5F80] mb-4">{META_ADS_ENTRY.lessons.length} Lessons</p>
+                                <div className="space-y-3">
+                                    {META_ADS_ENTRY.lessons.slice(0, 3).map((lesson) => (
+                                        <div key={lesson} className="flex items-center text-sm text-[#3B3150]">
+                                            <PlayCircle className="w-4 h-4 mr-2 shrink-0 text-[#D93C78]" />
+                                            <span className="truncate">{lesson}</span>
+                                        </div>
+                                    ))}
+                                    <p className="text-xs text-[#6B5F80] italic">+ {META_ADS_ENTRY.lessons.length - 3} more</p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 border-t border-[rgba(59,49,80,.14)] bg-[#FFF8FB] mt-auto">
+                                {metaAdsOwned ? (
+                                    <a href={`/dashboard/courses/category/${META_ADS_ROUTE_ID}`} className="lpd-btn lpd-btn-pink lpd-btn-block">
+                                        View Course
+                                    </a>
+                                ) : (
+                                    <a href={`/signup?product=${META_ADS_ENTRY.productSlug}`} className="lpd-btn lpd-btn-pink lpd-btn-block">
+                                        Buy Course
+                                    </a>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
