@@ -76,35 +76,35 @@ export default async function ExtensionDetailPage({
     const changelog = product.changelog || [];
 
     return (
-        <main className="min-h-screen bg-[#F7E8EC] font-sans px-4 py-10">
+        <main className="lpd-shell min-h-screen px-4 py-10">
             <div className="mx-auto w-full max-w-3xl">
                 <Link
                     href="/extensions"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[#732C3F] transition hover:text-[#1A0B12]"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#6B5F80] transition hover:text-[#1E1530]"
                 >
                     <ArrowLeft className="h-4 w-4" /> All Extensions
                 </Link>
 
-                <div className="mt-5 overflow-hidden rounded-3xl border border-rose-200 bg-white shadow-sm">
+                <div className="lpd-card mt-5 overflow-hidden">
                     <div className="p-6 md:p-8">
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div className="flex items-start gap-4">
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-50">
-                                    <Puzzle className="h-7 w-7 text-[#732C3F]" />
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[#FFE9F3] border-2 border-[rgba(59,49,80,.14)]">
+                                    <Puzzle className="h-7 w-7 text-[#D93C78]" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-extrabold text-gray-900 md:text-3xl">
+                                    <h1 className="lpd-display text-2xl font-extrabold text-[#1E1530] md:text-3xl">
                                         {product.title}
                                     </h1>
                                     {product.tagline && (
-                                        <p className="mt-1 text-sm leading-relaxed text-gray-500">
+                                        <p className="mt-1 text-sm leading-relaxed text-[#6B5F80]">
                                             {product.tagline}
                                         </p>
                                     )}
                                 </div>
                             </div>
                             {product.version && (
-                                <span className="shrink-0 rounded-full bg-rose-50 px-3 py-1 font-mono text-xs font-semibold text-[#732C3F]">
+                                <span className="lpd-badge lpd-badge-pink lpd-pixel shrink-0 normal-case tracking-normal text-[15px]">
                                     Version {product.version}
                                 </span>
                             )}
@@ -113,14 +113,14 @@ export default async function ExtensionDetailPage({
                         {product.premiereVersions &&
                             product.premiereVersions.length > 0 && (
                                 <div className="mt-6">
-                                    <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-gray-400">
+                                    <p className="lpd-pixel text-[15px] uppercase tracking-[0.18em] text-[#6B5F80]">
                                         Supported Premiere Pro Versions
                                     </p>
                                     <div className="mt-2 flex flex-wrap gap-2">
                                         {product.premiereVersions.map((v) => (
                                             <span
                                                 key={v}
-                                                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-700"
+                                                className="lpd-chip"
                                             >
                                                 Premiere Pro {v}
                                             </span>
@@ -130,31 +130,32 @@ export default async function ExtensionDetailPage({
                             )}
 
                         {/* Price / Buy / Owned */}
-                        <div className="mt-8 rounded-2xl border border-gray-100 bg-gray-50 p-5">
+                        <div className="mt-8 rounded-[18px] border-2 border-[rgba(59,49,80,.14)] bg-[#FFF8FB] p-5">
                             {owns ? (
                                 <div>
-                                    <p className="flex items-center gap-2 font-bold text-emerald-700">
+                                    <p className="flex items-center gap-2 font-bold text-[#0F8E69]">
                                         <CheckCircle2 className="h-5 w-5" /> You own
                                         this extension
                                     </p>
+                                    <span className="lpd-badge lpd-badge-mint mt-2">Active licence</span>
 
                                     {licences.length > 0 ? (
                                         <div className="mt-4 space-y-3">
                                             {licences.map((lic) => (
                                                 <div
                                                     key={lic.id || lic.key}
-                                                    className="rounded-xl border border-emerald-200 bg-white px-4 py-3"
+                                                    className="rounded-[14px] border-2 border-[#0F8E69]/30 bg-white px-4 py-3"
                                                 >
-                                                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#6B5F80]">
                                                         <KeyRound className="h-3.5 w-3.5" />
                                                         Licence Key
                                                     </p>
-                                                    <p className="mt-1 break-all font-mono text-base font-bold text-gray-900">
+                                                    <p className="lpd-pixel mt-1 break-all text-[20px] leading-tight font-bold text-[#1E1530]">
                                                         {lic.key}
                                                     </p>
-                                                    <p className="mt-1 text-sm text-gray-500">
+                                                    <p className="mt-1 text-sm text-[#6B5F80]">
                                                         Activations:{" "}
-                                                        <strong className="text-gray-800">
+                                                        <strong className="text-[#1E1530]">
                                                             {(lic.activations || []).length}
                                                         </strong>{" "}
                                                         / {lic.limit ?? 2} machines
@@ -166,17 +167,22 @@ export default async function ExtensionDetailPage({
                                                                 </>
                                                             )}
                                                     </p>
+                                                    {lic.status && (
+                                                        <span className={`mt-2 ${lic.status === "active" ? "lpd-badge lpd-badge-mint" : lic.status === "revoked" || lic.status === "suspended" ? "lpd-badge lpd-badge-coral" : "lpd-badge lpd-badge-butter"}`}>
+                                                            {lic.status}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="mt-2 text-sm text-gray-600">
+                                        <p className="mt-2 text-sm text-[#3B3150]">
                                             Your licence key will appear here as soon
                                             as it is issued for your purchase.
                                         </p>
                                     )}
 
-                                    <p className="mt-4 text-sm leading-relaxed text-gray-600">
+                                    <p className="mt-4 text-sm leading-relaxed text-[#3B3150]">
                                         The extension file itself is private and is
                                         delivered through the licence/activation
                                         flow: install the extension in Premiere Pro
@@ -187,14 +193,14 @@ export default async function ExtensionDetailPage({
                             ) : (
                                 <div className="flex flex-wrap items-center justify-between gap-4">
                                     <div>
-                                        <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-gray-400">
+                                        <p className="lpd-pixel text-[15px] uppercase tracking-[0.18em] text-[#6B5F80]">
                                             Price
                                         </p>
-                                        <p className="mt-1 text-3xl font-extrabold text-gray-900">
+                                        <p className="lpd-display mt-1 text-3xl font-extrabold text-[#1E1530]">
                                             {product.price > 0 ? (
                                                 formatINR(product.price)
                                             ) : (
-                                                <span className="text-lg font-semibold text-gray-500">
+                                                <span className="text-lg font-semibold text-[#6B5F80]">
                                                     Price coming soon
                                                 </span>
                                             )}
@@ -203,13 +209,13 @@ export default async function ExtensionDetailPage({
                                     {purchasable ? (
                                         <Link
                                             href={`/signup?product=${encodeURIComponent(product.slug)}`}
-                                            className="inline-flex items-center gap-2 rounded-xl bg-[#732C3F] px-6 py-3 font-bold text-white transition hover:brightness-110"
+                                            className="lpd-btn lpd-btn-pink"
                                         >
                                             <ShoppingCart className="h-4 w-4" /> Buy
                                             Now
                                         </Link>
                                     ) : (
-                                        <span className="inline-flex items-center rounded-xl bg-amber-100 px-5 py-3 text-sm font-bold text-amber-700">
+                                        <span className="lpd-badge lpd-badge-butter px-4 py-2 text-sm">
                                             {product.price > 0
                                                 ? "Coming Soon"
                                                 : "Price coming soon"}
@@ -218,7 +224,7 @@ export default async function ExtensionDetailPage({
                                 </div>
                             )}
                             {!owns && (
-                                <p className="mt-3 text-xs leading-relaxed text-gray-500">
+                                <p className="mt-3 text-xs leading-relaxed text-[#6B5F80]">
                                     After purchase, your licence key appears here and
                                     the extension is delivered through the
                                     licence/activation flow inside Premiere Pro — the
@@ -229,23 +235,23 @@ export default async function ExtensionDetailPage({
                     </div>
 
                     {/* Changelog */}
-                    <div className="border-t border-gray-100 px-6 py-6 md:px-8">
-                        <h2 className="flex items-center gap-2 text-base font-bold text-gray-900">
-                            <History className="h-4 w-4 text-[#732C3F]" /> Changelog
+                    <div className="border-t-2 border-[rgba(59,49,80,.14)] px-6 py-6 md:px-8">
+                        <h2 className="flex items-center gap-2 text-base font-bold text-[#1E1530]">
+                            <History className="h-4 w-4 text-[#D93C78]" /> Changelog
                         </h2>
                         {changelog.length > 0 ? (
                             <ul className="mt-4 space-y-4">
                                 {[...changelog].reverse().map((entry, i) => (
                                     <li key={`${entry.version}-${i}`} className="flex gap-4">
-                                        <span className="shrink-0 rounded-full bg-rose-50 px-2.5 py-1 font-mono text-[11px] font-semibold text-[#732C3F] h-fit">
+                                        <span className="lpd-badge lpd-badge-pink lpd-pixel shrink-0 normal-case tracking-normal text-[14px] h-fit">
                                             v{entry.version}
                                         </span>
                                         <div>
-                                            <p className="text-sm leading-relaxed text-gray-700">
+                                            <p className="text-sm leading-relaxed text-[#3B3150]">
                                                 {entry.notes}
                                             </p>
                                             {entry.at && (
-                                                <p className="mt-0.5 text-xs text-gray-400">
+                                                <p className="mt-0.5 text-xs text-[#6B5F80]">
                                                     {formatDate(entry.at)}
                                                 </p>
                                             )}
@@ -254,7 +260,7 @@ export default async function ExtensionDetailPage({
                                 ))}
                             </ul>
                         ) : (
-                            <p className="mt-3 text-sm text-gray-500">
+                            <p className="mt-3 text-sm text-[#6B5F80]">
                                 No changelog entries yet.
                             </p>
                         )}

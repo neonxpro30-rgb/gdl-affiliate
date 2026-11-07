@@ -84,7 +84,7 @@ function formatDateTime(value?: string | null): string {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return (
-        <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.3em] text-rose-300/80">
+        <p className="lpd-pixel mb-3 text-[15px] uppercase tracking-[0.18em] text-[#D93C78]">
             {children}
         </p>
     );
@@ -100,14 +100,12 @@ function PartChip({
     children: React.ReactNode;
 }) {
     const cls = ok
-        ? "border-emerald-400/40 bg-emerald-950/50 text-emerald-200"
+        ? "lpd-badge lpd-badge-mint"
         : warn
-          ? "border-amber-400/40 bg-amber-950/50 text-amber-200"
-          : "border-white/15 bg-black/30 text-rose-100/70";
+          ? "lpd-badge lpd-badge-butter"
+          : "lpd-badge lpd-badge-lav";
     return (
-        <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${cls}`}
-        >
+        <span className={`${cls} normal-case tracking-normal text-[13px]`}>
             {children}
         </span>
     );
@@ -253,8 +251,8 @@ export default function CourseTestPage() {
 
     if (loading && !data) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-[#1A0B12]">
-                <p className="flex items-center gap-2 text-sm text-rose-200/70">
+            <div className="lpd-shell flex min-h-screen items-center justify-center">
+                <p className="flex items-center gap-2 text-sm text-[#6B5F80]">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading your test…
                 </p>
             </div>
@@ -263,18 +261,20 @@ export default function CourseTestPage() {
 
     if (loadError && !data) {
         return (
-            <div className="min-h-screen bg-[#1A0B12] text-white">
+            <div className="lpd-shell min-h-screen">
                 {session?.user && <DashboardNavbar user={session.user} />}
-                <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-                    <XCircle className="mx-auto h-10 w-10 text-rose-400" />
-                    <h1 className="mt-4 text-xl font-bold">Could not load the test</h1>
-                    <p className="mt-2 text-sm text-rose-100/70">{loadError}</p>
-                    <button
-                        onClick={load}
-                        className="mt-6 rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
-                    >
-                        Try again
-                    </button>
+                <div className="mx-auto max-w-2xl px-4 py-16">
+                    <div className="lpd-card p-8 text-center">
+                        <XCircle className="mx-auto h-10 w-10 text-[#FF4F5E]" />
+                        <h1 className="lpd-display mt-4 text-xl font-bold text-[#1E1530]">Could not load the test</h1>
+                        <p className="mt-2 text-sm text-[#6B5F80]">{loadError}</p>
+                        <button
+                            onClick={load}
+                            className="lpd-btn lpd-btn-pink lpd-btn-sm mt-6"
+                        >
+                            Try again
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -283,57 +283,58 @@ export default function CourseTestPage() {
     if (!data) return null;
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-[#1A0B12] text-white">
-            <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#732C3F]/30 blur-[120px]" />
+        <div className="lpd-shell relative min-h-screen overflow-hidden">
             {session?.user && <DashboardNavbar user={session.user} />}
 
             <div className="relative mx-auto max-w-2xl px-4 pb-24 pt-6 md:max-w-3xl">
                 <Link
                     href="/dashboard/courses"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-rose-200/70 transition hover:text-white"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#6B5F80] transition hover:text-[#1E1530]"
                 >
                     <ArrowLeft className="h-4 w-4" /> Back to My Courses
                 </Link>
 
-                <h1 className="font-display mt-4 text-3xl uppercase tracking-wide md:text-4xl">
-                    Final Test
-                </h1>
-                <p className="mt-1 text-sm text-rose-200/70">
-                    {data.courseTitle || courseSlug}
-                </p>
+                <div className="lpd-banner mt-4 px-5 py-5 md:px-6">
+                    <h1 className="lpd-display text-3xl uppercase tracking-wide text-[#1E1530] md:text-4xl">
+                        Final Test
+                    </h1>
+                    <p className="mt-1 text-sm font-semibold text-[#6B5F80]">
+                        {data.courseTitle || courseSlug}
+                    </p>
+                </div>
 
                 {/* ------------------------- Intro ------------------------- */}
-                <section className="mt-6 rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6">
+                <section className="lpd-card mt-6 p-5 md:p-6">
                     <SectionLabel>How passing works</SectionLabel>
-                    <ul className="space-y-2.5 text-sm leading-relaxed text-rose-100/85">
+                    <ul className="space-y-2.5 text-sm leading-relaxed text-[#3B3150]">
                         <li className="flex gap-2">
-                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#D93C78]" />
                             <span>
-                                <strong className="text-white">Part 1 — MCQ:</strong>{" "}
+                                <strong className="text-[#1E1530]">Part 1 — MCQ:</strong>{" "}
                                 score at least{" "}
-                                <strong className="text-white">{passMark}%</strong> to
+                                <strong className="text-[#1E1530]">{passMark}%</strong> to
                                 clear this part.
                             </span>
                         </li>
                         <li className="flex gap-2">
-                            <Video className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+                            <Video className="mt-0.5 h-4 w-4 shrink-0 text-[#D93C78]" />
                             <span>
-                                <strong className="text-white">Part 2 — Practical:</strong>{" "}
+                                <strong className="text-[#1E1530]">Part 2 — Practical:</strong>{" "}
                                 submit a link to your edited video. Our team reviews
                                 it manually.
                             </span>
                         </li>
                         <li className="flex gap-2">
-                            <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+                            <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#D93C78]" />
                             <span>
-                                You pass only when <strong className="text-white">both
+                                You pass only when <strong className="text-[#1E1530]">both
                                 parts</strong> are cleared — MCQ at or above the pass
                                 mark <em>and</em> your practical is approved.
                             </span>
                         </li>
                         {data.cooldownHours > 0 && (
                             <li className="flex gap-2">
-                                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+                                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#D93C78]" />
                                 <span>
                                     If an attempt fails, you can retake it after a{" "}
                                     {data.cooldownHours}-hour cooldown.
@@ -345,7 +346,7 @@ export default function CourseTestPage() {
 
                 {/* --------------------- Attempt status --------------------- */}
                 {attempt && status && status !== "IN_PROGRESS" && (
-                    <section className="mt-5 rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6">
+                    <section className="lpd-card mt-5 p-5 md:p-6">
                         <SectionLabel>Your attempt</SectionLabel>
                         <div className="flex flex-wrap gap-2">
                             <PartChip ok={mcqPassed} warn={mcqScore !== null && !mcqPassed}>
@@ -377,20 +378,20 @@ export default function CourseTestPage() {
                         </div>
 
                         {status === "AWAITING_REVIEW" && (
-                            <p className="mt-4 text-sm leading-relaxed text-amber-100/85">
+                            <p className="mt-4 text-sm leading-relaxed text-[#3B3150] bg-[#FFE9AE]/50 border border-[rgba(59,49,80,.14)] rounded-[14px] px-3 py-2.5">
                                 Your MCQ is scored. Your practical video is with our
                                 review team — your result will update here once the
                                 review is done.
                             </p>
                         )}
                         {status === "FAILED" && (
-                            <p className="mt-4 text-sm leading-relaxed text-rose-100/85">
+                            <p className="mt-4 text-sm leading-relaxed text-[#3B3150] bg-[#FF4F5E]/10 border border-[#FF4F5E]/30 rounded-[14px] px-3 py-2.5">
                                 This attempt did not pass.
                                 {attempt.practical?.reviewerNote && (
                                     <>
                                         {" "}
                                         Reviewer note:{" "}
-                                        <span className="text-white">
+                                        <span className="text-[#1E1530] font-semibold">
                                             {attempt.practical.reviewerNote}
                                         </span>
                                     </>
@@ -399,7 +400,7 @@ export default function CourseTestPage() {
                                     <>
                                         {" "}
                                         You can retake the test after{" "}
-                                        <strong className="text-white">
+                                        <strong className="text-[#1E1530]">
                                             {formatDateTime(attempt.cooldownUntil)} IST
                                         </strong>
                                         .
@@ -409,7 +410,7 @@ export default function CourseTestPage() {
                         )}
                         {attempt.practical?.reviewerNote &&
                             status === "AWAITING_REVIEW" && (
-                                <p className="mt-2 text-sm text-rose-100/70">
+                                <p className="mt-2 text-sm text-[#6B5F80]">
                                     Reviewer note: {attempt.practical.reviewerNote}
                                 </p>
                             )}
@@ -418,32 +419,35 @@ export default function CourseTestPage() {
 
                 {/* --------------------- Certificate --------------------- */}
                 {isPassed && (
-                    <section className="mt-5 rounded-3xl border border-emerald-400/40 bg-gradient-to-br from-emerald-950/60 to-[#241019] p-5 md:p-6">
+                    <section className="lpd-card mt-5 p-5 md:p-6 border-[#0F8E69]/40 bg-[#E9FBF4]">
                         <div className="flex items-start gap-4">
-                            <Award className="h-10 w-10 shrink-0 text-emerald-300" />
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white border-2 border-[#0F8E69]/30">
+                                <Award className="h-6 w-6 text-[#0F8E69]" />
+                            </div>
                             <div className="min-w-0">
-                                <h2 className="text-xl font-extrabold text-emerald-200">
+                                <p className="lpd-pixel text-[14px] uppercase tracking-[0.18em] text-[#0F8E69]">Certificate</p>
+                                <h2 className="lpd-display text-xl font-extrabold text-[#1E1530]">
                                     You passed — certificate issued!
                                 </h2>
                                 {certId ? (
                                     <>
-                                        <p className="mt-1 text-sm text-emerald-100/80">
+                                        <p className="mt-1 text-sm text-[#3B3150]">
                                             Certificate ID:{" "}
-                                            <span className="font-mono font-bold text-white">
+                                            <span className="lpd-pixel text-[18px] font-bold text-[#1E1530]">
                                                 {certId}
                                             </span>
                                         </p>
                                         <div className="mt-4 flex flex-wrap gap-3">
                                             <a
                                                 href={`/api/certificates/${encodeURIComponent(certId)}/pdf`}
-                                                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-emerald-950 transition hover:brightness-110"
+                                                className="lpd-btn lpd-btn-sm"
                                             >
                                                 <Download className="h-4 w-4" />
                                                 Download Certificate (PDF)
                                             </a>
                                             <Link
                                                 href={`/verify/${encodeURIComponent(certId)}`}
-                                                className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/50 px-4 py-2.5 text-sm font-bold text-emerald-200 transition hover:bg-emerald-950/60"
+                                                className="lpd-btn lpd-btn-ghost lpd-btn-sm"
                                             >
                                                 <BadgeCheck className="h-4 w-4" />
                                                 View Public Verification
@@ -451,7 +455,7 @@ export default function CourseTestPage() {
                                         </div>
                                     </>
                                 ) : (
-                                    <p className="mt-1 text-sm text-emerald-100/80">
+                                    <p className="mt-1 text-sm text-[#3B3150]">
                                         Your certificate is being prepared and will
                                         appear here shortly.
                                     </p>
@@ -464,36 +468,36 @@ export default function CourseTestPage() {
                 {/* ------------------------- Form ------------------------- */}
                 {!isPassed &&
                     (inCooldown ? (
-                        <section className="mt-5 rounded-3xl border border-amber-400/40 bg-amber-950/30 p-5 text-center md:p-6">
-                            <Clock className="mx-auto h-8 w-8 text-amber-300" />
-                            <h2 className="mt-3 font-bold text-amber-100">
+                        <section className="lpd-card mt-5 p-5 text-center md:p-6 bg-[#FFE9AE]/40 border-[rgba(59,49,80,.2)]">
+                            <Clock className="mx-auto h-8 w-8 text-[#3B3150]" />
+                            <h2 className="lpd-display mt-3 font-bold text-[#1E1530]">
                                 Retake cooldown active
                             </h2>
-                            <p className="mt-1 text-sm text-amber-100/75">
+                            <p className="mt-1 text-sm text-[#3B3150]">
                                 You can attempt this test again after{" "}
-                                <strong className="text-white">
+                                <strong className="text-[#1E1530]">
                                     {formatDateTime(attempt?.cooldownUntil)} IST
                                 </strong>
                                 .
                             </p>
                         </section>
                     ) : status === "AWAITING_REVIEW" ? (
-                        <section className="mt-5 rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 text-center md:p-6">
-                            <Clock className="mx-auto h-8 w-8 text-amber-300" />
-                            <h2 className="mt-3 font-bold">Practical under review</h2>
-                            <p className="mt-1 text-sm text-rose-100/70">
+                        <section className="lpd-card mt-5 p-5 text-center md:p-6">
+                            <Clock className="mx-auto h-8 w-8 text-[#6B5F80]" />
+                            <h2 className="lpd-display mt-3 font-bold text-[#1E1530]">Practical under review</h2>
+                            <p className="mt-1 text-sm text-[#6B5F80]">
                                 Nothing more to do right now — check back here for
                                 your final result.
                             </p>
                         </section>
                     ) : (
                         <form onSubmit={handleSubmit} className="mt-5 space-y-5">
-                            <section className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6">
+                            <section className="lpd-card p-5 md:p-6">
                                 <SectionLabel>Part 1 · MCQ</SectionLabel>
                                 <div className="space-y-6">
                                     {data.questions.map((q, qi) => (
                                         <fieldset key={q.id}>
-                                            <legend className="text-sm font-semibold leading-relaxed text-white">
+                                            <legend className="text-sm font-semibold leading-relaxed text-[#1E1530]">
                                                 {qi + 1}. {q.text}
                                             </legend>
                                             <div className="mt-3 space-y-2">
@@ -503,10 +507,10 @@ export default function CourseTestPage() {
                                                     return (
                                                         <label
                                                             key={oi}
-                                                            className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition ${
+                                                            className={`flex cursor-pointer items-center gap-3 rounded-[14px] border-2 px-4 py-3 text-sm transition ${
                                                                 selected
-                                                                    ? "border-rose-400 bg-rose-950/60 text-white"
-                                                                    : "border-white/10 bg-black/30 text-rose-100/80 hover:border-rose-400/50"
+                                                                    ? "border-[#FF8AC4] bg-[#FFE9F3] text-[#1E1530] font-semibold"
+                                                                    : "border-[rgba(59,49,80,.14)] bg-white text-[#3B3150] hover:border-[#CFC6E2]"
                                                             }`}
                                                         >
                                                             <input
@@ -522,7 +526,7 @@ export default function CourseTestPage() {
                                                                         }),
                                                                     )
                                                                 }
-                                                                className="h-4 w-4 shrink-0 accent-rose-500"
+                                                                className="h-4 w-4 shrink-0 accent-[#D93C78]"
                                                             />
                                                             <span>{opt}</span>
                                                         </label>
@@ -534,15 +538,15 @@ export default function CourseTestPage() {
                                 </div>
                             </section>
 
-                            <section className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6">
+                            <section className="lpd-card p-5 md:p-6">
                                 <SectionLabel>Part 2 · Practical</SectionLabel>
                                 <label
                                     htmlFor="practicalLink"
-                                    className="text-sm font-semibold text-white"
+                                    className="lpd-label"
                                 >
                                     Link to your edited video
                                 </label>
-                                <p className="mt-1 text-xs leading-relaxed text-rose-100/60">
+                                <p className="mt-1 text-xs leading-relaxed text-[#6B5F80]">
                                     Paste a viewable link (Google Drive, YouTube
                                     unlisted, etc.) to the trailer/edit you made for
                                     this test. Make sure anyone with the link can
@@ -557,18 +561,18 @@ export default function CourseTestPage() {
                                     onChange={(e) =>
                                         setPracticalLink(e.target.value)
                                     }
-                                    className="mt-3 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-rose-100/30 focus:border-rose-400 focus:outline-none"
+                                    className="lpd-input mt-3"
                                 />
                             </section>
 
                             {result && (
                                 <div
-                                    className={`rounded-2xl border px-4 py-3 text-sm ${
+                                    className={`rounded-[16px] border-2 px-4 py-3 text-sm ${
                                         result.status === "PASSED"
-                                            ? "border-emerald-400/40 bg-emerald-950/50 text-emerald-100"
+                                            ? "border-[#0F8E69]/35 bg-[#E9FBF4] text-[#1E1530]"
                                             : result.status === "FAILED"
-                                              ? "border-red-400/40 bg-red-950/50 text-red-100"
-                                              : "border-amber-400/40 bg-amber-950/50 text-amber-100"
+                                              ? "border-[#FF4F5E]/35 bg-[#FF4F5E]/10 text-[#1E1530]"
+                                              : "border-[rgba(59,49,80,.2)] bg-[#FFE9AE]/50 text-[#1E1530]"
                                     }`}
                                 >
                                     <strong>Result:</strong> MCQ score{" "}
@@ -582,7 +586,7 @@ export default function CourseTestPage() {
                             )}
 
                             {submitError && (
-                                <div className="rounded-2xl border border-red-400/40 bg-red-950/50 px-4 py-3 text-sm text-red-100">
+                                <div className="rounded-[16px] border-2 border-[#FF4F5E]/35 bg-[#FF4F5E]/10 px-4 py-3 text-sm text-[#1E1530]">
                                     {submitError}
                                 </div>
                             )}
@@ -590,7 +594,7 @@ export default function CourseTestPage() {
                             <button
                                 type="submit"
                                 disabled={!canSubmit}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3.5 font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="lpd-btn lpd-btn-pink lpd-btn-block"
                             >
                                 {submitting ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />

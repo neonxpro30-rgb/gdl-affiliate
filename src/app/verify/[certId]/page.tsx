@@ -76,30 +76,32 @@ export default async function VerifyCertificatePage({
     }
 
     return (
-        <main className="min-h-screen bg-[#F7E8EC] font-sans px-4 py-12">
+        <main className="lpd-shell min-h-screen px-4 py-12">
             <div className="mx-auto w-full max-w-xl">
                 {/* Brand header */}
                 <div className="mb-8 text-center">
                     <Link href="/" className="inline-flex items-center gap-2">
-                        <Award className="h-8 w-8 text-[#732C3F]" />
-                        <span className="font-display text-3xl uppercase tracking-wide text-[#1A0B12]">
+                        <Award className="h-8 w-8 text-[#D93C78]" />
+                        <span className="lpd-display text-3xl uppercase tracking-wide text-[#1E1530]">
                             LearnPeak
                         </span>
                     </Link>
-                    <p className="mt-2 text-sm text-[#732C3F]/80">
+                    <p className="lpd-pixel mt-2 text-[16px] uppercase tracking-[0.18em] text-[#6B5F80]">
                         Certificate Verification
                     </p>
                 </div>
 
                 {!cert ? (
-                    <div className="rounded-3xl border border-rose-200 bg-white p-8 text-center shadow-sm">
-                        <SearchX className="mx-auto h-12 w-12 text-rose-300" />
-                        <h1 className="mt-4 text-2xl font-bold text-gray-900">
+                    <div className="lpd-card p-8 text-center">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#E8E2F0]">
+                            <SearchX className="h-7 w-7 text-[#3B3150]" />
+                        </div>
+                        <h1 className="lpd-display mt-4 text-2xl font-bold text-[#1E1530]">
                             Certificate not found
                         </h1>
-                        <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                        <p className="mt-2 text-sm leading-relaxed text-[#3B3150]">
                             We could not find any certificate with the ID{" "}
-                            <span className="font-mono font-semibold text-gray-800">
+                            <span className="lpd-pixel text-[18px] font-semibold text-[#1E1530]">
                                 {certId}
                             </span>
                             . Please check the ID and try again, or contact
@@ -107,43 +109,45 @@ export default async function VerifyCertificatePage({
                         </p>
                         <Link
                             href="/"
-                            className="mt-6 inline-block rounded-xl bg-[#732C3F] px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+                            className="lpd-btn lpd-btn-pink mt-6"
                         >
                             Back to LearnPeak
                         </Link>
                     </div>
                 ) : (
-                    <div className="overflow-hidden rounded-3xl border border-rose-200 bg-white shadow-sm">
+                    <div className="lpd-card overflow-hidden">
                         {/* Status banner */}
                         {cert.status === "revoked" ? (
-                            <div className="flex items-center gap-3 bg-red-50 px-6 py-5">
-                                <XCircle className="h-8 w-8 shrink-0 text-red-500" />
+                            <div className="flex items-center gap-3 bg-[#FF4F5E]/10 border-b-2 border-[#FF4F5E]/25 px-6 py-5">
+                                <XCircle className="h-8 w-8 shrink-0 text-[#FF4F5E]" />
                                 <div>
-                                    <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-red-400">
+                                    <p className="lpd-pixel text-[14px] uppercase tracking-[0.18em] text-[#FF4F5E]">
                                         Certificate Status
                                     </p>
-                                    <p className="text-xl font-extrabold uppercase tracking-wide text-red-600">
+                                    <p className="lpd-display text-xl font-extrabold uppercase tracking-wide text-[#1E1530]">
                                         Revoked
                                     </p>
+                                    <span className="lpd-badge lpd-badge-coral mt-1">Revoked</span>
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-3 bg-emerald-50 px-6 py-5">
-                                <BadgeCheck className="h-8 w-8 shrink-0 text-emerald-500" />
+                            <div className="flex items-center gap-3 bg-[#E9FBF4] border-b-2 border-[#0F8E69]/25 px-6 py-5">
+                                <BadgeCheck className="h-8 w-8 shrink-0 text-[#0F8E69]" />
                                 <div>
-                                    <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-emerald-500">
+                                    <p className="lpd-pixel text-[14px] uppercase tracking-[0.18em] text-[#0F8E69]">
                                         Certificate Status
                                     </p>
-                                    <p className="text-xl font-extrabold uppercase tracking-wide text-emerald-600">
+                                    <p className="lpd-display text-xl font-extrabold uppercase tracking-wide text-[#1E1530]">
                                         Valid
                                     </p>
+                                    <span className="lpd-badge lpd-badge-mint mt-1">Verified</span>
                                 </div>
                             </div>
                         )}
 
-                        <div className="px-6 py-6">
+                        <div className="px-6 py-6 bg-white">
                             {cert.status === "revoked" && (
-                                <p className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                <p className="mb-5 rounded-[14px] border-2 border-[#FF4F5E]/30 bg-[#FF4F5E]/10 px-4 py-3 text-sm text-[#1E1530]">
                                     This certificate has been revoked by
                                     LearnPeak and is no longer valid.
                                 </p>
@@ -151,35 +155,35 @@ export default async function VerifyCertificatePage({
 
                             <dl className="space-y-4">
                                 <div>
-                                    <dt className="font-mono text-[11px] uppercase tracking-[0.25em] text-gray-400">
+                                    <dt className="lpd-pixel text-[14px] uppercase tracking-[0.18em] text-[#6B5F80]">
                                         Student Name
                                     </dt>
-                                    <dd className="mt-1 text-lg font-bold text-gray-900">
+                                    <dd className="lpd-display mt-1 text-lg font-bold text-[#1E1530]">
                                         {cert.userName || "—"}
                                     </dd>
                                 </div>
                                 <div>
-                                    <dt className="font-mono text-[11px] uppercase tracking-[0.25em] text-gray-400">
+                                    <dt className="lpd-pixel text-[14px] uppercase tracking-[0.18em] text-[#6B5F80]">
                                         Course Completed
                                     </dt>
-                                    <dd className="mt-1 text-base font-semibold text-gray-800">
+                                    <dd className="mt-1 text-base font-semibold text-[#1E1530]">
                                         {courseTitle || "—"}
                                     </dd>
                                 </div>
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    <div>
-                                        <dt className="font-mono text-[11px] uppercase tracking-[0.25em] text-gray-400">
+                                    <div className="rounded-[14px] bg-[#FFF8FB] border-2 border-[rgba(59,49,80,.14)] px-3 py-2.5">
+                                        <dt className="lpd-pixel text-[14px] uppercase tracking-[0.18em] text-[#6B5F80]">
                                             Certificate ID
                                         </dt>
-                                        <dd className="mt-1 font-mono text-sm font-semibold text-gray-800">
+                                        <dd className="lpd-pixel mt-1 text-[18px] leading-tight font-semibold text-[#1E1530] break-all">
                                             {cert.certId || certId}
                                         </dd>
                                     </div>
                                     <div>
-                                        <dt className="font-mono text-[11px] uppercase tracking-[0.25em] text-gray-400">
+                                        <dt className="lpd-pixel text-[14px] uppercase tracking-[0.18em] text-[#6B5F80]">
                                             Completion / Issue Date
                                         </dt>
-                                        <dd className="mt-1 text-sm font-semibold text-gray-800">
+                                        <dd className="mt-1 text-sm font-semibold text-[#1E1530]">
                                             {formatDate(cert.issuedAt)}
                                         </dd>
                                     </div>
@@ -189,7 +193,7 @@ export default async function VerifyCertificatePage({
                     </div>
                 )}
 
-                <p className="mt-6 text-center text-xs leading-relaxed text-gray-500">
+                <p className="mt-6 text-center text-xs leading-relaxed text-[#6B5F80]">
                     This is a LearnPeak certificate of completion. It is not a
                     government or university qualification.
                 </p>

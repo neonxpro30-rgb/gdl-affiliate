@@ -20,38 +20,40 @@ export default async function ProfilePage() {
     const user = { id: userDoc.id, ...userDoc.data() } as any;
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="lpd-shell min-h-screen">
             <DashboardNavbar user={session.user} />
 
             <div className="max-w-3xl mx-auto p-4 md:p-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-8">My Profile</h1>
+                <div className="lpd-banner px-5 py-5 mb-8">
+                    <h1 className="lpd-display text-3xl font-bold text-[#1E1530]">My Profile</h1>
+                </div>
 
                 <ProfileUpload currentPhotoUrl={user.photoURL} userName={user.name} />
 
-                <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-                    <h2 className="text-xl font-bold mb-6 border-b pb-2">Personal Details</h2>
+                <div className="lpd-card p-6 mb-8">
+                    <h2 className="lpd-display text-xl font-bold text-[#1E1530] mb-6 border-b-2 border-[rgba(59,49,80,.14)] pb-2">Personal Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm text-gray-500">Full Name</label>
-                            <p className="font-medium text-lg">{user.name}</p>
+                            <label className="lpd-label">Full Name</label>
+                            <p className="font-semibold text-lg text-[#1E1530]">{user.name}</p>
                         </div>
                         <div>
-                            <label className="block text-sm text-gray-500">Email</label>
-                            <p className="font-medium text-lg">{user.email}</p>
+                            <label className="lpd-label">Email</label>
+                            <p className="font-semibold text-lg text-[#1E1530] break-all">{user.email}</p>
                         </div>
                         <div>
-                            <label className="block text-sm text-gray-500">Phone</label>
-                            <p className="font-medium text-lg">{user.phone}</p>
+                            <label className="lpd-label">Phone</label>
+                            <p className="font-semibold text-lg text-[#1E1530]">{user.phone}</p>
                         </div>
                         <div>
-                            <label className="block text-sm text-gray-500">Referral Code</label>
-                            <p className="font-medium text-lg">{user.referralCode}</p>
+                            <label className="lpd-label">Referral Code</label>
+                            <p className="lpd-pixel font-semibold text-[22px] leading-tight text-[#1E1530]">{user.referralCode}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-xl font-bold mb-6 border-b pb-2">Bank Details (For Payouts)</h2>
+                <div className="lpd-card p-6">
+                    <h2 className="lpd-display text-xl font-bold text-[#1E1530] mb-6 border-b-2 border-[rgba(59,49,80,.14)] pb-2">Bank Details (For Payouts)</h2>
                     <BankDetailsForm user={user} />
                 </div>
             </div>
