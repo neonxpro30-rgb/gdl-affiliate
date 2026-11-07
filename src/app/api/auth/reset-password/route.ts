@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
 import * as bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
     try {
         const { token, email, newPassword } = await req.json();
+
+        if (!token || !email) {
+            return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+        }
+        if (!newPassword || String(newPassword).length < 8) {
+            return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+        }
 
         const usersRef = db.collection('users');
         const snapshot = await usersRef.where('email', '==', email).limit(1).get();
@@ -16,7 +24,14 @@ export async function POST(req: Request) {
         const userDoc = snapshot.docs[0];
         const userData = userDoc.data();
 
-        if (userData.resetToken !== token || userData.resetTokenExpiry < Date.now()) {
+        // Tokens are stored as SHA-256 hashes (audit #12) — hash the
+        // presented token and compare hashes in constant time.
+        const presentedHash = crypto.createHash('sha256').update(String(token)).digest('hex');
+        const storedHash = String(userData.resetToken || '');
+        const hashesMatch = storedHash.length === presentedHash.length &&
+            crypto.timingSafeEqual(Buffer.from(storedHash), Buffer.from(presentedHash));
+
+        if (!hashesMatch || !userData.resetTokenExpiry || userData.resetTokenExpiry < Date.now()) {
             return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
         }
 

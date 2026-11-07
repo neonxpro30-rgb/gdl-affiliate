@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
 import crypto from 'crypto';
+import { sendPasswordResetEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
     try {
@@ -16,18 +17,20 @@ export async function POST(req: Request) {
 
         const userDoc = snapshot.docs[0];
         const resetToken = crypto.randomBytes(32).toString('hex');
+        // Store only the SHA-256 hash of the token — a database leak must
+        // not hand out usable reset tokens (audit #12). The raw token
+        // exists only in the emailed link.
+        const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
         const resetTokenExpiry = Date.now() + 3600000; // 1 hour
 
         await usersRef.doc(userDoc.id).update({
-            resetToken,
+            resetToken: resetTokenHash,
             resetTokenExpiry
         });
 
-        // In a real app, send email here.
-        // For this demo/local setup, we will log it to the console.
-        console.log(`[RESET PASSWORD] Token for ${email}: ${resetToken}`);
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        console.log(`[RESET LINK] ${baseUrl}/reset-password?token=${resetToken}&email=${email}`);
+        const resetLink = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+        await sendPasswordResetEmail(email, resetLink);
 
         return NextResponse.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
     } catch (error) {

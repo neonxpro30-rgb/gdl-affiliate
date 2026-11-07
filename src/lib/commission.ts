@@ -15,7 +15,7 @@ import type { Product } from '@/lib/products';
 //   -> reversed. Admin may hold/reject with a reason.
 // - NO owned-package logic, NO Upgrade Bonus / pendings anywhere here.
 
-export type CommissionStatus = 'pending' | 'confirmed' | 'approved' | 'paid' | 'reversed' | 'held' | 'rejected';
+export type CommissionStatus = 'pending' | 'confirmed' | 'approved' | 'batched' | 'paid' | 'reversed' | 'held' | 'rejected';
 
 export interface BuyerFingerprint {
     ip?: string;

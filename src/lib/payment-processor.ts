@@ -37,6 +37,22 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
         paymentData: paymentData,
     });
 
+    // 1b. Count the coupon use exactly once — here, on successful
+    // payment (audit #29). This processor is idempotency-guarded above,
+    // so replays never double-count. (Previously counted at PENDING
+    // order creation in checkout, where abandoned orders burned uses.)
+    if (orderData.couponCode) {
+        try {
+            const cSnap = await db.collection('coupons').where('code', '==', orderData.couponCode).limit(1).get();
+            if (!cSnap.empty) {
+                const c = cSnap.docs[0];
+                await c.ref.update({ uses: (c.data().uses || 0) + 1 });
+            }
+        } catch (err) {
+            console.error('Coupon use count failed (non-blocking):', err);
+        }
+    }
+
     // 2. Activate User
     if (orderData.userId) {
         await db.collection('users').doc(orderData.userId).update({

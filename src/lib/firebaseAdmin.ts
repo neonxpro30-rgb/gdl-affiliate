@@ -16,6 +16,15 @@ if (!admin.apps.length) {
             credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
             storageBucket: `${projectId}.appspot.com`
         });
+    } else if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
+        // Fail closed (audit #17): a production runtime without Firebase
+        // credentials must never silently serve the mock DB / default
+        // settings. The mock stays available for local dev and for the
+        // Next build phase only.
+        throw new Error(
+            'Firebase env vars missing in production: set FIREBASE_PROJECT_ID, ' +
+            'FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY. Refusing to fall back to the mock DB.'
+        );
     } else {
         console.warn("Firebase env vars missing - skipping admin init (mock DB will be used, e.g. during build).");
     }

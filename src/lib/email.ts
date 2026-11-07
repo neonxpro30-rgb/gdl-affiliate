@@ -62,6 +62,49 @@ export async function sendWelcomeEmail(toEmail: string, userName: string) {
     }
 }
 
+export async function sendPasswordResetEmail(toEmail: string, resetLink: string) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn("Skipping Password Reset Email: Credentials missing.");
+        return;
+    }
+
+    const mailOptions = {
+        from: `"LearnPeak Team" <${process.env.EMAIL_USER}>`,
+        to: toEmail,
+        subject: `Reset your LearnPeak password`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #732C3F;">Password Reset</h1>
+                </div>
+
+                <p>We received a request to reset the password for your LearnPeak account.</p>
+
+                <p>Click the button below to choose a new password. This link expires in 1 hour and can only be used once.</p>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="${resetLink}" style="background-color: #732C3F; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+                </div>
+
+                <p style="margin-top: 30px; font-size: 12px; color: #888; text-align: center;">
+                    If you did not request this, you can safely ignore this email — your password will not change.
+                </p>
+
+                <p style="text-align: center; font-size: 12px; color: #aaa; margin-top: 20px;">
+                    &copy; ${new Date().getFullYear()} LearnPeak. All rights reserved.
+                </p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Password reset email sent to ${toEmail}`);
+    } catch (error) {
+        console.error("Failed to send password reset email:", error);
+    }
+}
+
 export async function sendSaleNotificationEmail(toEmail: string, mentorName: string, buyerName: string, packageName: string) {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
 
