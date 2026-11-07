@@ -68,6 +68,15 @@ export default async function CoursesPage() {
             };
         });
 
+        // NEW catalog courses (productSlug-based, post-relaunch)
+        const { hasFullCourseAccess, hasLessonAccess } = await import('@/lib/access');
+        const newCourses: any[] = [];
+        for (const c of courses.filter((c: any) => c.productSlug)) {
+            const full = await hasFullCourseAccess(session.user.id, c.productSlug);
+            const demo = !full && await hasLessonAccess(session.user.id, c.productSlug, 0);
+            newCourses.push({ ...c, accessState: full ? 'full' : demo ? 'demo' : 'locked' });
+        }
+
         return (
             <div className="min-h-screen bg-gray-50">
                 <DashboardNavbar user={session.user} />
@@ -77,6 +86,29 @@ export default async function CoursesPage() {
                         <h1 className="text-3xl font-bold text-gray-800">My Learning</h1>
                         <p className="text-gray-600 mt-2">Select a category to start learning.</p>
                     </div>
+
+                    {newCourses.length > 0 && (
+                        <div className="mb-10">
+                            <h2 className="text-xl font-bold text-gray-800 mb-4">Wedding Editing Courses</h2>
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {newCourses.map((c: any) => (
+                                    <div key={c.id} className="bg-white rounded-xl shadow p-5">
+                                        <h3 className="font-bold text-gray-900">{c.title}</h3>
+                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{c.description || ''}</p>
+                                        {c.accessState === 'locked' ? (
+                                            <a href={`/signup?product=${c.productSlug}`} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#732C3F] px-4 py-2 text-sm font-bold text-white">
+                                                <Lock className="w-4 h-4" /> Buy Course
+                                            </a>
+                                        ) : (
+                                            <a href={`/dashboard/courses/player/${c.id}`} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white">
+                                                <PlayCircle className="w-4 h-4" /> {c.accessState === 'demo' ? 'Watch Demo Lesson' : 'Continue Learning'}
+                                            </a>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Learning Dashboard Welcome */}
                     <div className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-2xl p-6">

@@ -10,8 +10,7 @@ import CoursesTable from "./CoursesTable";
 import BlogManager from "./BlogManager";
 import DateFilter from "./DateFilter";
 import CommissionFilter from "./CommissionFilter";
-import PendingFilter from "./PendingFilter";
-import { transitionAllExpiredPendings } from "@/lib/pendingCommission";
+import RelaunchAdmin from "./RelaunchAdmin";
 
 export const dynamic = 'force-dynamic';
 
@@ -218,10 +217,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     let pendings: any[] = [];
     if (activeTab === 'pendings') {
         try {
-            // Run the lazy expiry transition first so admin never shows a
-            // stale PENDING for a window that already lapsed (user dashboard
-            // would show DONATED for the same doc).
-            await transitionAllExpiredPendings();
+            // READ-ONLY legacy view: no expiry transitions run anymore —
+            // pre-cutover settlement happens under supervision, off-app.
             const pendingsSnapshot = await db.collection('pendings').get();
             const allPendings = await Promise.all(pendingsSnapshot.docs.map(async (doc) => {
                 const data = doc.data();
@@ -455,7 +452,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                         href="/admin?tab=pendings"
                         className={`px-4 py-2 rounded-lg font-medium text-sm md:text-base ${activeTab === 'pendings' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'}`}
                     >
-                        Pendings (Upgrade Bonus)
+                        Legacy Bonuses (read-only)
                     </a>
                     <a
                         href="/admin?tab=charity"
@@ -468,6 +465,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                         className={`px-4 py-2 rounded-lg font-medium text-sm md:text-base ${activeTab === 'blog' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'}`}
                     >
                         Blog (Stories)
+                    </a>
+                    <a
+                        href="/admin?tab=relaunch"
+                        className={`px-4 py-2 rounded-lg font-medium text-sm md:text-base ${activeTab === 'relaunch' ? 'bg-[#732C3F] text-white' : 'bg-white text-gray-900 hover:bg-gray-50'}`}
+                    >
+                        🚀 Relaunch
                     </a>
                 </div>
 
@@ -678,9 +681,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 ) : activeTab === 'pendings' ? (
                     <div className="bg-white rounded-xl shadow-md overflow-hidden">
                         <div className="p-6 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-900">Upgrade Bonus Pendings Ledger</h2>
-                            <p className="text-sm text-gray-500 mb-4">Held commission differences from higher-package sales. PENDING = within 7-day claim window · DONATED = window lapsed, given to children&apos;s education charity · CLAIMED = credited to affiliate.</p>
-                            <PendingFilter />
+                            <h2 className="text-xl font-bold text-gray-900">Legacy Upgrade Bonus Ledger — Read Only</h2>
+                            <p className="text-sm text-gray-500">Historical records from the old Upgrade Bonus program (ended at relaunch). Pre-cutover pendings are settled under the old terms by a supervised settlement run — this view never writes anything.</p>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left min-w-[1000px]">
@@ -787,6 +789,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     </div>
                 ) : activeTab === 'categories' ? (
                     <CategoriesTable categories={categories} />
+                ) : activeTab === 'relaunch' ? (
+                    <RelaunchAdmin />
                 ) : activeTab === 'blog' ? (
                     <BlogManager />
                 ) : (

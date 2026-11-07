@@ -1,109 +1,42 @@
 'use client';
 
 import { useSession } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { redirect } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
-import { ArrowUpCircle } from "lucide-react";
 
-function tierOf(name: string): number {
-    const n = (name || '').toLowerCase();
-    if (n.includes('diamond')) return 3;
-    if (n.includes('gold')) return 2;
-    if (n.includes('silver')) return 1;
-    return 0;
-}
-
+// The old package-upgrade page existed to unlock Upgrade Bonus claims.
+// That program ended with the LearnPeak relaunch — this page now simply
+// explains the change and points to the new course catalog.
 export default function UpgradePage() {
     const { data: session, status } = useSession();
-    const router = useRouter();
-    const [packages, setPackages] = useState<any[]>([]);
-    const [currentTier, setCurrentTier] = useState<number | null>(null);
-    const [currentName, setCurrentName] = useState('Loading...');
-    const [buying, setBuying] = useState<string | null>(null);
-    const [error, setError] = useState('');
-
-    useEffect(() => {
-        if (status === 'unauthenticated') redirect('/login');
-        if (!session) return;
-
-        fetch('/api/packages').then(r => r.json()).then(setPackages).catch(console.error);
-        fetch('/api/user/pendings')
-            .then(r => r.json())
-            .then(d => {
-                setCurrentTier(d.currentTier ?? 0);
-                const names = ['Silicon Demo', 'Silver Package', 'Gold Package', 'Diamond Package'];
-                setCurrentName(names[d.currentTier ?? 0] || 'Unknown');
-            })
-            .catch(() => { setCurrentTier(0); setCurrentName('Unknown'); });
-    }, [session, status]);
-
-    const handleUpgrade = async (packageId: string) => {
-        setBuying(packageId);
-        setError('');
-        try {
-            const res = await fetch('/api/user/upgrade', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ packageId }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Upgrade failed');
-            router.push(`/payment/${data.orderId}`);
-        } catch (err: any) {
-            setError(err.message);
-            setBuying(null);
-        }
-    };
-
-    if (status === 'loading') {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-    }
+    if (status === 'unauthenticated') redirect('/login');
     if (!session) return null;
 
-    const higher = packages.filter(p => currentTier !== null && tierOf(p.name) > currentTier);
-
     return (
-        <div className="min-h-screen bg-[#FFFBF0]">
-            <DashboardNavbar user={session.user} />
-            <div className="max-w-3xl mx-auto p-4 pb-24">
-                <div className="flex items-center gap-3 mb-2 mt-4">
-                    <ArrowUpCircle className="w-8 h-8 text-[#732C3F]" />
-                    <h1 className="text-3xl font-bold text-[#1A0B12]">Upgrade Package</h1>
+        <div className="min-h-screen bg-[#1A0B12] text-white">
+            <DashboardNavbar user={session.user as any} />
+            <div className="max-w-md md:max-w-2xl mx-auto px-4 pt-10 pb-24">
+                <h1 className="font-display text-3xl uppercase tracking-wide">Upgrades have changed</h1>
+                <div className="mt-5 rounded-2xl border border-rose-900/60 bg-[#241019]/90 p-6 text-sm leading-relaxed text-rose-100/85 space-y-3">
+                    <p>
+                        LearnPeak has relaunched as a wedding video editing school. The old
+                        Silicon / Silver / Gold / Diamond packages are no longer sold, and the
+                        Upgrade Bonus program has ended.
+                    </p>
+                    <p>
+                        <strong className="text-white">Your existing access is safe</strong> — everything you
+                        already bought stays in your account. Any Upgrade Bonus that was pending
+                        before the relaunch is being settled under the old terms; it has not been
+                        cancelled.
+                    </p>
+                    <p>
+                        New courses are sold individually now — no tiers, no upgrades needed.
+                        And anyone can earn a flat 30% affiliate commission without buying anything.
+                    </p>
+                    <a href="/dashboard/courses" className="inline-block mt-2 rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 px-5 py-3 font-bold text-white">
+                        Go to My Courses
+                    </a>
                 </div>
-                <p className="text-gray-600 mb-8">
-                    Your current package: <span className="font-bold text-[#732C3F]">{currentName}</span>.
-                    Upgrade to unlock higher commissions and claim your Upgrade Bonus.
-                </p>
-
-                {error && (
-                    <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-medium">{error}</div>
-                )}
-
-                {currentTier === null ? (
-                    <p className="text-gray-500">Loading packages...</p>
-                ) : higher.length === 0 ? (
-                    <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-200">
-                        <p className="text-lg font-semibold text-gray-800">You own the highest package. 🎉</p>
-                        <p className="text-gray-500 mt-2">There is nothing above {currentName} to upgrade to.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {higher.map(pkg => (
-                            <div key={pkg.id} className="bg-white rounded-2xl p-6 shadow-sm border-2 border-[#732C3F]/10 hover:border-[#732C3F]/40 transition">
-                                <h3 className="text-xl font-bold text-[#1A0B12]">{pkg.name}</h3>
-                                <p className="text-3xl font-extrabold text-[#732C3F] mt-2">₹{pkg.price}</p>
-                                <button
-                                    onClick={() => handleUpgrade(pkg.id)}
-                                    disabled={buying !== null}
-                                    className="mt-4 w-full bg-[#732C3F] text-white py-3 rounded-xl font-bold hover:bg-[#5a2231] transition disabled:opacity-50"
-                                >
-                                    {buying === pkg.id ? 'Creating order...' : `Upgrade to ${pkg.name}`}
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
             </div>
         </div>
     );

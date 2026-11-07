@@ -4,9 +4,9 @@ import { db } from '@/lib/firebaseAdmin';
 
 export async function POST(req: Request) {
     try {
-        const { name, email, phone, password, referralCode, packageId } = await req.json();
+        const { name, email, phone, password, referralCode, packageId, productSlug } = await req.json();
 
-        if (!name || !email || !password || !packageId) {
+        if (!name || !email || !password || (!packageId && !productSlug)) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -29,19 +29,32 @@ export async function POST(req: Request) {
             }
         }
 
-        // Get Package Details
-        const packageRef = db.collection('packages').doc(packageId);
-        const packageDoc = await packageRef.get();
+        // Price resolution: NEW catalog products win over legacy packages
+        let amount = 0;
+        let resolvedProductSlug: string | null = null;
+        if (productSlug) {
+            const { getProduct } = await import('@/lib/products');
+            const product = await getProduct(productSlug);
+            if (!product || !product.active) {
+                return NextResponse.json({ error: 'Product not available' }, { status: 400 });
+            }
+            amount = product.price;
+            resolvedProductSlug = product.slug;
+        } else {
+            // Get Package Details (legacy)
+            const packageRef = db.collection('packages').doc(packageId);
+            const packageDoc = await packageRef.get();
 
-        // Fallback if package not found (should be seeded)
-        let packageData = packageDoc.exists ? packageDoc.data() : null;
-        let amount = packageData ? packageData.price : 0;
+            // Fallback if package not found (should be seeded)
+            let packageData = packageDoc.exists ? packageDoc.data() : null;
+            amount = packageData ? packageData.price : 0;
 
-        // If package not found in DB, use hardcoded values (temporary safety)
-        if (!packageData) {
-            if (packageId.includes('silver')) amount = 799;
-            else if (packageId.includes('gold')) amount = 1299;
-            else if (packageId.includes('diamond')) amount = 3899;
+            // If package not found in DB, use hardcoded values (temporary safety)
+            if (!packageData) {
+                if (packageId.includes('silver')) amount = 799;
+                else if (packageId.includes('gold')) amount = 1299;
+                else if (packageId.includes('diamond')) amount = 3899;
+            }
         }
 
         // Create User
@@ -68,7 +81,9 @@ export async function POST(req: Request) {
         const timestamp = new Date().toISOString();
         await newOrderRef.set({
             userId,
-            packageId,
+            packageId: resolvedProductSlug ? null : packageId,
+            productSlug: resolvedProductSlug,
+            affiliateId: referrerId,
             amount,
             status: 'PENDING',
             createdAt: timestamp,

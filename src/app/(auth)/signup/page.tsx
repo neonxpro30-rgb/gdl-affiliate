@@ -14,10 +14,12 @@ function SignupForm() {
         phone: '',
         password: '',
         referralCode: '',
-        packageId: ''
+        packageId: '',
+        productSlug: ''
     });
 
     const [packages, setPackages] = useState<any[]>([]);
+    const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -30,18 +32,24 @@ function SignupForm() {
 
         // Auto-fill from URL
         const pkgId = searchParams.get('package');
+        const productSlug = searchParams.get('product');
         const refCode = searchParams.get('ref');
 
         setFormData(prev => ({
             ...prev,
             packageId: pkgId || '',
+            productSlug: productSlug || '',
             referralCode: refCode || ''
         }));
 
-        // Fetch packages for dropdown
+        // Fetch packages for dropdown (legacy) + new product catalog
         fetch('/api/packages')
             .then(res => res.json())
             .then(data => setPackages(data))
+            .catch(err => console.error(err));
+        fetch('/api/products')
+            .then(res => res.json())
+            .then(data => setProducts(Array.isArray(data) ? data : []))
             .catch(err => console.error(err));
     }, [searchParams]);
 
@@ -232,19 +240,33 @@ function SignupForm() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Select Package</label>
-                    <select
-                        name="packageId" required
-                        className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none text-gray-900"
-                        value={formData.packageId} onChange={handleChange}
-                    >
-                        <option value="">-- Choose a Package --</option>
-                        {packages.map(pkg => (
-                            <option key={pkg.id} value={pkg.id}>
-                                {pkg.name} - ₹{pkg.price}
-                            </option>
-                        ))}
-                    </select>
+                    {formData.productSlug ? (
+                        <>
+                            <label className="block text-sm font-medium text-gray-700">Your Course</label>
+                            <div className="w-full mt-1 p-3 border rounded-lg bg-rose-50 text-gray-900 font-semibold">
+                                {(() => {
+                                    const prod = products.find((p: any) => p.slug === formData.productSlug);
+                                    return prod ? `${prod.title} — ₹${prod.price}` : formData.productSlug;
+                                })()}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <label className="block text-sm font-medium text-gray-700">Select Package</label>
+                            <select
+                                name="packageId" required={!formData.productSlug}
+                                className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none text-gray-900"
+                                value={formData.packageId} onChange={handleChange}
+                            >
+                                <option value="">-- Choose a Package --</option>
+                                {packages.map(pkg => (
+                                    <option key={pkg.id} value={pkg.id}>
+                                        {pkg.name} - ₹{pkg.price}
+                                    </option>
+                                ))}
+                            </select>
+                        </>
+                    )}
                 </div>
 
                 <button

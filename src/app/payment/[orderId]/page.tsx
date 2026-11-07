@@ -11,9 +11,16 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderI
 
     const order = { id: orderDoc.id, ...orderDoc.data() } as any;
 
-    // Fetch Package
-    const packageDoc = await db.collection('packages').doc(order.packageId).get();
-    const pkg = packageDoc.exists ? packageDoc.data() : { name: 'Unknown Package' };
+    // Fetch Package (legacy) or Product (new catalog)
+    let pkg: any = { name: 'Unknown Package' };
+    if (order.productSlug) {
+        const { getProduct } = await import('@/lib/products');
+        const product = await getProduct(order.productSlug);
+        if (product) pkg = { name: product.title };
+    } else if (order.packageId) {
+        const packageDoc = await db.collection('packages').doc(order.packageId).get();
+        pkg = packageDoc.exists ? packageDoc.data() : { name: 'Unknown Package' };
+    }
 
     // Fetch User
     const userDoc = await db.collection('users').doc(order.userId).get();
@@ -24,7 +31,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderI
             <div className="min-h-screen flex items-center justify-center bg-green-50">
                 <div className="text-center p-8 bg-white rounded-xl shadow-lg">
                     <h1 className="text-3xl font-bold text-green-600 mb-4">Payment Successful!</h1>
-                    <p className="mb-6">You have successfully purchased the {pkg?.name} package.</p>
+                    <p className="mb-6">You have successfully purchased {pkg?.name}.</p>
                     <a href="/dashboard" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Go to Dashboard</a>
                 </div>
             </div>

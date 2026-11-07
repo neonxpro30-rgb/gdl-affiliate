@@ -31,9 +31,9 @@ export default function AboutUs() {
                 {/* Active Platform Badge */}
                 <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-6 text-center">
                     <div className="text-3xl mb-2">✅</div>
-                    <h2 className="text-xl font-bold text-green-800 mb-2">Active Digital Education Platform</h2>
+                    <h2 className="text-xl font-bold text-green-800 mb-2">Active Wedding Video Editing School</h2>
                     <p className="text-green-700 mb-3">
-                        LearnPeak is a fully operational platform. We continuously add new courses, update content, and improve the learning experience based on student feedback.
+                        LearnPeak is a fully operational school for wedding video editing, taught by a working wedding-film editor. We continuously add new lessons, update content, and improve the learning experience based on student feedback.
                     </p>
                     <div className="bg-green-100 rounded-lg p-3 inline-block">
                         <p className="text-green-800 font-medium">
@@ -48,30 +48,36 @@ export default function AboutUs() {
 
                     <div className="space-y-6 text-gray-700 leading-relaxed">
                         <p className="text-lg font-medium text-[#732C3F]">
-                            Empowering the next generation of digital leaders through skill-based education.
+                            A wedding video editing school, taught by an editor who does this work for real clients.
                         </p>
 
                         <p>
-                            LearnPeak is an ed-tech platform designed to help individuals learn practical digital skills like affiliate marketing, content creation, video editing, and social media marketing. Our focus is on <strong>skill development first, earnings second</strong>.
+                            LearnPeak teaches one craft properly: <strong>wedding video editing</strong>. Every course is taught by <strong>Naksh Gupta</strong>, a working wedding-film editor who edits real wedding projects for paying clients. The lessons are built from that real work — real timelines, real footage problems, and the workflow clients actually expect. LearnPeak is a skills school, <strong>not an income opportunity</strong>.
                         </p>
 
                         <h2 className="text-xl font-bold text-[#732C3F]">Our Mission</h2>
                         <p>
-                            To provide high-quality, affordable, and practical skills training to students and professionals, enabling them to build real skills that can lead to career growth and financial independence over time.
+                            To teach wedding video editing the way it is actually practised — practically, honestly, and at a price students can afford — so learners build a real, portfolio-ready skill.
                         </p>
 
                         <h2 className="text-xl font-bold text-[#732C3F]">Our Vision</h2>
                         <p>
-                            To become a trusted platform for digital skill development, creating a community of skilled professionals who succeed through hard work, consistency, and continuous learning.
+                            To become a trusted school for wedding-film editing, known for students whose work is good enough to be trusted on real client projects.
                         </p>
 
                         <h2 className="text-xl font-bold text-[#732C3F]">What We Offer</h2>
                         <ul className="list-disc ml-6 space-y-2">
-                            <li><strong>Lifetime Access</strong> to all courses – learn at your own pace.</li>
-                            <li>Practical, real-world focused courses.</li>
-                            <li>Community support and mentorship.</li>
-                            <li>Referral program for additional income (not the primary focus).</li>
+                            <li><strong>Four editing courses</strong> that build step by step, plus a bundle and a ₹19 demo lesson so you can try the teaching style first.</li>
+                            <li>Every course ends with a <strong>final test and a LearnPeak certificate of completion</strong>.</li>
+                            <li><strong>Paid work on real projects:</strong> top certified students can be offered paid editing work on real client wedding projects. This depends on the quality of their work and is not guaranteed.</li>
+                            <li><strong>Premiere Pro extensions</strong> built by Naksh himself — the same tools he uses to speed up his own editing workflow.</li>
+                            <li>Learn at your own pace, with course access through your personal dashboard.</li>
                         </ul>
+
+                        <h2 className="text-xl font-bold text-[#732C3F]">Business Details</h2>
+                        <p>[Business address — to be added]</p>
+                        <p>[Udyam registration — to be added] · [GSTIN — to be added]</p>
+                        <p>Support: [Support email — to be added]</p>
                     </div>
                 </div>
 
@@ -98,8 +104,8 @@ export default function AboutUs() {
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-red-200">
-                            <h3 className="font-bold mb-2">💰 Referral Income is Secondary</h3>
-                            <p>Our referral program exists to reward students who recommend others. It should NOT be your primary reason for joining. <strong>Primary focus = Learning Skills.</strong></p>
+                            <h3 className="font-bold mb-2">🎬 Paid Work is Earned, Not Promised</h3>
+                            <p>Top students who pass the final test may be offered paid work on real client wedding projects. This depends on the quality of your work and is <strong>not guaranteed</strong> to anyone. <strong>Primary focus = Learning the Skill.</strong></p>
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-red-200">
@@ -108,8 +114,8 @@ export default function AboutUs() {
                         </div>
 
                         <div className="bg-white p-4 rounded-lg border border-red-200">
-                            <h3 className="font-bold mb-2">📋 Strict No-Refund Policy</h3>
-                            <p><strong>All sales are final.</strong> Due to the digital nature of our products, no refunds or cancellations will be issued once payment is processed. Please review all course details before purchasing. See our full <a href="/legal/refund-policy" className="underline font-bold">Refund Policy</a>.</p>
+                            <h3 className="font-bold mb-2">📋 Our Refund Policy</h3>
+                            <p>If a course is not right for you, you can get a <strong>full refund within 24 hours of purchase</strong>, provided you have watched less than 20% of the course. See our full <a href="/legal/refund-policy" className="underline font-bold">Refund Policy</a>.</p>
                         </div>
                     </div>
 
@@ -127,19 +133,19 @@ export default function AboutUs() {
                     <ul className="space-y-3 text-green-900">
                         <li className="flex items-start gap-2">
                             <span>✓</span>
-                            <span>You want to <strong>learn real digital skills</strong> (affiliate marketing, content creation, video editing)</span>
+                            <span>You want to <strong>learn wedding video editing properly</strong> — the craft, the workflow, and the storytelling</span>
                         </li>
                         <li className="flex items-start gap-2">
                             <span>✓</span>
-                            <span>You are willing to <strong>put in 3-6 months of consistent effort</strong></span>
+                            <span>You are willing to <strong>practice consistently</strong> and finish the course and its final test</span>
                         </li>
                         <li className="flex items-start gap-2">
                             <span>✓</span>
-                            <span>You understand that <strong>success takes time and hard work</strong></span>
+                            <span>You understand that <strong>skill takes time and hard work</strong></span>
                         </li>
                         <li className="flex items-start gap-2">
                             <span>✓</span>
-                            <span>You want to <strong>build a long-term career or side income</strong>, not quick money</span>
+                            <span>You want to <strong>build a real editing portfolio</strong> over time, not quick money</span>
                         </li>
                     </ul>
                 </div>
@@ -182,8 +188,10 @@ export default function AboutUs() {
                             <h3 className="text-xl font-bold text-gray-900">Naksh Gupta</h3>
                             <p className="text-[#C57C8A] font-medium text-sm mb-3">(Priyanshu Gupta)</p>
                             <p className="text-gray-600 leading-relaxed">
-                                Founder of LearnPeak with experience in digital marketing and content creation.
-                                His goal is to help individuals develop practical skills for the digital economy.
+                                Founder of LearnPeak and a working wedding-film editor. Naksh edits real
+                                wedding projects for clients, teaches every LearnPeak course himself, and
+                                builds the Premiere Pro extensions his students use. His goal is simple:
+                                teach editing the way it is actually done on real projects.
                             </p>
                         </div>
                     </div>

@@ -24,12 +24,17 @@ export default function TermsAndConditions() {
 
                     <h2 className="text-xl font-bold text-[#732C3F]">3. Course Content & Access</h2>
                     <p>
-                        LearnPeak is a fully operational digital education platform. All course content is available immediately upon purchase in your personal dashboard.
+                        LearnPeak is a fully operational digital education platform — a skills school that teaches wedding video editing. It is not an investment, a scheme, or a job. All course content is available immediately upon purchase in your personal dashboard.
                         Content is provided for educational purposes only. We make no guarantees regarding specific results or earnings.
                         Course content may be updated or expanded over time as part of your lifetime access.
                     </p>
 
-                    <h2 className="text-xl font-bold text-[#732C3F]">4. Termination</h2>
+                    <h2 className="text-xl font-bold text-[#732C3F]">4. Refunds</h2>
+                    <p>
+                        Refunds are governed by our <a href="/legal/refund-policy" className="text-[#732C3F] font-semibold underline">Refund &amp; Cancellation Policy</a>: a full refund is available within 24 hours of purchase if less than 20% of the course has been watched.
+                    </p>
+
+                    <h2 className="text-xl font-bold text-[#732C3F]">5. Termination</h2>
                     <p>
                         We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
                     </p>

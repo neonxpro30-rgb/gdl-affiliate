@@ -63,23 +63,16 @@ export default function TermsPage() {
                     {/* Refund Policy */}
                     <section>
                         <h2 className="text-xl font-bold text-[#732C3F] mb-3">4. Refund & Cancellation Policy</h2>
-                        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5">
-                            <p className="font-bold text-red-800 text-lg mb-3">🚫 Strict No-Refund Policy</p>
-                            <p className="mb-3 text-red-900">
-                                <strong>ALL SALES ARE FINAL.</strong> LearnPeak operates a strict no-refund, no-cancellation policy on all purchases.
-                            </p>
-                            <ul className="list-disc ml-6 space-y-2 text-red-900">
-                                <li>Once a payment is successfully processed, <strong>no refund will be issued under any circumstances</strong>.</li>
-                                <li>This policy applies to ALL packages — Silicon, Silver, Gold, and Diamond.</li>
-                                <li>Digital course content is delivered immediately upon purchase; hence it cannot be "returned".</li>
-                                <li>Requesting a chargeback or payment dispute without contacting us first is a violation of these terms.</li>
-                            </ul>
-                            <div className="mt-4 bg-red-100 rounded-lg p-3">
-                                <p className="text-red-800 text-sm font-medium">
-                                    ⚠️ We strongly encourage you to review the course details, watch available previews, and contact us with any questions <strong>BEFORE making a purchase</strong>. Contact: <a href="mailto:learnpeak.in@gmail.com" className="underline">learnpeak.in@gmail.com</a>
-                                </p>
-                            </div>
-                        </div>
+                        <p className="mb-3">
+                            You can request a <strong>full refund within 24 hours of purchase</strong>, provided you have
+                            watched <strong>less than 20% of the course</strong>. Refund requests are made through a simple
+                            form in your dashboard (order ID, course, and reason). Approved refunds are made to the
+                            original source of payment, and access to the refunded course is then removed.
+                        </p>
+                        <p>
+                            Full details are in our{' '}
+                            <Link href="/legal/refund-policy" className="text-[#732C3F] font-semibold underline">Refund &amp; Cancellation Policy</Link>.
+                        </p>
                     </section>
 
                     {/* User Responsibilities */}

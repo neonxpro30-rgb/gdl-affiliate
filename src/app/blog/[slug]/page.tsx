@@ -194,9 +194,9 @@ export default async function BlogPostPage({ params }: Props) {
 
                 {/* LearnPeak Promotion CTA */}
                 <div className="my-12 bg-gradient-to-r from-[#732C3F] to-[#9E4A5F] rounded-2xl p-8 text-center text-white">
-                    <h3 className="text-2xl font-bold mb-3">🚀 Ready to Start Earning Online?</h3>
+                    <h3 className="text-2xl font-bold mb-3">🎬 Ready to Learn Wedding Video Editing?</h3>
                     <p className="text-white/90 mb-6 max-w-xl mx-auto">
-                        Join thousands of students learning affiliate marketing, digital skills, and building passive income with LearnPeak.
+                        Learn wedding video editing in Premiere Pro from a working editor — start with the first lesson for just ₹19.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
