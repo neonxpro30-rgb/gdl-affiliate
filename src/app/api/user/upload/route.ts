@@ -60,10 +60,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ url: result.secure_url });
 
     } catch (error: any) {
+        // Details stay in server logs only (audit #31) — provider error
+        // strings can leak internals to the client.
         console.error('Error uploading file:', error);
         return NextResponse.json({
-            error: 'Internal Server Error',
-            details: error.message
+            error: 'Internal Server Error'
         }, { status: 500 });
     }
 }

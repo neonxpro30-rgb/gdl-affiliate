@@ -296,7 +296,9 @@ SAFETY CHECK: Use Google Search to find the most current live finance news right
         }
 
         const data = await response.json();
-        console.log('Gemini API Raw Response:', JSON.stringify(data, null, 2));
+        // Never dump the full provider response into logs (audit #31) —
+        // status + payload size are enough to debug with.
+        console.log('Gemini API response received:', response.status, 'bytes:', JSON.stringify(data).length);
         const topic = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
         if (topic.length > 10 && topic.length < 150) {

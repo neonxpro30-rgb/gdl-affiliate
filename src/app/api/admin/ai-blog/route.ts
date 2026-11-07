@@ -29,9 +29,10 @@ export async function GET(request: Request) {
             topics
         });
     } catch (error) {
+        console.error('AI blog topics error:', error);
         return NextResponse.json({
             success: false,
-            error: String(error)
+            error: 'Internal server error'
         }, { status: 500 });
     }
 }
@@ -57,9 +58,10 @@ export async function POST(request: Request) {
         const result = await generateBlogPost(topic);
 
         if (!result.success || !result.blog) {
+            console.error('AI blog generation failed:', result.error);
             return NextResponse.json({
                 success: false,
-                error: result.error || 'Failed to generate blog'
+                error: 'Failed to generate blog'
             }, { status: 500 });
         }
 
@@ -114,7 +116,7 @@ export async function POST(request: Request) {
         console.error('❌ Blog generation error:', error);
         return NextResponse.json({
             success: false,
-            error: String(error)
+            error: 'Internal server error'
         }, { status: 500 });
     }
 }
