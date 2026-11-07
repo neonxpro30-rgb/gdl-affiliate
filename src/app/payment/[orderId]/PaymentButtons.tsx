@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function PaymentButtons({ orderId, amount, userEmail, userName, productInfo }: { orderId: string, amount: number, userEmail: string, userName: string, productInfo: string }) {
+export default function PaymentButtons({ orderId, amount, userEmail, userName, userPhone, productInfo }: { orderId: string, amount: number, userEmail: string, userName: string, userPhone?: string, productInfo: string }) {
     const [loading, setLoading] = useState(false);
 
     const handlePayUPayment = async () => {
@@ -43,7 +43,9 @@ export default function PaymentButtons({ orderId, amount, userEmail, userName, p
                 productinfo: productInfo,
                 firstname: userName,
                 email: userEmail,
-                phone: '9999999999',
+                // The buyer's real phone (audit #24) — PayU uses it for
+                // OTP/receipts; never send a hard-coded placeholder.
+                phone: userPhone || '',
                 surl: `${window.location.origin}/api/payment/payu-response`,
                 furl: `${window.location.origin}/api/payment/payu-response`,
                 hash: data.hash,
