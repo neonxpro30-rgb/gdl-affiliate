@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminGuard';
-import { setCommissionStatus, type CommissionStatus } from '@/lib/commission';
+import { setCommissionStatus, TerminalStatusError, type CommissionStatus } from '@/lib/commission';
 
 // Admin commission actions: approve / hold / reject (with reason).
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -13,6 +13,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         await setCommissionStatus(id, status, note);
         return NextResponse.json({ ok: true });
     } catch (error) {
+        if (error instanceof TerminalStatusError) {
+            return NextResponse.json({ error: error.message }, { status: 409 });
+        }
         console.error('Admin commission error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

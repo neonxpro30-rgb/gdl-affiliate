@@ -197,11 +197,27 @@ export async function reverseCommissionsForOrder(orderId: string, reason: string
     return n;
 }
 
+// Thrown when a status change is attempted out of a terminal state;
+// admin routes map it to HTTP 409.
+export class TerminalStatusError extends Error {
+    constructor(current: string) {
+        super(`Commission is '${current}' (terminal) and cannot change status`);
+        this.name = 'TerminalStatusError';
+    }
+}
+
 export async function setCommissionStatus(id: string, status: CommissionStatus, note?: string): Promise<void> {
     const ref = db.collection('referrals').doc(id);
     const doc = await ref.get();
     if (!doc.exists) throw new Error('Commission not found');
     const data = doc.data() as any;
+    // 'paid' and 'reversed' are terminal (audit #23): money has moved
+    // (or been clawed back) — no admin action may resurrect the row
+    // into a payable state, or a batch could pay it twice.
+    const TERMINAL: CommissionStatus[] = ['paid', 'reversed'];
+    if (TERMINAL.includes(data.status) && data.status !== status) {
+        throw new TerminalStatusError(data.status);
+    }
     await ref.update({
         status,
         holdReason: status === 'held' || status === 'rejected' ? (note || '') : (data.holdReason || ''),
