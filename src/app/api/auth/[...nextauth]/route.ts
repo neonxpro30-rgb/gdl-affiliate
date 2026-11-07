@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 const usersRef = db.collection('users');
-                const snapshot = await usersRef.where('email', '==', credentials.email).limit(1).get();
+                const snapshot = await usersRef.where('email', '==', credentials.email.trim().toLowerCase()).limit(1).get();
 
                 if (snapshot.empty) {
                     throw new Error("User not found");
