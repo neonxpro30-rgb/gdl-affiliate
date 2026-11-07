@@ -15,11 +15,17 @@ export async function GET() {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const userData = userDoc.data();
-        return NextResponse.json({
-            id: userDoc.id,
-            ...userData
-        });
+        const userData = userDoc.data() as any;
+        // Whitelist (audit #18): never return the full user doc — it holds
+        // the password hash, reset token, KYC documents and bank/UPI
+        // details. Only the safe profile fields below leave the server.
+        const profile: Record<string, any> = { id: userDoc.id };
+        const safeFields = ['name', 'email', 'phone', 'role', 'isActive', 'referralCode', 'partnerTier', 'createdAt', 'image', 'avatar'] as const;
+        for (const field of safeFields) {
+            if (userData[field] !== undefined) profile[field] = userData[field];
+        }
+        profile.kycStatus = userData.kycStatus ?? userData.kyc?.status ?? 'none';
+        return NextResponse.json(profile);
 
     } catch (error) {
         console.error('Error fetching user profile:', error);
