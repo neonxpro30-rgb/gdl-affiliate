@@ -230,8 +230,8 @@ function PayoutsPanel() {
                             <span><strong>{b.status}</strong> · {new Date(b.createdAt).toLocaleString('en-IN')} · {b.lines?.length || 0} lines</span>
                             <span className="font-mono">Gross ₹{Number(b.totalGross).toFixed(0)} · TDS ₹{Number(b.totalTds).toFixed(0)} · Net ₹{Number(b.totalNet).toFixed(0)}</span>
                         </div>
-                        {b.status !== 'paid' && <button className={`${ghostCls} mt-2`} onClick={async () => { await api('/api/admin/payouts', 'PATCH', { batchId: b.id, note: prompt('Payment reference / note?') || '' }); load(); }}>Mark Paid</button>}
-                        {b.paidAt && <p className="text-xs text-gray-500 mt-1">Paid {new Date(b.paidAt).toLocaleString('en-IN')} {b.paidNote ? `· ${b.paidNote}` : ''}</p>}
+                        {b.status === 'open' && <button className={`${ghostCls} mt-2`} onClick={async () => { const reference = prompt('Disbursement reference (required)?') || ''; if (!reference.trim()) return; await api('/api/admin/payouts', 'PATCH', { batchId: b.id, reference, note: reference }); load(); }}>Mark Paid</button>}
+                        {b.paidAt && <p className="text-xs text-gray-500 mt-1">Paid {new Date(b.paidAt).toLocaleString('en-IN')} {b.reference ? `· Ref ${b.reference}` : ''} {b.paidNote ? `· ${b.paidNote}` : ''}</p>}
                     </div>
                 ))}
                 {batches.length === 0 && <p className="text-sm text-gray-500">No batches yet.</p>}
