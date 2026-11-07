@@ -1,24 +1,62 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { db } from '@/lib/firebaseAdmin';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
+
+// Referral codes (audit #21): name prefix + 8 crypto-random chars from
+// an unambiguous alphabet (no 0/O/1/I/L). The old generator used
+// Math.random with only 4 digits (~10k space per prefix) and never
+// checked for collisions, so two users could share a code and
+// commissions could attach to the wrong referrer.
+const REFERRAL_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function randomSuffix(length: number): string {
+    const bytes = crypto.randomBytes(length);
+    return Array.from(bytes, (b) => REFERRAL_ALPHABET[b % REFERRAL_ALPHABET.length]).join('');
+}
+
+async function generateUniqueReferralCode(usersRef: FirebaseFirestore.CollectionReference, name: string): Promise<string> {
+    const prefix = (name.replace(/[^a-zA-Z]/g, '').substring(0, 4) || 'USER').toUpperCase().padEnd(4, 'X');
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const code = prefix + randomSuffix(8);
+        const clash = await usersRef.where('referralCode', '==', code).limit(1).get();
+        if (clash.empty) return code;
+    }
+    // Statistically unreachable — fall back to a longer suffix.
+    return prefix + randomSuffix(12);
+}
 
 export async function POST(req: Request) {
     try {
+        // Rate limit (audit #25): 20 signups/hour per IP.
+        if (!(await rateLimit(`signup_ip_${clientIp(req)}`, 20, 3600_000))) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
+
         const { name, email, phone, password, referralCode, packageId, productSlug } = await req.json();
 
         if (!name || !email || !password || (!packageId && !productSlug)) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        // Normalise email (audit #21): case/whitespace variants of the
+        // same address must not create duplicate accounts.
+        const normalizedEmail = String(email).trim().toLowerCase();
+
+        if (String(password).length < 8) {
+            return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+        }
+
         const usersRef = db.collection('users');
-        const userSnapshot = await usersRef.where('email', '==', email).get();
+        const userSnapshot = await usersRef.where('email', '==', normalizedEmail).get();
 
         if (!userSnapshot.empty) {
             return NextResponse.json({ error: 'User already exists' }, { status: 400 });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newReferralCode = name.substring(0, 4).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
+        const newReferralCode = await generateUniqueReferralCode(usersRef as any, String(name));
 
         // Find referrer
         let referrerId = null;
@@ -63,7 +101,7 @@ export async function POST(req: Request) {
 
         await newUserRef.set({
             name,
-            email,
+            email: normalizedEmail,
             phone,
             password: hashedPassword,
             referralCode: newReferralCode,
