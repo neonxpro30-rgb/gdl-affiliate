@@ -47,12 +47,12 @@ interface EligibilityResult {
 }
 
 const STATUS_CHIP: Record<string, string> = {
-    pending: "border-amber-400/40 bg-amber-950/50 text-amber-200",
-    under_review: "border-amber-400/40 bg-amber-950/50 text-amber-200",
-    approved: "border-emerald-400/40 bg-emerald-950/50 text-emerald-200",
-    refunded: "border-emerald-400/40 bg-emerald-950/50 text-emerald-200",
-    rejected: "border-red-400/40 bg-red-950/50 text-red-200",
-    denied: "border-red-400/40 bg-red-950/50 text-red-200",
+    pending: "lpd-badge lpd-badge-butter",
+    under_review: "lpd-badge lpd-badge-butter",
+    approved: "lpd-badge lpd-badge-mint",
+    refunded: "lpd-badge lpd-badge-mint",
+    rejected: "lpd-badge lpd-badge-coral",
+    denied: "lpd-badge lpd-badge-coral",
 };
 
 function formatDate(value?: string): string {
@@ -141,17 +141,17 @@ export default function RefundRequestForm({
     }
 
     return (
-        <div className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 text-white md:p-6">
-            <h2 className="flex items-center gap-2 text-lg font-bold">
-                <RotateCcw className="h-5 w-5 text-rose-300" /> Request a Refund
+        <div className="lpd-card p-5 md:p-6">
+            <h2 className="lpd-display flex items-center gap-2 text-lg font-bold text-[#1E1530]">
+                <RotateCcw className="h-5 w-5 text-[#D93C78]" /> Request a Refund
             </h2>
-            <p className="mt-1 text-sm leading-relaxed text-rose-100/70">
+            <p className="mt-1 text-sm leading-relaxed text-[#6B5F80]">
                 Tell us which order and why. Every request is reviewed by the
                 LearnPeak team — submitting a request does not guarantee a refund.
             </p>
 
             {orders.length === 0 ? (
-                <p className="mt-4 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-rose-100/70">
+                <p className="mt-4 rounded-[14px] border-2 border-[rgba(59,49,80,.14)] bg-[#FFF8FB] px-4 py-3 text-sm text-[#3B3150]">
                     You have no orders that a refund can be requested for.
                 </p>
             ) : (
@@ -159,7 +159,7 @@ export default function RefundRequestForm({
                     <div>
                         <label
                             htmlFor="refund-order"
-                            className="text-sm font-semibold text-white"
+                            className="lpd-label"
                         >
                             Order
                         </label>
@@ -167,7 +167,7 @@ export default function RefundRequestForm({
                             id="refund-order"
                             value={orderId}
                             onChange={(e) => setOrderId(e.target.value)}
-                            className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white focus:border-rose-400 focus:outline-none"
+                            className="lpd-input"
                         >
                             {orders.map((order) => (
                                 <option key={order.id} value={order.id}>
@@ -183,7 +183,7 @@ export default function RefundRequestForm({
                     <div>
                         <label
                             htmlFor="refund-reason"
-                            className="text-sm font-semibold text-white"
+                            className="lpd-label"
                         >
                             Reason
                         </label>
@@ -194,36 +194,36 @@ export default function RefundRequestForm({
                             required
                             rows={4}
                             placeholder="Please explain why you are requesting a refund…"
-                            className="mt-2 w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-rose-100/30 focus:border-rose-400 focus:outline-none"
+                            className="lpd-input resize-none"
                         />
                     </div>
 
                     {result && (
                         <div
-                            className={`rounded-2xl border px-4 py-3 text-sm ${
+                            className={`rounded-[16px] border-2 px-4 py-3 text-sm ${
                                 result.eligible
-                                    ? "border-emerald-400/40 bg-emerald-950/50 text-emerald-100"
-                                    : "border-amber-400/40 bg-amber-950/50 text-amber-100"
+                                    ? "border-[#0F8E69]/35 bg-[#E9FBF4] text-[#1E1530]"
+                                    : "border-[rgba(59,49,80,.2)] bg-[#FFE9AE]/50 text-[#1E1530]"
                             }`}
                         >
                             <p className="flex items-start gap-2 font-semibold">
                                 {result.eligible ? (
-                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#0F8E69]" />
                                 ) : (
-                                    <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#3B3150]" />
                                 )}
                                 {result.eligible
                                     ? "Your request looks eligible based on our automatic checks."
                                     : "Your request has been submitted for review."}
                             </p>
                             {result.reasons.length > 0 && (
-                                <ul className="mt-2 list-disc space-y-1 pl-5 text-rose-100/85">
+                                <ul className="mt-2 list-disc space-y-1 pl-5 text-[#3B3150]">
                                     {result.reasons.map((r, i) => (
                                         <li key={i}>{r}</li>
                                     ))}
                                 </ul>
                             )}
-                            <p className="mt-2 text-xs opacity-80">
+                            <p className="mt-2 text-xs text-[#6B5F80]">
                                 Note: LearnPeak reviews every request before any
                                 refund is processed.
                             </p>
@@ -231,15 +231,15 @@ export default function RefundRequestForm({
                     )}
 
                     {error && (
-                        <div className="flex items-start gap-2 rounded-2xl border border-red-400/40 bg-red-950/50 px-4 py-3 text-sm text-red-100">
-                            <XCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+                        <div className="flex items-start gap-2 rounded-[16px] border-2 border-[#FF4F5E]/35 bg-[#FF4F5E]/10 px-4 py-3 text-sm text-[#1E1530]">
+                            <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#FF4F5E]" /> {error}
                         </div>
                     )}
 
                     <button
                         type="submit"
                         disabled={submitting || !selectedOrder || !reason.trim()}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="lpd-btn lpd-btn-pink lpd-btn-block"
                     >
                         {submitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -252,38 +252,38 @@ export default function RefundRequestForm({
             )}
 
             {history.length > 0 && (
-                <div className="mt-6 border-t border-white/10 pt-5">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-rose-300/80">
+                <div className="mt-6 border-t-2 border-[rgba(59,49,80,.14)] pt-5">
+                    <p className="lpd-pixel text-[15px] uppercase tracking-[0.18em] text-[#D93C78]">
                         Your Previous Requests
                     </p>
                     <div className="mt-3 space-y-3">
                         {history.map((req) => (
                             <div
                                 key={req.id}
-                                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3"
+                                className="rounded-[16px] border-2 border-[rgba(59,49,80,.14)] bg-[#FFF8FB] px-4 py-3"
                             >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <p className="text-sm font-semibold text-white">
+                                    <p className="text-sm font-semibold text-[#1E1530]">
                                         {titleForOrder(req.orderId, req.courseTitle)}
                                     </p>
                                     <span
-                                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold capitalize ${STATUS_CHIP[req.status] || "border-white/15 bg-black/30 text-rose-100/70"}`}
+                                        className={`capitalize ${STATUS_CHIP[req.status] || "lpd-badge lpd-badge-lav"}`}
                                     >
                                         {req.status.replace(/_/g, " ")}
                                     </span>
                                 </div>
                                 {req.createdAt && (
-                                    <p className="mt-1 text-xs text-rose-100/50">
+                                    <p className="mt-1 text-xs text-[#6B5F80]">
                                         Requested on {formatDate(req.createdAt)}
                                     </p>
                                 )}
                                 {req.reason && (
-                                    <p className="mt-1.5 text-sm text-rose-100/70">
+                                    <p className="mt-1.5 text-sm text-[#3B3150]">
                                         {req.reason}
                                     </p>
                                 )}
                                 {Array.isArray(req.reasons) && req.reasons.length > 0 && (
-                                    <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-xs text-rose-100/60">
+                                    <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-xs text-[#6B5F80]">
                                         {req.reasons.map((r, i) => (
                                             <li key={i}>{r}</li>
                                         ))}

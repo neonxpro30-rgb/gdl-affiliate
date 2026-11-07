@@ -66,12 +66,12 @@ const PROJECT_STATUS: Record<
     string,
     { label: string; chip: string }
 > = {
-    assigned: { label: "Assigned", chip: "border-sky-400/40 bg-sky-950/50 text-sky-200" },
-    in_progress: { label: "In Progress", chip: "border-amber-400/40 bg-amber-950/50 text-amber-200" },
-    submitted: { label: "Submitted", chip: "border-violet-400/40 bg-violet-950/50 text-violet-200" },
-    revision: { label: "Revision Requested", chip: "border-orange-400/40 bg-orange-950/50 text-orange-200" },
-    approved: { label: "Approved", chip: "border-emerald-400/40 bg-emerald-950/50 text-emerald-200" },
-    paid: { label: "Paid", chip: "border-emerald-400/40 bg-emerald-950/50 text-emerald-200" },
+    assigned: { label: "Assigned", chip: "lpd-badge lpd-badge-lav" },
+    in_progress: { label: "In Progress", chip: "lpd-badge lpd-badge-butter" },
+    submitted: { label: "Submitted", chip: "lpd-badge lpd-badge-butter" },
+    revision: { label: "Revision Requested", chip: "lpd-badge lpd-badge-coral" },
+    approved: { label: "Approved", chip: "lpd-badge lpd-badge-mint" },
+    paid: { label: "Paid", chip: "lpd-badge lpd-badge-mint" },
 };
 
 /** Next student-driven transition for a project status, if any. */
@@ -82,14 +82,14 @@ const NEXT_STEP: Record<string, { status: string; label: string } | undefined> =
 };
 
 const REVIEW_CHIP: Record<string, string> = {
-    pending: "border-amber-400/40 bg-amber-950/50 text-amber-200",
-    approved: "border-emerald-400/40 bg-emerald-950/50 text-emerald-200",
-    rejected: "border-red-400/40 bg-red-950/50 text-red-200",
+    pending: "lpd-badge lpd-badge-butter",
+    approved: "lpd-badge lpd-badge-mint",
+    rejected: "lpd-badge lpd-badge-coral",
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return (
-        <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.3em] text-rose-300/80">
+        <p className="lpd-pixel mb-3 text-[15px] uppercase tracking-[0.18em] text-[#D93C78]">
             {children}
         </p>
     );
@@ -218,48 +218,49 @@ export default async function PaidWorkPage({
     const portfolioEdits: string[] = Array.isArray(portfolio?.edits) ? portfolio.edits : [];
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-[#1A0B12] text-white">
-            <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#732C3F]/30 blur-[120px]" />
+        <div className="lpd-shell relative min-h-screen overflow-hidden">
             <DashboardNavbar user={session.user} />
 
             <div className="relative mx-auto max-w-md px-4 pb-24 pt-6 md:max-w-4xl">
-                <div className="flex items-center gap-3">
-                    <Briefcase className="h-7 w-7 text-rose-300" />
-                    <h1 className="font-display text-3xl uppercase tracking-wide md:text-4xl">
-                        Paid Work
-                    </h1>
+                <div className="lpd-banner px-5 py-5">
+                    <div className="flex items-center gap-3">
+                        <Briefcase className="h-7 w-7 text-[#D93C78]" />
+                        <h1 className="lpd-display text-3xl uppercase tracking-wide text-[#1E1530] md:text-4xl">
+                            Paid Work
+                        </h1>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-[#6B5F80]">
+                        Real client projects for students who have proven their editing
+                        skills.
+                    </p>
                 </div>
-                <p className="mt-1 text-sm text-rose-200/70">
-                    Real client projects for students who have proven their editing
-                    skills.
-                </p>
 
                 {/* Disclaimer — always visible */}
-                <div className="mt-5 rounded-2xl border border-amber-400/40 bg-amber-950/40 px-4 py-3 text-sm leading-relaxed text-amber-100/90">
+                <div className="mt-5 rounded-[16px] border-2 border-[rgba(59,49,80,.2)] bg-[#FFE9AE]/50 px-4 py-3 text-sm leading-relaxed text-[#3B3150]">
                     Paid work depends on the quality of your work and project
                     availability. It is not guaranteed.
                 </div>
 
                 {/* Action feedback */}
                 {notice.portfolio === "ok" && (
-                    <div className="mt-4 flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-100">
-                        <CheckCircle2 className="h-4 w-4 shrink-0" /> Portfolio submitted —
+                    <div className="mt-4 flex items-center gap-2 rounded-[16px] border-2 border-[#0F8E69]/35 bg-[#E9FBF4] px-4 py-3 text-sm text-[#1E1530]">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0F8E69]" /> Portfolio submitted —
                         it is now awaiting review.
                     </div>
                 )}
                 {notice.portfolio === "error" && (
-                    <div className="mt-4 rounded-2xl border border-red-400/40 bg-red-950/50 px-4 py-3 text-sm text-red-100">
+                    <div className="mt-4 rounded-[16px] border-2 border-[#FF4F5E]/35 bg-[#FF4F5E]/10 px-4 py-3 text-sm text-[#1E1530]">
                         Portfolio submission failed{notice.msg ? `: ${notice.msg}` : ""}.
                         Please try again.
                     </div>
                 )}
                 {notice.project === "ok" && (
-                    <div className="mt-4 flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-950/50 px-4 py-3 text-sm text-emerald-100">
-                        <CheckCircle2 className="h-4 w-4 shrink-0" /> Project status updated.
+                    <div className="mt-4 flex items-center gap-2 rounded-[16px] border-2 border-[#0F8E69]/35 bg-[#E9FBF4] px-4 py-3 text-sm text-[#1E1530]">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0F8E69]" /> Project status updated.
                     </div>
                 )}
                 {notice.project === "error" && (
-                    <div className="mt-4 rounded-2xl border border-red-400/40 bg-red-950/50 px-4 py-3 text-sm text-red-100">
+                    <div className="mt-4 rounded-[16px] border-2 border-[#FF4F5E]/35 bg-[#FF4F5E]/10 px-4 py-3 text-sm text-[#1E1530]">
                         Project update failed{notice.msg ? `: ${notice.msg}` : ""}. Please
                         try again.
                     </div>
@@ -270,17 +271,19 @@ export default async function PaidWorkPage({
                     <SectionLabel>Your Portfolio</SectionLabel>
 
                     {!passedProTrailer ? (
-                        <div className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6">
+                        <div className="lpd-card p-5 md:p-6">
                             <div className="flex items-start gap-4">
-                                <Lock className="mt-1 h-8 w-8 shrink-0 text-rose-300" />
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E8E2F0]">
+                                    <Lock className="h-5 w-5 text-[#3B3150]" />
+                                </div>
                                 <div>
-                                    <h2 className="text-lg font-bold">
+                                    <h2 className="lpd-display text-lg font-bold text-[#1E1530]">
                                         Pass Course 03 to unlock Paid Work
                                     </h2>
-                                    <p className="mt-2 text-sm leading-relaxed text-rose-100/75">
+                                    <p className="mt-2 text-sm leading-relaxed text-[#3B3150]">
                                         Paid client projects are offered to students who
                                         have passed{" "}
-                                        <strong className="text-white">
+                                        <strong className="text-[#1E1530]">
                                             Course 03 · Pro Wedding Trailer
                                         </strong>{" "}
                                         — including its final test (MCQ + practical
@@ -289,7 +292,7 @@ export default async function PaidWorkPage({
                                     </p>
                                     <Link
                                         href="/dashboard/courses"
-                                        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+                                        className="lpd-btn lpd-btn-pink lpd-btn-sm mt-4"
                                     >
                                         <PlayCircle className="h-4 w-4" /> Go to My Courses
                                     </Link>
@@ -297,30 +300,30 @@ export default async function PaidWorkPage({
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6">
+                        <div className="lpd-card p-5 md:p-6">
                             {portfolio && (
-                                <div className="mb-5 rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                                <div className="mb-5 rounded-[16px] border-2 border-[rgba(59,49,80,.14)] bg-[#FFF8FB] px-4 py-3">
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-sm font-semibold text-white">
+                                        <span className="text-sm font-semibold text-[#1E1530]">
                                             Portfolio review:
                                         </span>
                                         <span
-                                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold capitalize ${REVIEW_CHIP[portfolio.reviewStatus] || REVIEW_CHIP.pending}`}
+                                            className={`capitalize ${REVIEW_CHIP[portfolio.reviewStatus] || REVIEW_CHIP.pending}`}
                                         >
                                             <Clock className="h-3.5 w-3.5" />
                                             {portfolio.reviewStatus || "pending"}
                                         </span>
                                     </div>
                                     {portfolio.feedback && (
-                                        <p className="mt-2 text-sm leading-relaxed text-rose-100/75">
-                                            <span className="font-semibold text-white">
+                                        <p className="mt-2 text-sm leading-relaxed text-[#3B3150]">
+                                            <span className="font-semibold text-[#1E1530]">
                                                 Feedback:
                                             </span>{" "}
                                             {portfolio.feedback}
                                         </p>
                                     )}
                                     {portfolio.reviewStatus === "rejected" && (
-                                        <p className="mt-1 text-sm text-rose-100/60">
+                                        <p className="mt-1 text-sm text-[#6B5F80]">
                                             Update your links below and resubmit.
                                         </p>
                                     )}
@@ -331,9 +334,9 @@ export default async function PaidWorkPage({
                                 <div>
                                     <label
                                         htmlFor="showreelLink"
-                                        className="flex items-center gap-2 text-sm font-semibold text-white"
+                                        className="lpd-label flex items-center gap-2"
                                     >
-                                        <Video className="h-4 w-4 text-rose-300" /> Showreel
+                                        <Video className="h-4 w-4 text-[#D93C78]" /> Showreel
                                         link
                                     </label>
                                     <input
@@ -343,17 +346,17 @@ export default async function PaidWorkPage({
                                         required
                                         placeholder="https://… (your best showreel)"
                                         defaultValue={portfolio?.showreelLink || ""}
-                                        className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-rose-100/30 focus:border-rose-400 focus:outline-none"
+                                        className="lpd-input"
                                     />
                                 </div>
                                 {[0, 1, 2].map((i) => (
                                     <div key={i}>
                                         <label
                                             htmlFor={`edit${i + 1}`}
-                                            className="text-sm font-semibold text-white"
+                                            className="lpd-label"
                                         >
                                             Edit {i + 1} link{" "}
-                                            <span className="font-normal text-rose-100/50">
+                                            <span className="font-normal text-[#6B5F80]">
                                                 (optional)
                                             </span>
                                         </label>
@@ -363,13 +366,13 @@ export default async function PaidWorkPage({
                                             type="url"
                                             placeholder="https://…"
                                             defaultValue={portfolioEdits[i] || ""}
-                                            className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-rose-100/30 focus:border-rose-400 focus:outline-none"
+                                            className="lpd-input"
                                         />
                                     </div>
                                 ))}
                                 <button
                                     type="submit"
-                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 font-bold text-white transition hover:brightness-110"
+                                    className="lpd-btn lpd-btn-pink lpd-btn-block"
                                 >
                                     <Send className="h-4 w-4" />
                                     {portfolio ? "Update & Resubmit Portfolio" : "Submit Portfolio"}
@@ -384,9 +387,9 @@ export default async function PaidWorkPage({
                     <SectionLabel>Your Projects</SectionLabel>
 
                     {projects.length === 0 ? (
-                        <div className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-6 text-center">
-                            <FolderOpen className="mx-auto h-8 w-8 text-rose-300/70" />
-                            <p className="mt-3 text-sm leading-relaxed text-rose-100/70">
+                        <div className="lpd-card p-6 text-center">
+                            <FolderOpen className="mx-auto h-8 w-8 text-[#6B5F80]" />
+                            <p className="mt-3 text-sm leading-relaxed text-[#6B5F80]">
                                 No projects assigned yet. Projects appear here when
                                 LearnPeak assigns client work to you.
                             </p>
@@ -400,33 +403,31 @@ export default async function PaidWorkPage({
                                 return (
                                     <div
                                         key={project.id}
-                                        className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5"
+                                        className="lpd-card lpd-card-hover p-5"
                                     >
                                         <div className="flex flex-wrap items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <h3 className="font-bold text-white">
+                                                <h3 className="font-bold text-[#1E1530]">
                                                     {project.title || "Untitled project"}
                                                 </h3>
                                                 {project.client && (
-                                                    <p className="mt-0.5 text-xs text-rose-100/60">
+                                                    <p className="mt-0.5 text-xs text-[#6B5F80]">
                                                         Client: {project.client}
                                                     </p>
                                                 )}
                                             </div>
-                                            <span
-                                                className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-xs font-semibold ${meta.chip}`}
-                                            >
+                                            <span className={`shrink-0 ${meta.chip}`}>
                                                 {meta.label}
                                             </span>
                                         </div>
 
-                                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-rose-100/75">
-                                            <span className="inline-flex items-center gap-1.5">
-                                                <IndianRupee className="h-4 w-4 text-amber-300" />
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            <span className="lpd-chip">
+                                                <IndianRupee className="h-4 w-4 text-[#0F8E69]" />
                                                 {formatINR(project.payAmount)}
                                             </span>
-                                            <span className="inline-flex items-center gap-1.5">
-                                                <CalendarClock className="h-4 w-4 text-rose-300" />
+                                            <span className="lpd-chip">
+                                                <CalendarClock className="h-4 w-4 text-[#D93C78]" />
                                                 Deadline: {formatDate(project.deadline)}
                                             </span>
                                             {project.footageLink && (
@@ -434,7 +435,7 @@ export default async function PaidWorkPage({
                                                     href={project.footageLink}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 font-medium text-rose-200 underline decoration-rose-400/50 underline-offset-2 transition hover:text-white"
+                                                    className="lpd-chip font-semibold text-[#D93C78] underline decoration-[#FF8AC4] underline-offset-2 transition hover:text-[#1E1530]"
                                                 >
                                                     <ExternalLink className="h-4 w-4" />
                                                     Footage
@@ -456,13 +457,13 @@ export default async function PaidWorkPage({
                                                 />
                                                 <button
                                                     type="submit"
-                                                    className="w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-2.5 text-sm font-bold text-white transition hover:brightness-110 md:w-auto md:px-6"
+                                                    className="lpd-btn lpd-btn-pink lpd-btn-sm w-full md:w-auto"
                                                 >
                                                     {next.label}
                                                 </button>
                                             </form>
                                         ) : (
-                                            <p className="mt-4 text-xs text-rose-100/50">
+                                            <p className="mt-4 text-xs text-[#6B5F80]">
                                                 {project.status === "submitted" &&
                                                     "Submitted — waiting for review."}
                                                 {project.status === "approved" &&

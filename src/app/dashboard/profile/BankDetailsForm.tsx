@@ -47,38 +47,38 @@ export default function BankDetailsForm({ user }: { user: any }) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            {message && <div className={`p-3 rounded text-sm ${message.includes('success') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{message}</div>}
+            {message && <div className={`rounded-[14px] border-2 px-4 py-3 text-sm ${message.includes('success') ? 'border-[#0F8E69]/35 bg-[#E9FBF4] text-[#1E1530]' : 'border-[#FF4F5E]/35 bg-[#FF4F5E]/10 text-[#1E1530]'}`}>{message}</div>}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Bank Name</label>
+                    <label className="lpd-label">Bank Name</label>
                     <input
                         name="bankName" type="text"
-                        className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="lpd-input"
                         value={formData.bankName} onChange={handleChange}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Account Number</label>
+                    <label className="lpd-label">Account Number</label>
                     <input
                         name="accountNumber" type="text"
-                        className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="lpd-input"
                         value={formData.accountNumber} onChange={handleChange}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">IFSC Code</label>
+                    <label className="lpd-label">IFSC Code</label>
                     <input
                         name="ifscCode" type="text"
-                        className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="lpd-input"
                         value={formData.ifscCode} onChange={handleChange}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">UPI ID</label>
+                    <label className="lpd-label">UPI ID</label>
                     <input
                         name="upiId" type="text"
-                        className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="lpd-input"
                         value={formData.upiId} onChange={handleChange}
                     />
                 </div>
@@ -86,7 +86,7 @@ export default function BankDetailsForm({ user }: { user: any }) {
 
             <button
                 type="submit" disabled={loading}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition disabled:opacity-50"
+                className="lpd-btn lpd-btn-pink"
             >
                 {loading ? 'Saving...' : 'Save Details'}
             </button>

@@ -142,13 +142,15 @@ export default async function CoursePlayerPage({ params, searchParams }: {
 
     if (!currentLesson || !currentUnlocked) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className="lpd-shell min-h-screen">
                 <DashboardNavbar user={session.user} />
-                <div className="max-w-7xl mx-auto p-8 text-center">
-                    <Lock className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                    <h1 className="text-2xl font-bold text-gray-800">Access Locked</h1>
-                    <p className="text-gray-600 mt-2">You do not have access to this course.</p>
-                    <Link href="/dashboard/courses" className="mt-4 inline-block text-blue-600 hover:underline">Back to Courses</Link>
+                <div className="max-w-7xl mx-auto p-8">
+                    <div className="lpd-card max-w-lg mx-auto p-8 text-center">
+                        <Lock className="w-16 h-16 mx-auto text-[#6B5F80] mb-4" />
+                        <h1 className="lpd-display text-2xl font-bold text-[#1E1530]">Access Locked</h1>
+                        <p className="text-[#6B5F80] mt-2">You do not have access to this course.</p>
+                        <Link href="/dashboard/courses" className="lpd-btn lpd-btn-pink mt-5">Back to Courses</Link>
+                    </div>
                 </div>
             </div>
         );
@@ -157,7 +159,7 @@ export default async function CoursePlayerPage({ params, searchParams }: {
     const embedUrl = getEmbedUrl(currentLesson.videoLink);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="lpd-shell min-h-screen">
             <DashboardNavbar user={session.user} />
             <ProgressTracker
                 courseSlug={course.productSlug || course.id}
@@ -166,13 +168,13 @@ export default async function CoursePlayerPage({ params, searchParams }: {
             />
 
             <div className="max-w-7xl mx-auto p-4 md:p-8">
-                <Link href="/dashboard/courses" className="flex items-center text-gray-600 hover:text-gray-900 mb-6">
+                <Link href="/dashboard/courses" className="flex items-center text-[#6B5F80] hover:text-[#1E1530] mb-6 font-semibold">
                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Courses
                 </Link>
 
-                <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                        <div className="aspect-video bg-black w-full relative">
+                <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+                    <div className="lpd-card overflow-hidden">
+                        <div className="aspect-video bg-[#1E1530] w-full relative">
                             {embedUrl ? (
                                 <iframe
                                     src={embedUrl}
@@ -190,17 +192,17 @@ export default async function CoursePlayerPage({ params, searchParams }: {
                         </div>
 
                         <div className="p-6 md:p-8">
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{course.title}</h1>
-                            <p className="text-sm font-semibold text-gray-500 mb-4">
+                            <h1 className="lpd-display text-2xl md:text-3xl font-bold text-[#1E1530] mb-2">{course.title}</h1>
+                            <p className="text-sm font-semibold text-[#6B5F80] mb-4">
                                 Lesson {currentIdx + 1}: {currentLesson.title}
                             </p>
-                            <div className="prose max-w-none text-gray-600">
+                            <div className="prose max-w-none text-[#3B3150]">
                                 <p>{course.description}</p>
                             </div>
                             {isNewCourse && fullAccess && (
                                 <Link
                                     href={`/dashboard/courses/test/${course.productSlug}`}
-                                    className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#732C3F] px-5 py-3 font-bold text-white hover:bg-[#5a2231]"
+                                    className="lpd-btn lpd-btn-pink mt-6"
                                 >
                                     <FlaskConical className="w-4 h-4" /> Take the Final Test
                                 </Link>
@@ -209,9 +211,9 @@ export default async function CoursePlayerPage({ params, searchParams }: {
                     </div>
 
                     {/* Lesson list */}
-                    <div className="bg-white rounded-xl shadow-lg p-4 h-fit">
-                        <p className="flex items-center gap-2 font-bold text-gray-800 mb-3">
-                            <ListVideo className="w-5 h-5" /> Lessons ({lessons.length})
+                    <div className="lpd-card p-4 h-fit">
+                        <p className="flex items-center gap-2 font-bold text-[#1E1530] mb-3">
+                            <ListVideo className="w-5 h-5 text-[#D93C78]" /> Lessons ({lessons.length})
                         </p>
                         <div className="space-y-1.5">
                             {lessons.map((l, i) => {
@@ -221,21 +223,23 @@ export default async function CoursePlayerPage({ params, searchParams }: {
                                     <Link
                                         key={l.id}
                                         href={`/dashboard/courses/player/${course.id}?lesson=${l.id}`}
-                                        className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${active ? 'bg-rose-50 text-[#732C3F] border border-rose-200' : 'text-gray-700 hover:bg-gray-50'}`}
+                                        className={`block rounded-[14px] px-3 py-2.5 text-sm font-semibold border-2 ${active ? 'bg-[#FFE9F3] text-[#1E1530] border-[#FF8AC4]' : 'text-[#3B3150] border-transparent hover:bg-[#FFF8FB] hover:border-[rgba(59,49,80,.14)]'}`}
                                     >
                                         {i + 1}. {l.title}
                                     </Link>
                                 ) : (
-                                    <div key={l.id} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-400">
-                                        <Lock className="w-3.5 h-3.5" /> {i + 1}. {l.title}
+                                    <div key={l.id} className="flex items-center gap-2 rounded-[14px] px-3 py-2.5 text-sm text-[#6B5F80] bg-[#E8E2F0]/60">
+                                        <Lock className="w-3.5 h-3.5 shrink-0" /> {i + 1}. {l.title}
                                     </div>
                                 );
                             })}
                         </div>
                         {isNewCourse && !fullAccess && (
-                            <p className="mt-3 text-xs text-gray-500">
-                                You are watching the free demo lesson. Buy the full course to unlock every lesson.
-                            </p>
+                            <div className="mt-4 rounded-[14px] bg-[#FFE9AE]/60 border border-[rgba(59,49,80,.14)] px-3 py-2.5">
+                                <p className="text-xs text-[#3B3150] leading-relaxed">
+                                    You are watching the free demo lesson. Buy the full course to unlock every lesson.
+                                </p>
+                            </div>
                         )}
                     </div>
                 </div>

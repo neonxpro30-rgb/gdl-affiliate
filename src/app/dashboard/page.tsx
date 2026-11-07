@@ -26,7 +26,7 @@ function tierOfName(name: string | undefined | null) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return (
-        <p className="font-mono text-[11px] tracking-[0.3em] text-rose-300/80 mb-3 uppercase">
+        <p className="lpd-pixel text-[13px] tracking-[0.14em] text-[#D93C78] mb-3 uppercase">
             {children}
         </p>
     );
@@ -194,8 +194,8 @@ export default function DashboardPage() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-screen bg-[#1A0B12] flex items-center justify-center">
-                <p className="text-sm text-rose-200/70">Loading…</p>
+            <div className="lpd-shell min-h-screen flex items-center justify-center">
+                <p className="text-sm text-[#6B5F80]">Loading…</p>
             </div>
         );
     }
@@ -209,47 +209,47 @@ export default function DashboardPage() {
     const referralLink = `https://learnpeak.in/signup?ref=${displayUser.referralCode || ''}`;
 
     return (
-        <div className="min-h-screen bg-[#1A0B12] text-white relative overflow-hidden">
+        <div className="lpd-shell min-h-screen relative overflow-hidden">
             {/* soft ambient glow */}
-            <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-[#732C3F]/30 blur-[120px]" />
+            <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] max-w-full -translate-x-1/2 rounded-full bg-[#FFE9F3] blur-[120px]" />
 
             <DashboardNavbar user={displayUser} />
 
             <div className="relative max-w-md md:max-w-4xl mx-auto px-4 pt-6 pb-24">
 
                 {/* ============ 1. PROFILE CARD ============ */}
-                <section className="rounded-3xl border border-rose-900/60 bg-[#241019]/90 p-5 md:p-6 relative overflow-hidden">
-                    <div className="relative flex items-center gap-4">
+                <section className="lpd-card p-5 md:p-6 relative overflow-hidden">
+                    <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
                         {/* avatar in ring */}
-                        <div className="relative shrink-0">
-                            <div className="rounded-full bg-gradient-to-br from-rose-400 via-[#732C3F] to-pink-300 p-[3px]">
-                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-[#1A0B12] flex items-center justify-center">
+                        <div className="relative shrink-0 self-start sm:self-auto">
+                            <div className="rounded-full bg-gradient-to-br from-[#FF8AC4] via-[#FFE9F3] to-[#E8E2F0] p-[3px]">
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-[#FFF8FB] flex items-center justify-center">
                                     {displayUser.photoURL ? (
                                         <img src={displayUser.photoURL} alt={displayUser.name} className="w-full h-full object-cover" />
                                     ) : (
-                                        <User size={36} className="text-rose-300" />
+                                        <User size={36} className="text-[#D93C78]" />
                                     )}
                                 </div>
                             </div>
                             {ownedTier && (
-                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-[#1A0B12] border border-rose-400/50 px-2.5 py-0.5 font-mono text-[10px] font-bold tracking-widest text-rose-300 whitespace-nowrap">
+                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 lpd-badge lpd-badge-butter whitespace-nowrap">
                                     {ownedTier.medal} {ownedTier.lvl}
                                 </div>
                             )}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h1 className="font-display text-2xl md:text-3xl uppercase tracking-wide truncate">{displayUser.name}</h1>
-                            <p className="text-rose-200/80 text-sm font-medium mt-0.5">
+                            <h1 className="lpd-display text-2xl md:text-3xl uppercase tracking-wide truncate text-[#1E1530]">{displayUser.name}</h1>
+                            <p className="text-[#6B5F80] text-sm font-medium mt-0.5">
                                 {ownedTier ? `${ownedTier.name} Package` : packageName}
                             </p>
                             {/* level progress */}
                             <div className="mt-3">
-                                <div className="mb-1.5 flex items-center justify-between text-[10px] tracking-[0.2em] text-rose-200/70">
+                                <div className="mb-1.5 flex items-center justify-between text-[10px] tracking-[0.2em] text-[#6B5F80]">
                                     <span>{ownedTier && ownedTier.rank < 4 ? `NEXT: LVL ${ownedTier.rank + 1} ${TIERS[ownedTier.rank].name.toUpperCase()}` : ownedTier ? 'MAX LEVEL REACHED' : 'LEVEL'}</span>
                                 </div>
-                                <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                                    <div
-                                        className="h-full rounded-full bg-gradient-to-r from-[#732C3F] via-rose-400 to-pink-300 transition-all duration-700"
+                                <div className="lpd-progress h-2">
+                                    <i
+                                        className="transition-all duration-700"
                                         style={{ width: `${xpPct}%` }}
                                     />
                                 </div>
@@ -257,57 +257,57 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     {/* referral code */}
-                    <div className="relative mt-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                    <div className="relative mt-5 flex items-center justify-between gap-3 rounded-xl border border-[rgba(59,49,80,0.14)] bg-[#FFE9F3] px-4 py-3">
                         <div className="min-w-0">
-                            <p className="text-[10px] tracking-[0.25em] text-rose-200/60">REFERRAL CODE</p>
-                            <p className="font-mono text-base md:text-lg font-bold text-white tracking-wider truncate">{displayUser.referralCode}</p>
+                            <p className="text-[10px] tracking-[0.25em] text-[#6B5F80]">REFERRAL CODE</p>
+                            <p className="font-mono text-base md:text-lg font-bold text-[#3B3150] tracking-wider truncate">{displayUser.referralCode}</p>
                         </div>
                         <button
                             onClick={() => copyInvite(displayUser.referralCode || '')}
-                            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-rose-400/40 bg-rose-950/60 px-3 py-2 text-xs font-bold text-rose-200 transition hover:border-rose-300 hover:text-white"
+                            className="lpd-btn lpd-btn-sm shrink-0"
                         >
-                            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                            {copied ? <Check className="w-4 h-4 text-[#0F8E69]" /> : <Copy className="w-4 h-4" />}
                             {copied ? 'Copied' : 'Copy'}
                         </button>
                     </div>
                 </section>
 
                 {/* ============ 2. MENTOR & MANAGER ============ */}
-                <section className="mt-5 grid grid-cols-2 gap-3">
+                <section className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                         onClick={openMentorModal}
-                        className="rounded-2xl border border-rose-900/50 bg-[#241019]/80 px-4 py-3.5 text-left transition hover:border-rose-400/60 hover:bg-rose-950/50 active:scale-[0.98]"
+                        className="lpd-card lpd-card-hover px-4 py-3.5 text-left transition active:scale-[0.98] min-h-[44px]"
                     >
-                        <p className="font-bold text-white text-sm md:text-base">Mentor</p>
-                        <p className="text-xs text-rose-200/60 mt-0.5">View details</p>
+                        <p className="font-bold text-[#3B3150] text-sm md:text-base">Mentor</p>
+                        <p className="text-xs text-[#6B5F80] mt-0.5">View details</p>
                     </button>
                     <button
                         onClick={openManagerModal}
-                        className="rounded-2xl border border-rose-900/50 bg-[#241019]/80 px-4 py-3.5 text-left transition hover:border-rose-400/60 hover:bg-rose-950/50 active:scale-[0.98]"
+                        className="lpd-card lpd-card-hover px-4 py-3.5 text-left transition active:scale-[0.98] min-h-[44px]"
                     >
-                        <p className="font-bold text-white text-sm md:text-base">Manager</p>
-                        <p className="text-xs text-rose-200/60 mt-0.5">View details</p>
+                        <p className="font-bold text-[#3B3150] text-sm md:text-base">Manager</p>
+                        <p className="text-xs text-[#6B5F80] mt-0.5">View details</p>
                     </button>
                 </section>
 
                 {/* ============ 3. EARNINGS ============ */}
                 <section className="mt-8">
                     <SectionLabel>Total Earnings</SectionLabel>
-                    <div className="rounded-3xl border border-rose-900/60 bg-gradient-to-br from-[#2b1220] to-[#732C3F] p-6 text-center relative overflow-hidden">
+                    <div className="lpd-banner p-6 text-center relative overflow-hidden">
                         <div className="relative">
-                            <p className="text-[10px] tracking-[0.3em] text-rose-200/70">ALL-TIME</p>
-                            <p className="font-display mt-2 text-5xl md:text-6xl bg-gradient-to-r from-rose-200 via-rose-400 to-pink-300 bg-clip-text text-transparent tabular-nums">
+                            <p className="text-[10px] tracking-[0.3em] text-[#6B5F80]">ALL-TIME</p>
+                            <p className="lpd-display mt-2 text-4xl sm:text-5xl md:text-6xl text-[#D93C78] tabular-nums break-words">
                                 <CountUp end={stats.allTime} prefix="₹" />
                             </p>
-                            <div className="mt-5 grid grid-cols-3 gap-2">
+                            <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {[
                                     { label: 'TODAY', value: stats.today },
                                     { label: 'LAST 7 DAYS', value: stats.sevenDays },
                                     { label: 'LAST 30 DAYS', value: stats.thirtyDays },
                                 ].map(s => (
-                                    <div key={s.label} className="rounded-xl bg-black/30 border border-white/10 px-2 py-3">
-                                        <p className="font-mono text-[9px] tracking-[0.2em] text-rose-200/60">{s.label}</p>
-                                        <p className="mt-1 text-lg md:text-xl font-extrabold text-white tabular-nums">
+                                    <div key={s.label} className="rounded-xl bg-white border border-[rgba(59,49,80,0.14)] px-2 py-3">
+                                        <p className="font-mono text-[9px] tracking-[0.2em] text-[#6B5F80]">{s.label}</p>
+                                        <p className="mt-1 text-lg md:text-xl font-extrabold text-[#3B3150] tabular-nums">
                                             <CountUp end={s.value} prefix="₹" />
                                         </p>
                                     </div>
@@ -320,22 +320,22 @@ export default function DashboardPage() {
                 {/* ============ 4. PAYOUTS ============ */}
                 <section className="mt-8">
                     <SectionLabel>Payouts</SectionLabel>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl border border-amber-400/30 bg-amber-950/40 p-5 text-center">
-                            <Wallet className="w-5 h-5 mx-auto text-amber-300/80" />
-                            <p className="mt-2 text-[10px] tracking-[0.2em] text-amber-200/70">PENDING</p>
-                            <p className="mt-1 text-2xl md:text-3xl font-extrabold text-amber-200 tabular-nums">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="lpd-card p-5 text-center" style={{ background: '#FFE9AE', borderColor: 'rgba(59,49,80,0.25)' }}>
+                            <Wallet className="w-5 h-5 mx-auto text-[#3B3150]" />
+                            <p className="mt-2 text-[10px] tracking-[0.2em] text-[#6B5F80]">PENDING</p>
+                            <p className="mt-1 text-2xl md:text-3xl font-extrabold text-[#3B3150] tabular-nums">
                                 <CountUp end={stats.pending} prefix="₹" />
                             </p>
-                            <p className="mt-1 text-[11px] text-amber-200/60">Pending payout</p>
+                            <p className="mt-1 text-[11px] text-[#6B5F80]">Pending payout</p>
                         </div>
-                        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/40 p-5 text-center">
-                            <Trophy className="w-5 h-5 mx-auto text-emerald-300/80" />
-                            <p className="mt-2 text-[10px] tracking-[0.2em] text-emerald-200/70">RECEIVED</p>
-                            <p className="mt-1 text-2xl md:text-3xl font-extrabold text-emerald-200 tabular-nums">
+                        <div className="lpd-card p-5 text-center" style={{ background: '#E9FBF4', borderColor: 'rgba(15,142,105,0.35)' }}>
+                            <Trophy className="w-5 h-5 mx-auto text-[#0F8E69]" />
+                            <p className="mt-2 text-[10px] tracking-[0.2em] text-[#0F8E69]">RECEIVED</p>
+                            <p className="mt-1 text-2xl md:text-3xl font-extrabold text-[#0F8E69] tabular-nums">
                                 <CountUp end={stats.paid} prefix="₹" />
                             </p>
-                            <p className="mt-1 text-[11px] text-emerald-200/60">Transferred to you</p>
+                            <p className="mt-1 text-[11px] text-[#6B5F80]">Transferred to you</p>
                         </div>
                     </div>
                 </section>
@@ -343,16 +343,16 @@ export default function DashboardPage() {
                 {/* ============ 5. INVITE & EARN ============ */}
                 <section className="mt-8">
                     <SectionLabel>Invite & Earn</SectionLabel>
-                    <div className="rounded-2xl border border-rose-900/60 bg-[#241019]/90 p-5">
-                        <p className="text-sm text-rose-100/80 leading-relaxed">
+                    <div className="lpd-card p-5">
+                        <p className="text-sm text-[#6B5F80] leading-relaxed">
                             Share your invite link. When a friend buys a course through it, you earn a flat 30% commission — no purchase needed to earn, ever.
                         </p>
-                        <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/40 border border-white/10 px-3 py-2.5">
-                            <p className="flex-1 truncate font-mono text-xs text-rose-100/90">{referralLink}</p>
+                        <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#FFF8FB] border border-[rgba(59,49,80,0.14)] px-3 py-2.5">
+                            <p className="flex-1 truncate font-mono text-xs text-[#3B3150]">{referralLink}</p>
                         </div>
                         <button
                             onClick={() => copyInvite(referralLink)}
-                            className="mt-3 w-full rounded-xl bg-gradient-to-r from-[#732C3F] to-rose-500 py-3 font-bold text-white transition hover:brightness-110 active:scale-[0.99] inline-flex items-center justify-center gap-2"
+                            className="lpd-btn lpd-btn-pink lpd-btn-block mt-3"
                         >
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                             {copied ? 'Invite Link Copied!' : 'Copy Invite Link'}
@@ -367,17 +367,17 @@ export default function DashboardPage() {
                 {legacyPendings.length > 0 && (
                     <section className="mt-8">
                         <SectionLabel>Upgrade Bonus — Ended</SectionLabel>
-                        <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                            <p className="text-sm text-rose-100/70 leading-relaxed">
+                        <div className="lpd-card p-5">
+                            <p className="text-sm text-[#6B5F80] leading-relaxed">
                                 The Upgrade Bonus program ended with the LearnPeak relaunch. Bonuses that were
                                 pending before the change are being settled under the old terms — nothing is
                                 cancelled silently. New sales earn the flat commission shown above.
                             </p>
                             <div className="mt-3 space-y-2">
                                 {legacyPendings.map((p: any) => (
-                                    <div key={p.id} className="flex items-center justify-between rounded-lg bg-black/25 border border-white/5 px-3 py-2 text-xs">
-                                        <span className="truncate text-rose-100/80">{p.soldPackageName} sale</span>
-                                        <span className="shrink-0 font-mono tabular-nums">₹{Number(p.pendingAmount || 0).toFixed(2)} · {p.effectiveStatus || p.status}</span>
+                                    <div key={p.id} className="flex items-center justify-between gap-3 rounded-lg bg-[#FFF8FB] border border-[rgba(59,49,80,0.14)] px-3 py-2 text-xs">
+                                        <span className="truncate text-[#3B3150]">{p.soldPackageName} sale</span>
+                                        <span className="shrink-0 font-mono tabular-nums text-[#3B3150]">₹{Number(p.pendingAmount || 0).toFixed(2)} · {p.effectiveStatus || p.status}</span>
                                     </div>
                                 ))}
                             </div>

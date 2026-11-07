@@ -3,6 +3,7 @@ import { authOptions } from "../../api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/firebaseAdmin";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import CategoryThumb from "@/components/CategoryThumb";
 import { Lock, PlayCircle, CheckCircle } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
@@ -65,29 +66,29 @@ export default async function CoursesPage() {
         }
 
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen lpd-shell">
                 <DashboardNavbar user={session.user} />
 
                 <div className="max-w-7xl mx-auto p-4 md:p-8">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800">My Learning</h1>
-                        <p className="text-gray-600 mt-2">Select a category to start learning.</p>
+                        <h1 className="text-3xl lpd-display text-[#1E1530]">My Learning</h1>
+                        <p className="text-[#6B5F80] mt-2">Select a category to start learning.</p>
                     </div>
 
                     {newCourses.length > 0 && (
                         <div className="mb-10">
-                            <h2 className="text-xl font-bold text-gray-800 mb-4">Wedding Editing Courses</h2>
+                            <h2 className="text-xl lpd-display text-[#1E1530] mb-4">Wedding Editing Courses</h2>
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {newCourses.map((c: any) => (
-                                    <div key={c.id} className="bg-white rounded-xl shadow p-5">
-                                        <h3 className="font-bold text-gray-900">{c.title}</h3>
-                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{c.description || ''}</p>
+                                    <div key={c.id} className="lpd-card lpd-card-hover p-5 flex flex-col">
+                                        <h3 className="font-bold text-[#1E1530]">{c.title}</h3>
+                                        <p className="text-sm text-[#6B5F80] mt-1 line-clamp-2">{c.description || ''}</p>
                                         {c.accessState === 'locked' ? (
-                                            <a href={`/signup?product=${c.productSlug}`} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#732C3F] px-4 py-2 text-sm font-bold text-white">
+                                            <a href={`/signup?product=${c.productSlug}`} className="lpd-btn lpd-btn-pink lpd-btn-sm mt-4 self-start">
                                                 <Lock className="w-4 h-4" /> Buy Course
                                             </a>
                                         ) : (
-                                            <a href={`/dashboard/courses/player/${c.id}`} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white">
+                                            <a href={`/dashboard/courses/player/${c.id}`} className="lpd-btn lpd-btn-sm mt-4 self-start">
                                                 <PlayCircle className="w-4 h-4" /> {c.accessState === 'demo' ? 'Watch Demo Lesson' : 'Continue Learning'}
                                             </a>
                                         )}
@@ -98,19 +99,19 @@ export default async function CoursesPage() {
                     )}
 
                     {/* Learning Dashboard Welcome */}
-                    <div className="mb-8 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-2xl p-6">
+                    <div className="mb-8 lpd-banner p-6">
                         <div className="flex items-start gap-4">
                             <div className="text-4xl">🎓</div>
                             <div>
-                                <h3 className="text-xl font-bold text-green-800 mb-2">Welcome to Your Learning Dashboard</h3>
-                                <p className="text-green-700 mb-3">
+                                <h3 className="text-xl font-bold text-[#1E1530] mb-2">Welcome to Your Learning Dashboard</h3>
+                                <p className="text-[#6B5F80] mb-3">
                                     Browse your courses below. Unlocked categories are ready for you to start learning.
                                     New content is added regularly — enjoy lifetime access to all your purchased courses!
                                 </p>
                                 <div className="flex flex-wrap gap-2 text-sm">
-                                    <span className="bg-green-200 text-green-800 px-3 py-1 rounded-full">✅ Lifetime Access</span>
-                                    <span className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full">📚 Learn at Your Pace</span>
-                                    <span className="bg-purple-200 text-purple-800 px-3 py-1 rounded-full">🔄 Regular Updates</span>
+                                    <span className="lpd-chip">✅ Lifetime Access</span>
+                                    <span className="lpd-chip">📚 Learn at Your Pace</span>
+                                    <span className="lpd-chip">🔄 Regular Updates</span>
                                 </div>
                             </div>
                         </div>
@@ -118,53 +119,47 @@ export default async function CoursesPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {groupedCategories.map((category) => (
-                            <div key={category.id} className={`bg-white rounded-xl shadow-sm border ${category.isUnlocked ? 'border-green-200' : 'border-gray-200'} overflow-hidden flex flex-col`}>
+                            <div key={category.id} className="lpd-card lpd-card-hover overflow-hidden flex flex-col">
                                 {/* Category Image */}
-                                <div className="h-48 bg-gray-100 relative">
-                                    {category.image ? (
-                                        <img src={category.image} alt={category.title} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                            <PlayCircle className="w-16 h-16" />
-                                        </div>
-                                    )}
+                                <div className="h-48 bg-[#FFE9F3] relative overflow-hidden">
+                                    <CategoryThumb image={category.image} title={category.title} />
                                     <div className="absolute top-4 right-4">
                                         {category.isUnlocked ? (
-                                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
-                                                <CheckCircle className="w-3 h-3 mr-1" /> Unlocked
+                                            <span className="lpd-badge lpd-badge-mint shadow-sm">
+                                                <CheckCircle className="w-3 h-3" /> Unlocked
                                             </span>
                                         ) : (
-                                            <span className="bg-gray-800 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
-                                                <Lock className="w-3 h-3 mr-1" /> Locked
+                                            <span className="lpd-badge lpd-badge-lock shadow-sm">
+                                                <Lock className="w-3 h-3" /> Locked
                                             </span>
                                         )}
                                     </div>
                                 </div>
 
                                 <div className="p-6 flex-grow">
-                                    <h2 className="text-xl font-bold text-gray-900 mb-2">{category.title}</h2>
-                                    <p className="text-sm text-gray-500 mb-4">{category.courses.length} Courses</p>
+                                    <h2 className="text-xl font-bold text-[#1E1530] mb-2">{category.title}</h2>
+                                    <p className="text-sm text-[#6B5F80] mb-4">{category.courses.length} Courses</p>
 
                                     <div className="space-y-3">
                                         {category.courses.slice(0, 3).map((course: any) => (
-                                            <div key={course.id} className="flex items-center text-sm text-gray-600">
-                                                <PlayCircle className="w-4 h-4 mr-2 text-blue-500" />
+                                            <div key={course.id} className="flex items-center text-sm text-[#3B3150]">
+                                                <PlayCircle className="w-4 h-4 mr-2 shrink-0 text-[#D93C78]" />
                                                 <span className="truncate">{course.title}</span>
                                             </div>
                                         ))}
                                         {category.courses.length > 3 && (
-                                            <p className="text-xs text-gray-400 italic">+ {category.courses.length - 3} more</p>
+                                            <p className="text-xs text-[#6B5F80] italic">+ {category.courses.length - 3} more</p>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="p-4 bg-gray-50 border-t mt-auto">
+                                <div className="p-4 border-t border-[rgba(59,49,80,.14)] bg-[#FFF8FB] mt-auto">
                                     {category.isUnlocked ? (
-                                        <a href={`/dashboard/courses/category/${category.id}`} className="block w-full bg-blue-600 text-white text-center py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                                        <a href={`/dashboard/courses/category/${category.id}`} className="lpd-btn lpd-btn-pink lpd-btn-block">
                                             View Courses
                                         </a>
                                     ) : (
-                                        <button disabled className="block w-full bg-gray-300 text-gray-500 text-center py-2 rounded-lg font-medium cursor-not-allowed">
+                                        <button disabled className="lpd-btn lpd-btn-block bg-[#E8E2F0] text-[#3B3150] border-[#CFC6E2]">
                                             Locked
                                         </button>
                                     )}
