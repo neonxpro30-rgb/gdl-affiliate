@@ -2,10 +2,19 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        // Rate limit (audit #25): 5/hour per IP, 3/hour per email.
+        const ip = clientIp(req);
+        if (!(await rateLimit(`forgot_ip_${ip}`, 5, 3600_000))) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
         const { email } = await req.json();
+        if (email && !(await rateLimit(`forgot_email_${String(email).trim().toLowerCase()}`, 3, 3600_000))) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
 
         const usersRef = db.collection('users');
         const snapshot = await usersRef.where('email', '==', email).limit(1).get();

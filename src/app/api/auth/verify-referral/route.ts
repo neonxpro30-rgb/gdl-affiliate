@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        // Rate limit (audit #25): 30/minute per IP — slows referral-code
+        // enumeration (codes are also longer/crypto-random since batch 3).
+        if (!(await rateLimit(`verifyref_ip_${clientIp(req)}`, 30, 60_000))) {
+            return NextResponse.json({ valid: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
         const { code } = await req.json();
 
         if (!code) {

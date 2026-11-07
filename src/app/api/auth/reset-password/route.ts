@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
 import * as bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        // Rate limit (audit #25): 10/hour per IP — token guessing must
+        // stay impractical even with a leaked email address.
+        if (!(await rateLimit(`reset_ip_${clientIp(req)}`, 10, 3600_000))) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
         const { token, email, newPassword } = await req.json();
 
         if (!token || !email) {
