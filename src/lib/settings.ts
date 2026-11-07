@@ -7,6 +7,7 @@ import { db } from '@/lib/firebaseAdmin';
 
 export interface LearnPeakSettings {
     rates: { course: number; partner: number; extension: number; demo: number };
+    demoFixedCommissionInr: number; // demo (Silicon) sales pay a FIXED ₹ amount, not a % — the old Silicon default, kept per Naksh 2026-11-07
     couponDiscountPct: number; // buyer discount when an affiliate coupon is used (5-10)
     confirmAfterHours: number; // pending -> confirmed window (covers the 24h refund window + buffer)
     payout: { minAmount: number; cadence: 'weekly' | 'fortnightly' };
@@ -25,6 +26,7 @@ export interface LearnPeakSettings {
 
 export const DEFAULT_SETTINGS: LearnPeakSettings = {
     rates: { course: 0.30, partner: 0.40, extension: 0.18, demo: 0 },
+    demoFixedCommissionInr: 17,
     couponDiscountPct: 5,
     confirmAfterHours: 48,
     payout: { minAmount: 500, cadence: 'weekly' },

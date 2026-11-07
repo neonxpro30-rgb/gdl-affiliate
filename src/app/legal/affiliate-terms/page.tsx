@@ -28,7 +28,7 @@ export default function AffiliateTerms() {
                         <li><strong>Courses: 30% flat</strong> for every affiliate, regardless of what you own or have purchased.</li>
                         <li><strong>Partner tier: 40%</strong> on courses, for verified editors, photographers, and creators. This tier is granted by <strong>manual admin approval</strong> only — it is not automatic and cannot be bought.</li>
                         <li><strong>Premiere Pro extensions: 15–20%</strong>, as configured by admin for each extension.</li>
-                        <li><strong>₹19 demo lesson: 0%</strong> — no commission is paid on demo lesson sales.</li>
+                        <li><strong>₹19 demo lesson (Silicon Demo): flat ₹17 per sale</strong> — a fixed commission is paid on every demo lesson sale (not a percentage).</li>
                         <li>Every affiliate also gets a personal <strong>coupon code</strong> that gives buyers <strong>5–10% off</strong> (the exact discount is configured by admin). Sales made with your coupon code are credited to you the same way as referral-link sales.</li>
                     </ul>
 

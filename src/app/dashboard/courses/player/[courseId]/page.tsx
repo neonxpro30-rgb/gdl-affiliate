@@ -5,6 +5,7 @@ import { db } from "@/lib/firebaseAdmin";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import ProgressTracker from "@/components/ProgressTracker";
 import { hasFullCourseAccess, hasLessonAccess, getLegacyTopPackage } from "@/lib/access";
+import { retitleCourses, userUnlocksCategory } from "@/lib/catalog-display";
 import { Lock, ArrowLeft, PlayCircle, ListVideo, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import crypto from "crypto";
@@ -89,6 +90,19 @@ export default async function CoursePlayerPage({ params, searchParams }: {
     if (!courseDoc.exists) return <div>Course not found</div>;
     const course = { id: courseDoc.id, ...courseDoc.data() } as any;
 
+    // Display title: legacy course docs keep their stored (old) titles in
+    // the DB; the catalog-display mapping retitles them by curriculum
+    // position within their category. Stored data is never changed.
+    let displayCourseTitle: string = course.title;
+    if (!course.productSlug && course.category) {
+        try {
+            const sibSnap = await db.collection('courses').where('category', '==', course.category).get();
+            const siblings = sibSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            const retitled = retitleCourses(String(course.category), siblings);
+            displayCourseTitle = retitled.find(c => c.id === course.id)?.displayTitle ?? course.title;
+        } catch { /* keep stored title */ }
+    }
+
     // Lessons: subcollection first; a legacy course's single videoLink
     // becomes its Lesson 1 without any data migration.
     let lessons: Lesson[] = [];
@@ -106,22 +120,18 @@ export default async function CoursePlayerPage({ params, searchParams }: {
         }).sort((a, b) => a.order - b.order);
     } catch { /* subcollection unsupported in mock */ }
     if (!lessons.length && course.videoLink) {
-        lessons = [{ id: 'lesson-1', title: course.title || 'Lesson 1', videoLink: course.videoLink, durationSec: 0, order: 0 }];
+        lessons = [{ id: 'lesson-1', title: displayCourseTitle || 'Lesson 1', videoLink: course.videoLink, durationSec: 0, order: 0 }];
     }
 
     const isNewCourse = !!course.productSlug;
 
-    // Legacy price-tier access for old package courses (unchanged rules)
+    // Legacy access for old package courses: the legacy price-tier rule,
+    // OR ownership of the category's mapped new product / the bundle
+    // (catalog-display mapping). Legacy buyers never lose access.
     let legacyUnlocked = false;
     if (!isNewCourse) {
         const { price: purchasedPackagePrice } = await getLegacyTopPackage(userId);
-        let requiredPrice = 0;
-        const cat = String(course.category || '');
-        if (cat.includes('Silicon')) requiredPrice = 19;
-        else if (cat.includes('Silver')) requiredPrice = 799;
-        else if (cat.includes('Gold')) requiredPrice = 1299;
-        else if (cat.includes('Diamond')) requiredPrice = 3899;
-        legacyUnlocked = purchasedPackagePrice >= requiredPrice;
+        legacyUnlocked = await userUnlocksCategory(userId, String(course.category || ''), purchasedPackagePrice);
     }
 
     const fullAccess = isNewCourse ? await hasFullCourseAccess(userId, course.productSlug) : legacyUnlocked;
@@ -192,7 +202,7 @@ export default async function CoursePlayerPage({ params, searchParams }: {
                         </div>
 
                         <div className="p-6 md:p-8">
-                            <h1 className="lpd-display text-2xl md:text-3xl font-bold text-[#1E1530] mb-2">{course.title}</h1>
+                            <h1 className="lpd-display text-2xl md:text-3xl font-bold text-[#1E1530] mb-2">{displayCourseTitle}</h1>
                             <p className="text-sm font-semibold text-[#6B5F80] mb-4">
                                 Lesson {currentIdx + 1}: {currentLesson.title}
                             </p>

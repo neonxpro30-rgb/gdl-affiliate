@@ -5,7 +5,10 @@ import type { Product } from '@/lib/products';
 // NEW affiliate engine (relaunch). Rules, per MUSE_HANDOFF.md Step 4:
 // - Flat 30% on courses for everyone, whatever they own. Partner tier 40%
 //   (admin-approved: verified editors / photographers / creators).
-// - Extensions 15-20% (configurable; default 18%). Demo (₹19): 0%.
+// - Extensions 15-20% (configurable; default 18%). Demo (₹19): FIXED ₹17
+//   per sale (settings.demoFixedCommissionInr) — the old Silicon default,
+//   kept on Naksh's explicit instruction 2026-11-07 (overrides the
+//   handoff's original 0%-on-demo rule).
 // - Single-tier only. Free to join — no purchase required to earn.
 // - Lifecycle: pending -> confirmed (after the 48h window) -> approved
 //   (fraud checks passed) -> paid (in a payout batch). Refund/chargeback
@@ -81,15 +84,22 @@ export async function createCommissionForOrder(args: {
         return { created: false, reason: `self-referral:${selfReason}` };
     }
 
+    const isDemo = product.type === 'demo';
     const rate = rateForProduct(product, affiliate, settings);
-    if (rate <= 0) return { created: false, reason: 'zero-rate' };
+    const saleAmount = Number(order.amount) || product.price;
+    let amount: number;
+    if (isDemo) {
+        // Fixed ₹17 per demo sale (old Silicon default), not a percentage
+        amount = Number(settings.demoFixedCommissionInr) || 0;
+        if (amount <= 0) return { created: false, reason: 'zero-rate' };
+    } else {
+        if (rate <= 0) return { created: false, reason: 'zero-rate' };
+        amount = Math.round(saleAmount * rate * 100) / 100;
+    }
 
     // Dedupe: one commission per order
     const existing = await db.collection('referrals').where('orderId', '==', order.id).limit(1).get();
     if (!existing.empty) return { created: false, reason: 'duplicate' };
-
-    const saleAmount = Number(order.amount) || product.price;
-    const amount = Math.round(saleAmount * rate * 100) / 100;
 
     // Fraud velocity: many sales for one affiliate from one IP/device in 24h
     const fraudFlags: string[] = [];
@@ -117,7 +127,8 @@ export async function createCommissionForOrder(args: {
         productTitle: product.title,
         type: 'DIRECT',
         saleAmount,
-        rateApplied: rate,
+        rateApplied: isDemo ? 0 : rate,
+        fixedInr: isDemo ? amount : null,
         amount,
         couponCode: args.couponCode || null,
         status: 'pending' as CommissionStatus,
