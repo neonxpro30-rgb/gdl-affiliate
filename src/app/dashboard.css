@@ -1,0 +1,127 @@
+/* LearnPeak dashboard theme — retro-tape light theme matching the homepage
+   (src/app/home.css). Scoped by the `lpd-` class prefix so nothing collides
+   with the homepage's .lp-home styles or the admin panel. Tokens mirror the
+   homepage font stacks exactly; colours use the dashboard palette brief. */
+
+:root {
+  --lpd-ink: #3B3150;
+  --lpd-ink-deep: #1E1530;
+  --lpd-paper: #FFF8FB;
+  --lpd-wash: #FFE9F3;
+  --lpd-pink: #FF8AC4;
+  --lpd-pink-deep: #D93C78;
+  --lpd-mint: #0F8E69;
+  --lpd-mint-bg: #E9FBF4;
+  --lpd-lav: #E8E2F0;
+  --lpd-lav-deep: #CFC6E2;
+  --lpd-butter: #FFE07A;
+  --lpd-butter-soft: #FFE9AE;
+  --lpd-coral: #FF4F5E;
+  --lpd-soft: #6B5F80;
+  --lpd-line: rgba(59, 49, 80, .14);
+  --lpd-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --lpd-body: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --lpd-pixel: "VT323", ui-monospace, Menlo, monospace;
+}
+
+/* Page shell: put on the outermost element of a student page */
+.lpd-shell {
+  background: var(--lpd-paper);
+  color: var(--lpd-ink);
+  font-family: var(--lpd-body);
+}
+.lpd-display { font-family: var(--lpd-display); }
+.lpd-pixel { font-family: var(--lpd-pixel); font-variant-numeric: tabular-nums; }
+
+/* Cards */
+.lpd-card {
+  background: #fff;
+  border: 2px solid var(--lpd-line);
+  border-radius: 24px;
+  box-shadow: 0 4px 0 rgba(59, 49, 80, .06);
+}
+.lpd-card-hover { transition: transform .15s, box-shadow .15s; }
+.lpd-card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 0 rgba(59, 49, 80, .08); }
+
+/* Buttons — mirror the homepage .btn shape (chunky pill, hard shadow) */
+.lpd-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--lpd-body); font-weight: 800; font-size: 16px; line-height: 1.2;
+  text-decoration: none; cursor: pointer; white-space: nowrap;
+  border: 2px solid var(--lpd-ink-deep); border-radius: 999px;
+  padding: 10px 22px 8px; background: var(--lpd-ink-deep); color: #fff;
+  transition: transform .15s, box-shadow .15s, background .15s;
+}
+.lpd-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--lpd-pink); }
+.lpd-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+.lpd-btn-pink { background: var(--lpd-pink); color: var(--lpd-ink-deep); }
+.lpd-btn-pink:hover { box-shadow: 0 6px 0 var(--lpd-ink-deep); }
+.lpd-btn-ghost { background: transparent; color: var(--lpd-ink); }
+.lpd-btn-ghost:hover { background: #fff; box-shadow: 0 6px 0 var(--lpd-lav-deep); }
+.lpd-btn-sm { font-size: 14px; padding: 7px 16px 5px; }
+.lpd-btn-block { width: 100%; }
+
+/* Tape / label-style badges */
+.lpd-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--lpd-body); font-weight: 800; font-size: 12.5px;
+  letter-spacing: .04em; text-transform: uppercase;
+  border-radius: 999px; padding: 3px 12px 1px; border: 1.5px solid transparent;
+}
+.lpd-badge-mint { background: var(--lpd-mint-bg); color: var(--lpd-mint); border-color: rgba(15, 142, 105, .35); }
+.lpd-badge-lock { background: var(--lpd-ink); color: #fff; border-color: var(--lpd-ink); }
+.lpd-badge-pink { background: var(--lpd-wash); color: var(--lpd-pink-deep); border-color: rgba(217, 60, 120, .3); }
+.lpd-badge-lav { background: var(--lpd-lav); color: var(--lpd-ink); border-color: var(--lpd-lav-deep); }
+.lpd-badge-butter { background: var(--lpd-butter-soft); color: var(--lpd-ink); border-color: rgba(59, 49, 80, .25); }
+.lpd-badge-coral { background: var(--lpd-coral); color: #fff; border-color: var(--lpd-coral); }
+
+/* Welcome / hero banner (replaces the old green-blue gradients) */
+.lpd-banner {
+  background: linear-gradient(120deg, var(--lpd-wash) 0%, #fff 55%, var(--lpd-lav) 130%);
+  border: 2px solid rgba(217, 60, 120, .22);
+  border-radius: 24px;
+}
+
+/* Chips (small stat / feature pills) */
+.lpd-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 700; font-size: 13.5px; border-radius: 999px; padding: 4px 12px 2px;
+  background: #fff; border: 1.5px solid var(--lpd-line); color: var(--lpd-ink);
+}
+
+/* Form controls */
+.lpd-input {
+  width: 100%; border: 2px solid var(--lpd-line); border-radius: 14px;
+  background: #fff; color: var(--lpd-ink); font-family: var(--lpd-body);
+  font-size: 15.5px; font-weight: 600; padding: 10px 14px;
+}
+.lpd-input:focus { outline: none; border-color: var(--lpd-pink); box-shadow: 0 0 0 3px var(--lpd-wash); }
+.lpd-label { display: block; font-weight: 800; font-size: 13.5px; letter-spacing: .03em; color: var(--lpd-ink); margin-bottom: 6px; }
+
+/* Branded fallback for missing / placeholder category thumbnails.
+   Fills its (aspect-ratio) parent; never shows a grey "600 × 400" box. */
+.lpd-thumb {
+  position: relative; width: 100%; height: 100%; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background:
+    radial-gradient(70% 60% at 78% 20%, var(--lpd-butter-soft) 0, rgba(255, 233, 174, 0) 62%),
+    linear-gradient(150deg, var(--lpd-lav) 0%, var(--lpd-wash) 58%, var(--lpd-pink) 135%);
+  color: var(--lpd-ink);
+}
+.lpd-thumb-tape {
+  font-family: var(--lpd-pixel); font-size: 15px; letter-spacing: .14em;
+  background: var(--lpd-ink-deep); color: #fff; border-radius: 6px; padding: 2px 10px 0;
+}
+.lpd-thumb-initial {
+  font-family: var(--lpd-display); font-weight: 800; line-height: 1;
+  font-size: clamp(44px, 6vw, 64px); color: var(--lpd-ink-deep);
+  text-shadow: 3px 3px 0 rgba(255, 255, 255, .65);
+}
+.lpd-thumb-name {
+  font-family: var(--lpd-display); font-weight: 700; font-size: 14.5px;
+  letter-spacing: -.01em; text-align: center; padding: 0 14px;
+}
+
+/* Progress bars */
+.lpd-progress { background: var(--lpd-lav); border-radius: 999px; overflow: hidden; }
+.lpd-progress > i { display: block; height: 100%; background: linear-gradient(90deg, var(--lpd-pink), var(--lpd-pink-deep)); border-radius: 999px; }

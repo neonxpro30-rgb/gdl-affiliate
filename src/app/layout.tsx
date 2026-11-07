@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Anton } from "next/font/google";
 import "./globals.css";
+import "./dashboard.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,6 +84,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Same font families the homepage loads for its retro-tape theme
+            (Unbounded / Baloo 2 / VT323) — loaded app-wide so the student
+            dashboard can reuse the exact --display/--body/--pixel stacks. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Baloo+2:wght@400;500;600;700;800&family=VT323&display=swap"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} antialiased`}
         suppressHydrationWarning
