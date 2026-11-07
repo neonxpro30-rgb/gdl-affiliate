@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { requireAdmin } from "@/lib/adminGuard";
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
-        // Basic protection: Check if user exists. Ideally check role 'ADMIN' if you have it.
-        if (!session) {
+        // Admin-only (audit 2026-11-07, critical #5): a bare session check let
+        // ANY logged-in customer manage blog posts.
+        const admin = await requireAdmin();
+        if (!admin.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -22,8 +22,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session) {
+        const admin = await requireAdmin();
+        if (!admin.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

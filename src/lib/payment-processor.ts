@@ -21,6 +21,14 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
     const orderData: any = { id: orderId, ...orderDoc.data() };
     if (!orderData) throw new Error('Order data empty');
 
+    // Idempotency (audit 2026-11-07, high #11): an order that is already
+    // SUCCESS is never re-processed — replayed/concurrent callbacks must not
+    // double-issue commissions, licences or emails.
+    if (orderData.status === 'SUCCESS') {
+        console.log(`Order ${orderId} already SUCCESS — skipping re-processing`);
+        return;
+    }
+
     // 1. Update Order Status
     await orderRef.update({
         status: 'SUCCESS',

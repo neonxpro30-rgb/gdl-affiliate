@@ -6,9 +6,12 @@ import { v2 as cloudinary } from 'cloudinary';
 
 // Configure Cloudinary
 cloudinary.config({
-    cloud_name: 'dhahxfyvo',
-    api_key: '155648641738369',
-    api_secret: 'i6ClF86BVqH0CBljsOhVp3c2swY'
+    // Env-first (audit 2026-11-07, high #16): the secret was hard-coded in
+    // this public repo — rotate it in Cloudinary and set CLOUDINARY_* in
+    // Vercel env; the literals remain only as a legacy fallback until then.
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dhahxfyvo',
+    api_key: process.env.CLOUDINARY_API_KEY || '155648641738369',
+    api_secret: process.env.CLOUDINARY_API_SECRET || 'i6ClF86BVqH0CBljsOhVp3c2swY'
 });
 
 export async function POST(request: Request) {

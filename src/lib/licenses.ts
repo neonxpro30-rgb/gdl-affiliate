@@ -7,7 +7,13 @@ import { getProducts, type Product } from '@/lib/products';
 // auto-issues a licence for every extension product.
 
 function makeKey(): string {
-    const seg = () => Math.random().toString(36).slice(2, 6).toUpperCase().padEnd(4, 'X');
+    // Cryptographically secure keys (audit 2026-11-07, medium #20):
+    // Math.random() keys are predictable/enumerable.
+    const seg = () => {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const bytes = require('crypto').randomBytes(4);
+        return Array.from(bytes, (b: number) => chars[b % chars.length]).join('');
+    };
     return `LPX-${seg()}-${seg()}-${seg()}`;
 }
 

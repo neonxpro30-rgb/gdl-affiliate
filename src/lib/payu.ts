@@ -1,11 +1,16 @@
 import crypto from 'crypto';
 
-const PAYU_KEY = 'bTpGZj';
-const PAYU_SALT = 'CLZAqnk88f2mr4Penza7cVQB7S06BF7W';
+// PayU credentials come from env (PAYU_KEY / PAYU_SALT, also accepting the
+// PAYU_MERCHANT_* names). The literals below are a LEGACY FALLBACK only —
+// the salt was exposed in this public repo's history (audit 2026-11-07,
+// critical #2), so it MUST be rotated in the PayU dashboard and the new
+// values set in Vercel env; the fallback gets deleted right after rotation.
+const PAYU_KEY = process.env.PAYU_KEY || process.env.PAYU_MERCHANT_KEY || 'bTpGZj';
+const PAYU_SALT = process.env.PAYU_SALT || process.env.PAYU_MERCHANT_SALT || 'CLZAqnk88f2mr4Penza7cVQB7S06BF7W';
 
 export const generateHash = (data: any) => {
     const hashString = `${PAYU_KEY}|${data.txnid}|${data.amount}|${data.productinfo}|${data.firstname}|${data.email}|${data.udf1 || ''}|${data.udf2 || ''}|${data.udf3 || ''}|${data.udf4 || ''}|${data.udf5 || ''}||||||${PAYU_SALT}`;
-    console.log('Generating Hash String:', hashString);
+    // NEVER log the hash string — it contains the salt (audit #2/#31)
     return crypto.createHash('sha512').update(hashString).digest('hex');
 };
 

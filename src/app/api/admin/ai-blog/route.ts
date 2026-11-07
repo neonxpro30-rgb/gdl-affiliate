@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { generateBlogPost, getTopicSuggestions, generateBlogImageUrl, getTrendingTopic } from '@/lib/ai-blog-generator';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/adminGuard';
 
 // Helper to generate URL-friendly slug
 function generateSlug(title: string): string {
@@ -18,6 +19,10 @@ function generateSlug(title: string): string {
 // GET: Get topic suggestions
 export async function GET(request: Request) {
     try {
+        // Admin-only (audit 2026-11-07, critical #5): this route had NO auth —
+        // anyone could burn Gemini quota and auto-publish posts.
+        const admin = await requireAdmin();
+        if (!admin.ok) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         const topics = await getTopicSuggestions();
         return NextResponse.json({
             success: true,
@@ -34,6 +39,8 @@ export async function GET(request: Request) {
 // POST: Generate a new blog post
 export async function POST(request: Request) {
     try {
+        const admin = await requireAdmin();
+        if (!admin.ok) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         const body = await request.json().catch(() => ({}));
         let { topic, autoPublish = false, autoSave = true } = body;
 
