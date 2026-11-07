@@ -21,6 +21,12 @@ export async function getOwnedProductSlugs(userId: string): Promise<Set<string>>
                 if (data.productSlug) owned.delete(data.productSlug);
             }
         }
+        // The ₹19 demo IS the old Silicon package (same product, new name):
+        // legacy Silicon-tier buyers own the demo too.
+        if (!owned.has('demo')) {
+            const { price } = await getLegacyTopPackage(userId);
+            if (price >= 19) owned.add('demo');
+        }
     } catch { /* mock DB etc. */ }
     return owned;
 }
@@ -49,10 +55,16 @@ export async function getLegacyTopPackage(userId: string): Promise<{ price: numb
             .get();
         for (const doc of snap.docs) {
             const order = doc.data() as any;
-            if (!order.packageId || order.refundStatus === 'REFUNDED') continue;
-            const pkgDoc = await db.collection('packages').doc(order.packageId).get();
-            const price = Number(pkgDoc.data()?.price) || 0;
-            if (price > top.price) top = { price, packageId: order.packageId };
+            if (order.refundStatus === 'REFUNDED') continue;
+            if (order.packageId) {
+                const pkgDoc = await db.collection('packages').doc(order.packageId).get();
+                const price = Number(pkgDoc.data()?.price) || 0;
+                if (price > top.price) top = { price, packageId: order.packageId };
+            } else if (order.productSlug === 'demo') {
+                // The ₹19 demo IS the old Silicon package (same product, new
+                // name) — a demo purchase unlocks the legacy Silicon tier.
+                if (19 > top.price) top = { price: 19, packageId: top.packageId };
+            }
         }
     } catch { /* mock DB etc. */ }
     return top;
