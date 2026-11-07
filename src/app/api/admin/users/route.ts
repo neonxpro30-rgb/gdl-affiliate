@@ -41,7 +41,18 @@ export async function POST(req: Request) {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const referralCode = name.substring(0, 4).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
+        // Crypto-random referral code with collision retry (audit #21 —
+        // matches the signup generator; the old 4-digit Math.random scheme
+        // was enumerable and collision-prone)
+        const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let referralCode = '';
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const bytes = require('crypto').randomBytes(8);
+            const suffix = Array.from(bytes, (b: any) => ALPHABET[(b as number) % ALPHABET.length]).join('');
+            referralCode = name.substring(0, 4).toUpperCase() + suffix;
+            const clash = await userRef.where('referralCode', '==', referralCode).limit(1).get();
+            if (clash.empty) break;
+        }
 
         await userRef.add({
             name,

@@ -86,7 +86,7 @@ export async function GET(request: Request) {
             console.error('❌ Failed to generate blog:', result.error);
             return NextResponse.json({
                 success: false,
-                error: result.error || 'Failed to generate blog'
+                error: 'Failed to generate blog'
             }, { status: 500 });
         }
 
@@ -168,7 +168,7 @@ export async function GET(request: Request) {
         console.error('❌ Cron job error:', error);
         return NextResponse.json({
             success: false,
-            error: String(error)
+            error: 'Internal server error'
         }, { status: 500 });
     }
 }

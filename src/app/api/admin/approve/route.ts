@@ -12,7 +12,23 @@ export async function POST(req: Request) {
 
         const { referralId } = await req.json();
 
-        await db.collection('referrals').doc(referralId).update({
+        if (!referralId) {
+            return NextResponse.json({ error: 'Referral ID is required' }, { status: 400 });
+        }
+
+        // Transition guard (audit #23): paid/reversed are terminal —
+        // re-marking a settled referral PAID would double-pay it.
+        const ref = db.collection('referrals').doc(referralId);
+        const doc = await ref.get();
+        if (!doc.exists) {
+            return NextResponse.json({ error: 'Referral not found' }, { status: 404 });
+        }
+        const current = String((doc.data() as any)?.status || '');
+        if (['paid', 'reversed'].includes(current.toLowerCase())) {
+            return NextResponse.json({ error: `Referral is already '${current}' and cannot be paid again` }, { status: 409 });
+        }
+
+        await ref.update({
             status: 'PAID',
             paidAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()

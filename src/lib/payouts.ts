@@ -124,6 +124,10 @@ export async function buildPayoutBatch(createdBy: string): Promise<{ batchId: st
     const now = new Date().toISOString();
     const batchRef = await db.collection('payouts').add({
         status: 'open', cadence: settings.payout.cadence, createdBy, createdAt: now,
+        // Denormalised member list so a user's payout history can be
+        // fetched with an array-contains query instead of scanning
+        // every batch in the collection (audit #26).
+        userIds: [...new Set(lines.map(l => l.userId))],
         lines, totalGross: lines.reduce((s, l) => s + l.gross, 0),
         totalTds: lines.reduce((s, l) => s + l.tdsAmount, 0),
         totalNet: lines.reduce((s, l) => s + l.net, 0),
@@ -183,7 +187,10 @@ export async function markBatchRowsPaid(batchId: string): Promise<number> {
 }
 
 export async function getUserPayouts(userId: string): Promise<any[]> {
-    const snap = await db.collection('payouts').get();
+    // Scoped query (audit #26): only batches that include this user.
+    // Batches built before the userIds field existed don't match an
+    // array-contains query — see the batch-3 report note.
+    const snap = await db.collection('payouts').where('userIds', 'array-contains', userId).get();
     const out: any[] = [];
     for (const doc of snap.docs) {
         const d = doc.data() as any;

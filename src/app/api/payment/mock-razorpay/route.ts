@@ -4,8 +4,14 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 import { db } from '@/lib/firebaseAdmin';
 
 export async function POST(req: Request) {
-    // SECURITY: this endpoint marks orders SUCCESS without real payment.
-    // Admin-only — used for testing. Never expose to regular users.
+    // SECURITY: this endpoint marks orders SUCCESS without real payment
+    // (audit #32). It does not exist unless explicitly enabled for local
+    // testing via ALLOW_MOCK_PAYMENTS=true — in production it is a 404
+    // for everyone, admins included.
+    if (process.env.ALLOW_MOCK_PAYMENTS !== 'true') {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    // When enabled: admin-only, used for testing. Never expose to users.
     const session = await getServerSession(authOptions);
     if (!session || (session.user as any)?.role !== 'ADMIN') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

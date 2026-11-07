@@ -15,6 +15,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const doc = await ref.get();
         if (!doc.exists) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
         const updates: any = { updatedAt: new Date().toISOString() };
+        // Transition guard (audit #23): a 'paid' project is settled —
+        // it cannot move back into the workflow (a later batch could
+        // otherwise pay it a second time).
+        if (doc.data()?.status === 'paid' && status !== undefined && status !== 'paid') {
+            return NextResponse.json({ error: 'Project is already paid and cannot change status' }, { status: 409 });
+        }
         if (assigneeId !== undefined) { updates.assigneeId = assigneeId; if (doc.data()?.status === 'unassigned') updates.status = 'assigned'; }
         if (status !== undefined) {
             if (!ADMIN_STATUSES.includes(status)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
