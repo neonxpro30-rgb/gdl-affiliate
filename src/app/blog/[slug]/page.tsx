@@ -5,6 +5,27 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BlogComments from "@/components/BlogComments";
 import BlogReview from "@/components/BlogReview";
+import sanitizeHtml from "sanitize-html";
+
+// Stored blog HTML is sanitized before rendering (audit 2026-11-07,
+// critical #6): post content is author/AI-supplied and was rendered raw —
+// a stored-XSS chain. Allowlist keeps normal article markup only.
+function sanitizePostContent(html: string): string {
+    return sanitizeHtml(html || '', {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'h1', 'h2', 'figure', 'figcaption']),
+        allowedAttributes: {
+            ...sanitizeHtml.defaults.allowedAttributes,
+            img: ['src', 'alt', 'title', 'width', 'height'],
+            a: ['href', 'name', 'target', 'rel'],
+        },
+        allowedSchemes: ['http', 'https', 'mailto'],
+    });
+}
+
+// JSON-LD must not be able to break out of its <script> tag (audit #6)
+function jsonLd(data: unknown): string {
+    return JSON.stringify(data).replace(/</g, '\\u003c');
+}
 
 export const revalidate = 60;
 
@@ -149,11 +170,11 @@ export default async function BlogPostPage({ params }: Props) {
             {/* JSON-LD Structured Data */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+                dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }}
             />
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+                dangerouslySetInnerHTML={{ __html: jsonLd(faqSchema) }}
             />
 
             <main className="max-w-4xl mx-auto px-4 py-12">
@@ -189,7 +210,7 @@ export default async function BlogPostPage({ params }: Props) {
                 </header>
 
                 <article className="prose prose-lg md:prose-xl mx-auto text-gray-800 leading-relaxed">
-                    <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizePostContent(post.content) }} />
                 </article>
 
                 {/* LearnPeak Promotion CTA */}

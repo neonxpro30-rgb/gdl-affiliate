@@ -58,6 +58,17 @@ async function checkForDuplicateTitle(title: string): Promise<boolean> {
 
 export async function GET(request: Request) {
     try {
+        // Fail closed (audit 2026-11-07, critical #5): this cron publishes
+        // posts and burns Gemini quota — it must never be publicly callable.
+        // Set CRON_SECRET in Vercel; Vercel Cron sends it as a Bearer token.
+        const cronSecret = process.env.CRON_SECRET;
+        if (process.env.NODE_ENV === 'production' && !cronSecret) {
+            return NextResponse.json({ success: false, error: 'Cron not configured' }, { status: 500 });
+        }
+        if (cronSecret && request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
+            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
         console.log('🚀 Daily Blog Cron Job Started');
         console.log('📅 Time:', new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
         const startTime = Date.now();

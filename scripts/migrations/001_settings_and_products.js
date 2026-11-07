@@ -37,7 +37,7 @@ const SETTINGS_DEFAULTS = {
 };
 
 const PRODUCTS = [
-    { slug: 'demo', title: 'Demo Lesson — Tape 01, Lesson 1', type: 'course', price: 19, active: true, visible: true, commissionRateOverride: 0, courseSlug: 'reel-trailer-starter', order: 0 },
+    { slug: 'demo', title: 'Demo Lesson — Tape 01, Lesson 1', type: 'demo', price: 19, active: true, visible: true, commissionRateOverride: null, courseSlug: 'reel-trailer-starter', order: 0 },
     { slug: 'reel-trailer-starter', title: '01 · Reel & Trailer Starter', type: 'course', price: 1299, active: true, visible: true, order: 1 },
     { slug: 'emotional-reels', title: '02 · Emotional Reels', type: 'course', price: 1799, active: true, visible: true, order: 2 },
     { slug: 'pro-wedding-trailer', title: '03 · Pro Wedding Trailer', type: 'course', price: 3999, active: true, visible: true, order: 3 },

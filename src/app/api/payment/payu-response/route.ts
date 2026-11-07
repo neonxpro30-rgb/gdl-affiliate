@@ -10,7 +10,8 @@ export async function POST(req: Request) {
             data[key] = value;
         });
 
-        console.log('PayU Response:', data);
+        // Never log the full callback (PII + payment fields) — ids/status only
+        console.log('PayU Response:', { txnid: data.txnid, status: data.status, mihpayid: data.mihpayid });
 
         const isValidHash = verifyHash(data);
         if (!isValidHash) {
@@ -28,7 +29,20 @@ export async function POST(req: Request) {
             return NextResponse.redirect(new URL('/payment/failure?error=OrderNotFound', req.url), 303);
         }
 
+        const orderData = orderDoc.data() as any;
+
         if (data.status === 'success') {
+            // Reconcile the paid amount with the stored order BEFORE settling
+            // (audit 2026-11-07, critical #3): a validly-signed callback for a
+            // smaller amount must never settle a larger order.
+            if (Number(data.amount) !== Number(orderData.amount)) {
+                console.error('PayU amount mismatch for order:', orderId);
+                return NextResponse.redirect(new URL('/payment/failure?error=AmountMismatch', req.url), 303);
+            }
+            // Replay of an already-settled order: no re-processing
+            if (orderData.status === 'SUCCESS') {
+                return NextResponse.redirect(new URL(`/dashboard?payment=success&orderId=${orderId}`, req.url), 303);
+            }
             const { processSuccessfulPayment } = await import('@/lib/payment-processor');
 
             // Unified Processor handles: Order Update, User Activation, Commission, Emails
@@ -37,11 +51,14 @@ export async function POST(req: Request) {
             // Use 303 status code (See Other) to properly redirect from POST to GET
             return NextResponse.redirect(new URL(`/dashboard?payment=success&orderId=${orderId}`, req.url), 303);
         } else {
-            await orderRef.update({
-                status: 'FAILED',
-                updatedAt: new Date().toISOString(),
-                paymentData: data
-            });
+            // A late failure callback must never regress a settled order
+            if (orderData.status === 'PENDING') {
+                await orderRef.update({
+                    status: 'FAILED',
+                    updatedAt: new Date().toISOString(),
+                    paymentData: { status: data.status, mihpayid: data.mihpayid, error: data.error_Message || data.error || '' }
+                });
+            }
             return NextResponse.redirect(new URL('/payment/failure?error=TransactionFailed', req.url), 303);
         }
 

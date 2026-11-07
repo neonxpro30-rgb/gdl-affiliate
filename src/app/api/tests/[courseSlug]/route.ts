@@ -4,6 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 import { db } from '@/lib/firebaseAdmin';
 import { getSettings } from '@/lib/settings';
 import { getCertificate } from '@/lib/certificates';
+import { hasFullCourseAccess } from '@/lib/access';
 
 // Final test per course: MCQ (auto-graded) + one practical edit
 // (link, admin-reviewed). Pass = MCQ >= pass mark AND practical approved.
@@ -23,6 +24,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ courseS
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const { courseSlug } = await params;
+        // Ownership gate (audit 2026-11-07, high #7): the final test belongs
+        // to buyers of the course — a non-buyer must not fetch questions,
+        // earn a certificate, or unlock the paid-work gate with it.
+        if (!(await hasFullCourseAccess(session.user.id, courseSlug))) {
+            return NextResponse.json({ error: 'Course not purchased' }, { status: 403 });
+        }
         const settings = await getSettings();
 
         const testDoc = await db.collection('tests').doc(courseSlug).get();
@@ -56,6 +63,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ courseS
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const { courseSlug } = await params;
+        if (!(await hasFullCourseAccess(session.user.id, courseSlug))) {
+            return NextResponse.json({ error: 'Course not purchased' }, { status: 403 });
+        }
         const { answers, practicalLink } = await req.json();
         const settings = await getSettings();
 
@@ -81,11 +91,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ courseS
         const passMark = test.passMarkPct ?? settings.test.passMarkPct;
         const mcqPassed = mcqScorePct >= passMark;
 
-        // Carry forward an already-approved practical from a prior attempt
-        const priorPracticalApproved = prev?.practical?.reviewStatus === 'approved';
+        // Carry forward an approved practical ONLY for the exact same work
+        // (audit 2026-11-07, high #8): a prior approval must never bless a
+        // brand-new, unreviewed link.
+        const approvedLink = prev?.practical?.reviewStatus === 'approved' ? (prev.practical.link || '') : null;
+        const carryApproved = !!approvedLink && (!practicalLink || practicalLink === approvedLink);
         const practical = practicalLink
-            ? { link: practicalLink, reviewStatus: 'pending', reviewerNote: '' }
+            ? { link: practicalLink, reviewStatus: carryApproved ? 'approved' : 'pending', reviewerNote: '' }
             : (prev?.practical || { link: '', reviewStatus: 'pending', reviewerNote: '' });
+        const priorPracticalApproved = carryApproved;
 
         const now = new Date().toISOString();
         let status: string;

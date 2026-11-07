@@ -33,7 +33,11 @@ export const DEFAULT_SETTINGS: LearnPeakSettings = {
     tds: { pct: null, yearlyThreshold: null },
     test: { passMarkPct: 70, retakeCooldownHours: 24 },
     activationLimit: 2,
-    cutoverAt: null,
+    // Relaunch go-live moment (2026-11-07 ~16:30 IST). Defaulting to this —
+    // instead of null — means the legacy 70% + Upgrade Bonus engine can
+    // never silently re-arm if the settings doc is missing (audit #15).
+    // Admin can still override by saving an explicit value.
+    cutoverAt: '2026-11-07T11:00:00.000Z',
     business: {
         legalName: 'LearnPeak',
         address: '', // placeholder — Naksh provides the registered business address
