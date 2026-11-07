@@ -97,6 +97,25 @@ export async function getProduct(slug: string): Promise<Product | null> {
     return SEED_PRODUCTS.find(p => p.slug === slug) || null;
 }
 
+// The course slugs an order for this product covers — the ONLY source a
+// refund may be calculated against (audit #9: never trust a
+// client-supplied course slug). Course/demo product -> its courseSlug;
+// bundle -> every included course product's courseSlug.
+export async function courseSlugsForProductSlug(productSlug: string | null | undefined): Promise<string[]> {
+    if (!productSlug) return [];
+    const product = await getProduct(productSlug);
+    if (!product) return [];
+    if (product.type === 'bundle') {
+        const slugs: string[] = [];
+        for (const included of product.includes || []) {
+            const p = await getProduct(included);
+            if (p?.courseSlug) slugs.push(p.courseSlug);
+        }
+        return [...new Set(slugs)];
+    }
+    return product.courseSlug ? [product.courseSlug] : [];
+}
+
 // Which product slugs unlock a given course (direct course product, bundle, demo for course 01 lesson 1)
 export function unlockingSlugsForCourse(courseSlug: string): string[] {
     const slugs = [courseSlug, 'bundle-all'];
