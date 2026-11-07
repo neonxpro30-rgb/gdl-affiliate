@@ -3,6 +3,7 @@ import { authOptions } from "../../../../api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/firebaseAdmin";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import { getLegacyTopPackage } from "@/lib/access";
 import { PlayCircle, Lock, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -21,23 +22,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     const coursesSnapshot = await db.collection('courses').where('category', '==', category.title).get();
     const courses = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
 
-    // 3. Check Access
-    const ordersSnapshot = await db.collection('orders')
-        .where('userId', '==', session.user.id)
-        .where('status', '==', 'SUCCESS')
-        .get();
-
-    let purchasedPackagePrice = 0;
-    if (!ordersSnapshot.empty) {
-        const orders = ordersSnapshot.docs.map(doc => doc.data());
-        orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        const latestOrder = orders[0];
-
-        if (latestOrder.packageId) {
-            const pkgDoc = await db.collection('packages').doc(latestOrder.packageId).get();
-            purchasedPackagePrice = pkgDoc.data()?.price || 0;
-        }
-    }
+    // 3. Check Access — highest owned legacy tier across ALL orders
+    const { price: purchasedPackagePrice } = await getLegacyTopPackage(session.user.id);
 
     let requiredPrice = 0;
     if (category.title.includes('Silicon')) requiredPrice = 19;

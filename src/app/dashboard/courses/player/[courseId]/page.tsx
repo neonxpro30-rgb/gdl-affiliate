@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/firebaseAdmin";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import ProgressTracker from "@/components/ProgressTracker";
-import { hasFullCourseAccess, hasLessonAccess } from "@/lib/access";
+import { hasFullCourseAccess, hasLessonAccess, getLegacyTopPackage } from "@/lib/access";
 import { Lock, ArrowLeft, PlayCircle, ListVideo, FlaskConical } from "lucide-react";
 import Link from "next/link";
 import crypto from "crypto";
@@ -114,20 +114,7 @@ export default async function CoursePlayerPage({ params, searchParams }: {
     // Legacy price-tier access for old package courses (unchanged rules)
     let legacyUnlocked = false;
     if (!isNewCourse) {
-        const ordersSnapshot = await db.collection('orders')
-            .where('userId', '==', userId)
-            .where('status', '==', 'SUCCESS')
-            .get();
-        let purchasedPackagePrice = 0;
-        if (!ordersSnapshot.empty) {
-            const orders = ordersSnapshot.docs.map(doc => doc.data());
-            orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            const latestOrder = orders[0];
-            if (latestOrder.packageId) {
-                const pkgDoc = await db.collection('packages').doc(latestOrder.packageId).get();
-                purchasedPackagePrice = pkgDoc.data()?.price || 0;
-            }
-        }
+        const { price: purchasedPackagePrice } = await getLegacyTopPackage(userId);
         let requiredPrice = 0;
         const cat = String(course.category || '');
         if (cat.includes('Silicon')) requiredPrice = 19;

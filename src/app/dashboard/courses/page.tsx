@@ -12,23 +12,10 @@ export default async function CoursesPage() {
         const session = await getServerSession(authOptions);
         if (!session) redirect('/login');
 
-        // 1. Fetch User's Purchased Package
-        const ordersSnapshot = await db.collection('orders')
-            .where('userId', '==', session.user.id)
-            .where('status', '==', 'SUCCESS')
-            .get();
-
-        let purchasedPackagePrice = 0;
-        if (!ordersSnapshot.empty) {
-            const orders = ordersSnapshot.docs.map(doc => doc.data());
-            orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            const latestOrder = orders[0];
-
-            if (latestOrder.packageId) {
-                const pkgDoc = await db.collection('packages').doc(latestOrder.packageId).get();
-                purchasedPackagePrice = pkgDoc.data()?.price || 0;
-            }
-        }
+        // 1. User's highest owned legacy package tier (across ALL orders —
+        //    never just the latest one; see getLegacyTopPackage)
+        const { getLegacyTopPackage } = await import('@/lib/access');
+        const { price: purchasedPackagePrice } = await getLegacyTopPackage(session.user.id);
 
         // 2. Fetch Categories
         const categoriesSnapshot = await db.collection('categories').orderBy('order', 'asc').get();

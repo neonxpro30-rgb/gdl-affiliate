@@ -12,22 +12,14 @@ export async function GET() {
 
         const userId = session.user.id;
 
-        // Fetch latest successful order
-        const ordersSnapshot = await db.collection('orders')
-            .where('userId', '==', userId)
-            .where('status', '==', 'SUCCESS')
-            .get();
+        // The user's package = the HIGHEST tier they own across all SUCCESS
+        // orders (a later small purchase must not downgrade them)
+        const { getLegacyTopPackage } = await import("@/lib/access");
+        const { packageId } = await getLegacyTopPackage(userId);
 
-        if (ordersSnapshot.empty) {
+        if (!packageId) {
             return NextResponse.json({ name: "No Package" });
         }
-
-        // Sort in memory to find latest
-        const orders = ordersSnapshot.docs.map(doc => doc.data());
-        orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-        const latestOrder = orders[0];
-        const packageId = latestOrder.packageId;
 
         // Fetch Package Name
         const packageDoc = await db.collection('packages').doc(packageId).get();

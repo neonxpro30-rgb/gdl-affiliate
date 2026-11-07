@@ -35,6 +35,29 @@ export async function userOwnsProduct(userId: string, slug: string): Promise<boo
     return false;
 }
 
+// Legacy package tier: the HIGHEST package the user has EVER bought
+// (any SUCCESS order), never just the latest order — a later small order
+// (e.g. the new ₹19 demo, which carries no packageId) must not re-lock
+// packages bought earlier. Refunded orders don't count.
+export async function getLegacyTopPackage(userId: string): Promise<{ price: number; packageId: string | null }> {
+    let top = { price: 0, packageId: null as string | null };
+    if (!userId) return top;
+    try {
+        const snap = await db.collection('orders')
+            .where('userId', '==', userId)
+            .where('status', '==', 'SUCCESS')
+            .get();
+        for (const doc of snap.docs) {
+            const order = doc.data() as any;
+            if (!order.packageId || order.refundStatus === 'REFUNDED') continue;
+            const pkgDoc = await db.collection('packages').doc(order.packageId).get();
+            const price = Number(pkgDoc.data()?.price) || 0;
+            if (price > top.price) top = { price, packageId: order.packageId };
+        }
+    } catch { /* mock DB etc. */ }
+    return top;
+}
+
 // Full course access (all lessons). Demo ownership gives lesson-1-only
 // access to Course 01 — use hasLessonAccess for that distinction.
 export async function hasFullCourseAccess(userId: string, courseSlug: string): Promise<boolean> {
