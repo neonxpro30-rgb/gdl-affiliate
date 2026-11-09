@@ -16,26 +16,33 @@ export async function processSuccessfulPayment(orderId: string, paymentId: strin
     console.log(`Processing payment for Order: ${orderId}`);
 
     const orderRef = db.collection('orders').doc(orderId);
-    const orderDoc = await orderRef.get();
-    if (!orderDoc.exists) throw new Error('Order not found');
-    const orderData: any = { id: orderId, ...orderDoc.data() };
-    if (!orderData) throw new Error('Order data empty');
 
     // Idempotency (audit 2026-11-07, high #11): an order that is already
     // SUCCESS is never re-processed — replayed/concurrent callbacks must not
-    // double-issue commissions, licences or emails.
-    if (orderData.status === 'SUCCESS') {
+    // double-issue commissions, licences or emails. The check-and-set runs
+    // in ONE transaction: two callbacks arriving together could otherwise
+    // both read PENDING and both process the order.
+    // 1. Claim the order (PENDING/FAILED -> SUCCESS) atomically
+    const nowIso = new Date().toISOString();
+    const claimed = await db.runTransaction(async (tx) => {
+        const doc = await tx.get(orderRef);
+        if (!doc.exists) throw new Error('Order not found');
+        const data: any = doc.data() || {};
+        if (data.status === 'SUCCESS') return null;
+        tx.update(orderRef, {
+            status: 'SUCCESS',
+            transactionId: paymentId,
+            paidAt: nowIso,
+            updatedAt: nowIso,
+            paymentData: paymentData,
+        });
+        return { id: orderId, ...data } as any;
+    });
+    if (!claimed) {
         console.log(`Order ${orderId} already SUCCESS — skipping re-processing`);
         return;
     }
-
-    // 1. Update Order Status
-    await orderRef.update({
-        status: 'SUCCESS',
-        transactionId: paymentId,
-        updatedAt: new Date().toISOString(),
-        paymentData: paymentData,
-    });
+    const orderData: any = claimed;
 
     // 1b. Count the coupon use exactly once — here, on successful
     // payment (audit #29). This processor is idempotency-guarded above,

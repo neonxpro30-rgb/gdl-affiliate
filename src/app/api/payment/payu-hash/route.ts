@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { db } from '@/lib/firebaseAdmin';
-import { generateHash } from '@/lib/payu';
+import { generateHash, PAYU_PUBLIC_KEY } from '@/lib/payu';
 
 // PayU hash generation — hardened (audit 2026-11-07, critical #3).
 // Previously this was a public signing oracle: anyone could get a valid
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
             udf5
         });
 
-        return NextResponse.json({ hash });
+        return NextResponse.json({ hash, key: PAYU_PUBLIC_KEY });
     } catch (error) {
         console.error('Hash generation error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -11,7 +11,9 @@ export async function POST(req: Request) {
         if (!(await rateLimit(`reset_ip_${clientIp(req)}`, 10, 3600_000))) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
-        const { token, email, newPassword } = await req.json();
+        const body = await req.json();
+        const { token, newPassword } = body;
+        const email = String(body.email || '').trim().toLowerCase();
 
         if (!token || !email) {
             return NextResponse.json({ error: 'Invalid request' }, { status: 400 });

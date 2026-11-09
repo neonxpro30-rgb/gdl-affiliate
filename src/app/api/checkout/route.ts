@@ -18,6 +18,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Product not available' }, { status: 404 });
         }
 
+        // Don't sell something the student already owns.
+        const { getOwnedProductSlugs } = await import('@/lib/access');
+        const owned = await getOwnedProductSlugs(session.user.id);
+        if (owned.has(product.slug) || (owned.has('bundle-all') && product.slug !== 'demo')) {
+            return NextResponse.json({ error: 'You already own this. Open it from My Courses.' }, { status: 409 });
+        }
+        if (!(Number(product.price) >= 1)) {
+            return NextResponse.json({ error: 'This item is not available for purchase right now' }, { status: 400 });
+        }
+
         const userDoc = await db.collection('users').doc(session.user.id).get();
         const user = userDoc.data() as any;
 
@@ -46,7 +56,7 @@ export async function POST(req: Request) {
             couponCode: appliedCoupon,
             affiliateId,
             status: 'PENDING',
-            ip: req.headers.get('x-forwarded-for') || '',
+            ip: (req.headers.get('x-forwarded-for') || '').split(',')[0].trim(),
             deviceId: req.headers.get('user-agent') || '',
             createdAt: now,
             updatedAt: now,

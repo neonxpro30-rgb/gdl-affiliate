@@ -7,28 +7,9 @@ export default function AdminDashboardClient({ referralId, status }: { referralI
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
-    const handleApprove = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/admin/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ referralId }),
-            });
-
-            if (res.ok) {
-                router.refresh();
-            } else {
-                alert('Failed to approve');
-            }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handlePay = async () => {
+    // Legacy commission: marking it paid records that the money was sent.
+    const handleMarkPaid = async () => {
+        if (!confirm('Mark this commission as PAID? Do this only after you have sent the money.')) return;
         setLoading(true);
         try {
             const res = await fetch('/api/admin/pay', {
@@ -40,10 +21,12 @@ export default function AdminDashboardClient({ referralId, status }: { referralI
             if (res.ok) {
                 router.refresh();
             } else {
-                alert('Failed to mark as paid');
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || 'Failed to mark as paid');
             }
         } catch (error) {
             console.error(error);
+            alert('Network error — nothing was changed');
         } finally {
             setLoading(false);
         }
@@ -52,11 +35,11 @@ export default function AdminDashboardClient({ referralId, status }: { referralI
     if (status === 'PENDING') {
         return (
             <button
-                onClick={handleApprove}
+                onClick={handleMarkPaid}
                 disabled={loading}
                 className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
             >
-                {loading ? 'Approving...' : 'Approve'}
+                {loading ? 'Saving...' : 'Mark Paid'}
             </button>
         );
     }

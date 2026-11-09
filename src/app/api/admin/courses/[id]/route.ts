@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { requireAdmin } from '@/lib/adminGuard';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'ADMIN') {
+        const guard = await requireAdmin();
+        if (!guard.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -14,10 +13,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         const body = await req.json();
         const { title, description, videoLink, category } = body;
 
-        await db.collection('courses').doc(id).update({
-            title, description, videoLink, category,
-            updatedAt: new Date().toISOString()
-        });
+        // Only send fields that were provided — Firestore rejects undefined.
+        const updates: Record<string, unknown> = { title, description, videoLink, category, updatedAt: new Date().toISOString() };
+        Object.keys(updates).forEach(k => updates[k] === undefined && delete updates[k]);
+        if (updates.title !== undefined && !String(updates.title).trim()) {
+            return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 });
+        }
+        const ref = db.collection('courses').doc(id);
+        if (!(await ref.get()).exists) {
+            return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+        }
+        await ref.update(updates);
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -27,8 +33,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'ADMIN') {
+        const guard = await requireAdmin();
+        if (!guard.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

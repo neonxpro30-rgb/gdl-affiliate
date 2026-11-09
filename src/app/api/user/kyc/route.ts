@@ -11,12 +11,17 @@ export async function POST(req: Request) {
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const { pan, bankOrUpi, accountName } = await req.json();
         if (!pan || !bankOrUpi) return NextResponse.json({ error: 'PAN and bank/UPI are required' }, { status: 400 });
+        const panUpper = String(pan).trim().toUpperCase();
+        // PAN format: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panUpper)) {
+            return NextResponse.json({ error: 'Enter a valid PAN (format ABCDE1234F)' }, { status: 400 });
+        }
 
         await db.collection('users').doc(session.user.id).update({
             kyc: {
-                pan: String(pan).toUpperCase(),
-                bankOrUpi: String(bankOrUpi),
-                accountName: accountName || '',
+                pan: panUpper,
+                bankOrUpi: String(bankOrUpi).trim(),
+                accountName: String(accountName || '').trim(),
                 status: 'pending',
                 submittedAt: new Date().toISOString(),
             },

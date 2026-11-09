@@ -14,12 +14,13 @@ export async function getOwnedProductSlugs(userId: string): Promise<Set<string>>
             .where('userId', '==', userId)
             .where('status', '==', 'SUCCESS')
             .get();
+        // Skip refunded orders instead of deleting their slug afterwards:
+        // with delete-after-add, a refunded order processed AFTER a paid
+        // order for the same product removed access the student paid for.
         for (const doc of snap.docs) {
             const data = doc.data() as any;
+            if (data.refundStatus === 'REFUNDED') continue;
             if (data.productSlug) owned.add(data.productSlug);
-            if (data.refundStatus === 'REFUNDED') {
-                if (data.productSlug) owned.delete(data.productSlug);
-            }
         }
         // The ₹19 demo IS the old Silicon package (same product, new name):
         // legacy Silicon-tier buyers own the demo too.

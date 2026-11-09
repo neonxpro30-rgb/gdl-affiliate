@@ -34,17 +34,9 @@ export async function POST(req: Request) {
 
         const orderData = orderDoc.data();
 
-        // Update Order
-        await orderRef.update({
-            status: 'SUCCESS',
-            transactionId: `mock_razorpay_${Date.now()}`,
-            updatedAt: new Date().toISOString(),
-            paymentData: {
-                method: 'mock_razorpay',
-                amount: orderData?.amount,
-                date: new Date().toISOString()
-            }
-        });
+        // Do NOT pre-mark the order SUCCESS here: the processor skips
+        // orders that are already SUCCESS, so commissions, licences and
+        // emails would never run. The processor sets the status itself.
 
         // Process payment including user activation and commission calculation
         const { processSuccessfulPayment } = await import('@/lib/payment-processor');

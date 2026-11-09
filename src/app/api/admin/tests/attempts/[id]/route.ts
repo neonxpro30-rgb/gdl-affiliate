@@ -11,8 +11,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!(await requireAdmin()).ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
         const { id } = await params;
-        const { reviewStatus, note } = await req.json();
-        if (!['approved', 'rejected'].includes(reviewStatus)) return NextResponse.json({ error: 'Invalid reviewStatus' }, { status: 400 });
+        const body = await req.json();
+        // Accept both shapes: { reviewStatus: 'approved'|'rejected', note }
+        // and the admin panel's { decision: 'approve'|'reject', feedback }.
+        const decisionMap: Record<string, string> = { approve: 'approved', reject: 'rejected', approved: 'approved', rejected: 'rejected' };
+        const reviewStatus = decisionMap[String(body.reviewStatus ?? body.decision ?? '')];
+        const note = body.note ?? body.feedback ?? '';
+        if (!reviewStatus) return NextResponse.json({ error: 'Invalid decision (use approve or reject)' }, { status: 400 });
 
         const ref = db.collection('testAttempts').doc(id);
         const doc = await ref.get();
@@ -23,6 +28,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const testDoc = await db.collection('tests').doc(attempt.courseSlug).get();
         const passMark = (testDoc.data() as any)?.passMarkPct ?? settings.test.passMarkPct;
 
+        if (attempt.status === 'PASSED') {
+            return NextResponse.json({ error: 'This attempt has already passed' }, { status: 409 });
+        }
         let status = attempt.status;
         if (reviewStatus === 'approved' && attempt.mcqScorePct >= passMark) status = 'PASSED';
         if (reviewStatus === 'rejected' && attempt.status === 'AWAITING_REVIEW') status = 'FAILED';
