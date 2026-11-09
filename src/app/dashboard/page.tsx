@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { User, Copy, Check, Trophy, Wallet } from 'lucide-react';
 import DashboardNavbar from "@/components/DashboardNavbar";
@@ -34,6 +34,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
+    const router = useRouter();
     const [stats, setStats] = useState({
         today: 0,
         sevenDays: 0,
@@ -51,8 +52,11 @@ export default function DashboardPage() {
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
+        // redirect() only works during render; inside an effect it throws
+        // and the logged-out visitor saw a blank page. Navigate instead.
         if (status === 'unauthenticated') {
-            redirect('/login');
+            router.replace('/login?next=/dashboard');
+            return;
         }
 
         async function fetchUserProfile() {
@@ -124,7 +128,7 @@ export default function DashboardPage() {
             fetchMentor();
             fetchPendings();
         }
-    }, [session, status]);
+    }, [session, status, router]);
 
     useEffect(() => {
         // Check for payment success param and orderId

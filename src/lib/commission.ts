@@ -187,8 +187,16 @@ export async function reverseCommissionsForOrder(orderId: string, reason: string
         const data = doc.data() as any;
         if (['paid'].includes(data.status)) continue; // paid rows need manual clawback — surfaced to admin instead
         if (data.status === 'reversed') continue;
+        if (data.status === 'batched' && data.payoutId) {
+            // Take it out of the open payout batch so it isn't paid. If the
+            // batch is already paid, leave the row for manual clawback.
+            const { removeLineFromOpenBatch } = await import('@/lib/payouts');
+            const removed = await removeLineFromOpenBatch(data.payoutId, doc.id);
+            if (!removed) continue;
+        }
         await doc.ref.update({
             status: 'reversed',
+            payoutId: null,
             statusHistory: [...(data.statusHistory || []), { status: 'reversed', at: new Date().toISOString(), note: reason }],
             updatedAt: new Date().toISOString(),
         });

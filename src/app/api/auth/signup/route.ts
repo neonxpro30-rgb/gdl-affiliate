@@ -49,20 +49,33 @@ export async function POST(req: Request) {
         }
 
         const usersRef = db.collection('users');
-        const userSnapshot = await usersRef.where('email', '==', normalizedEmail).get();
+        const userSnapshot = await usersRef.where('email', '==', normalizedEmail).limit(1).get();
 
+        // An account that signed up but never paid is inactive, and login
+        // refuses inactive accounts — so without this the person could
+        // never finish buying. If they prove it's theirs (same password),
+        // reuse the account and create a fresh order.
+        let existingUser: { id: string; data: any } | null = null;
         if (!userSnapshot.empty) {
-            return NextResponse.json({ error: 'User already exists' }, { status: 400 });
+            const doc = userSnapshot.docs[0];
+            const data = doc.data() as any;
+            if (data.isActive !== false) {
+                return NextResponse.json({ error: 'An account with this email already exists. Please log in and buy the course from your dashboard.' }, { status: 400 });
+            }
+            const samePassword = data.password ? await bcrypt.compare(String(password), data.password) : false;
+            if (!samePassword) {
+                return NextResponse.json({ error: 'This email already started a signup but payment was not completed. Use the same password as before, or reset it with "Forgot password".' }, { status: 400 });
+            }
+            existingUser = { id: doc.id, data };
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newReferralCode = await generateUniqueReferralCode(usersRef as any, String(name));
-
-        // Find referrer
-        let referrerId = null;
-        if (referralCode) {
-            const referrerSnapshot = await usersRef.where('referralCode', '==', referralCode).limit(1).get();
-            if (!referrerSnapshot.empty) {
+        // Find referrer (codes are stored upper-case; the verify endpoint
+        // already upper-cases, so match that here too)
+        let referrerId: string | null = existingUser?.data?.referrerId || null;
+        const normalizedReferral = String(referralCode || '').trim().toUpperCase();
+        if (normalizedReferral && !referrerId) {
+            const referrerSnapshot = await usersRef.where('referralCode', '==', normalizedReferral).limit(1).get();
+            if (!referrerSnapshot.empty && referrerSnapshot.docs[0].id !== existingUser?.id) {
                 referrerId = referrerSnapshot.docs[0].id;
             }
         }
@@ -80,37 +93,50 @@ export async function POST(req: Request) {
             resolvedProductSlug = product.slug;
         } else {
             // Get Package Details (legacy)
-            const packageRef = db.collection('packages').doc(packageId);
-            const packageDoc = await packageRef.get();
-
-            // Fallback if package not found (should be seeded)
-            let packageData = packageDoc.exists ? packageDoc.data() : null;
-            amount = packageData ? packageData.price : 0;
-
-            // If package not found in DB, use hardcoded values (temporary safety)
-            if (!packageData) {
-                if (packageId.includes('silver')) amount = 799;
-                else if (packageId.includes('gold')) amount = 1299;
-                else if (packageId.includes('diamond')) amount = 3899;
+            if (!/^[A-Za-z0-9_-]{1,100}$/.test(String(packageId))) {
+                return NextResponse.json({ error: 'Package not available' }, { status: 400 });
             }
+            const packageDoc = await db.collection('packages').doc(String(packageId)).get();
+            const packageData = packageDoc.exists ? packageDoc.data() : null;
+            amount = Number(packageData?.price) || 0;
         }
 
-        // Create User
-        const newUserRef = usersRef.doc();
-        const userId = newUserRef.id;
+        // A ₹0 (or unknown) item can't be paid through PayU.
+        if (!(amount >= 1)) {
+            return NextResponse.json({ error: 'This course is not available for purchase right now' }, { status: 400 });
+        }
 
-        await newUserRef.set({
-            name,
-            email: normalizedEmail,
-            phone,
-            password: hashedPassword,
-            referralCode: newReferralCode,
-            role: 'USER',
-            isActive: false,
-            referrerId,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        });
+        let userId: string;
+        if (existingUser) {
+            userId = existingUser.id;
+            await usersRef.doc(userId).update({
+                name,
+                phone: String(phone || ''),
+                ...(referrerId && !existingUser.data.referrerId ? { referrerId } : {}),
+                updatedAt: new Date().toISOString(),
+            });
+        } else {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const newReferralCode = await generateUniqueReferralCode(usersRef as any, String(name));
+
+            // Create User
+            const newUserRef = usersRef.doc();
+            userId = newUserRef.id;
+
+            await newUserRef.set({
+                name,
+                email: normalizedEmail,
+                // Firestore rejects undefined values
+                phone: String(phone || ''),
+                password: hashedPassword,
+                referralCode: newReferralCode,
+                role: 'USER',
+                isActive: false,
+                referrerId,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            });
+        }
 
         // Create Order
         const ordersRef = db.collection('orders');
@@ -119,7 +145,7 @@ export async function POST(req: Request) {
         const timestamp = new Date().toISOString();
         await newOrderRef.set({
             userId,
-            packageId: resolvedProductSlug ? null : packageId,
+            packageId: resolvedProductSlug ? null : String(packageId),
             productSlug: resolvedProductSlug,
             affiliateId: referrerId,
             amount,

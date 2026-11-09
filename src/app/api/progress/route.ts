@@ -14,6 +14,10 @@ export async function POST(req: Request) {
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const { courseSlug, lessonId, watchedSeconds, durationSec } = await req.json();
         if (!courseSlug || !lessonId) return NextResponse.json({ error: 'courseSlug and lessonId required' }, { status: 400 });
+        // Ids become part of a Firestore doc id — a '/' would break it.
+        if (!/^[A-Za-z0-9_-]{1,120}$/.test(String(courseSlug)) || !/^[A-Za-z0-9_-]{1,120}$/.test(String(lessonId))) {
+            return NextResponse.json({ error: 'Invalid courseSlug or lessonId' }, { status: 400 });
+        }
 
         const docId = `${session.user.id}_${courseSlug}_${lessonId}`;
         const ref = db.collection('progress').doc(docId);

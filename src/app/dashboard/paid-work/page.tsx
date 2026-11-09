@@ -149,11 +149,15 @@ async function advanceProject(formData: FormData) {
 
     const projectId = String(formData.get("projectId") || "");
     const status = String(formData.get("status") || "");
+    const submissionLink = String(formData.get("submissionLink") || "").trim();
     if (!projectId || !status) {
         redirect("/dashboard/paid-work?project=error&msg=Missing+project+or+status");
     }
     try {
-        await apiPost(`/api/projects/${encodeURIComponent(projectId)}/status`, { status });
+        await apiPost(`/api/projects/${encodeURIComponent(projectId)}/status`, {
+            status,
+            ...(submissionLink ? { submissionLink } : {}),
+        });
     } catch (err: any) {
         redirect(
             `/dashboard/paid-work?project=error&msg=${encodeURIComponent(err?.message || "Update failed")}`,
@@ -455,6 +459,25 @@ export default async function PaidWorkPage({
                                                     name="status"
                                                     value={next.status}
                                                 />
+                                                {next.status === "submitted" && (
+                                                    <>
+                                                        <label
+                                                            className="lpd-label"
+                                                            htmlFor={`submission-${project.id}`}
+                                                        >
+                                                            Link to your finished edit
+                                                        </label>
+                                                        <input
+                                                            id={`submission-${project.id}`}
+                                                            name="submissionLink"
+                                                            type="url"
+                                                            required
+                                                            placeholder="https://drive.google.com/…"
+                                                            defaultValue={project.submissionLink || ""}
+                                                            className="lpd-input mb-3"
+                                                        />
+                                                    </>
+                                                )}
                                                 <button
                                                     type="submit"
                                                     className="lpd-btn lpd-btn-pink lpd-btn-sm w-full md:w-auto"

@@ -30,6 +30,32 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     );
 }
 
+// Only http(s) links are rendered as clickable. Student-supplied links
+// (showreels, practical edits) could otherwise carry javascript: URLs
+// that run in the admin's session when clicked.
+function safeHref(url: unknown): string | undefined {
+    const s = String(url || '').trim();
+    return /^https?:\/\//i.test(s) ? s : undefined;
+}
+
+// Asks for a note; returns null when the admin pressed Cancel, so the
+// action can be aborted instead of running with an empty note.
+function askNote(question: string): string | null {
+    const v = prompt(question);
+    return v === null ? null : v;
+}
+
+// Defined at module level: a component declared inside another
+// component's render is a new type every render, so React remounts it
+// and the input loses focus after every keystroke.
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <label className="grid grid-cols-[220px_1fr] items-center gap-3 text-sm">
+            <span className="text-gray-600">{label}</span>{children}
+        </label>
+    );
+}
+
 const inputCls = "border rounded-lg px-2.5 py-1.5 text-sm w-full";
 const btnCls = "rounded-lg bg-blue-600 text-white px-3 py-1.5 text-sm font-semibold hover:bg-blue-700 disabled:opacity-50";
 const ghostCls = "rounded-lg border px-2.5 py-1 text-xs font-semibold hover:bg-gray-50";
@@ -104,11 +130,6 @@ function SettingsPanel() {
         try { const d = await api('/api/admin/settings', 'POST', s); setS(d.settings); setMsg('Settings saved.'); }
         catch (e: any) { setMsg(e.message); }
     };
-    const Row = ({ label, children }: any) => (
-        <label className="grid grid-cols-[220px_1fr] items-center gap-3 text-sm">
-            <span className="text-gray-600">{label}</span>{children}
-        </label>
-    );
     return (
         <Section title="Settings — rates, payouts, TDS, tests, business details">
             {msg && <p className="text-sm text-blue-700 mb-2">{msg}</p>}
@@ -193,8 +214,8 @@ function AffiliatesPanel() {
                             </span>
                             <span className="flex gap-1.5">
                                 {c.status !== 'approved' && c.status !== 'paid' && <button className={ghostCls} onClick={() => act(`/api/admin/commissions/${c.id}`, { status: 'approved' })}>Approve</button>}
-                                {c.status !== 'held' && c.status !== 'paid' && <button className={ghostCls} onClick={() => act(`/api/admin/commissions/${c.id}`, { status: 'held', note: prompt('Hold reason?') || '' })}>Hold</button>}
-                                {c.status !== 'rejected' && c.status !== 'paid' && <button className={ghostCls} onClick={() => act(`/api/admin/commissions/${c.id}`, { status: 'rejected', note: prompt('Reject reason?') || '' })}>Reject</button>}
+                                {c.status !== 'held' && c.status !== 'paid' && <button className={ghostCls} onClick={() => { const note = askNote('Hold reason?'); if (note !== null) act(`/api/admin/commissions/${c.id}`, { status: 'held', note }); }}>Hold</button>}
+                                {c.status !== 'rejected' && c.status !== 'paid' && <button className={ghostCls} onClick={() => { const note = askNote('Reject reason?'); if (note !== null) act(`/api/admin/commissions/${c.id}`, { status: 'rejected', note }); }}>Reject</button>}
                             </span>
                         </div>
                     ))}
@@ -209,20 +230,33 @@ function AffiliatesPanel() {
 function PayoutsPanel() {
     const [batches, setBatches] = useState<any[]>([]);
     const [msg, setMsg] = useState('');
+    const [busy, setBusy] = useState(false);
     const load = useCallback(() => { api('/api/admin/payouts').then(d => setBatches(d.batches)).catch(e => setMsg(e.message)); }, []);
     useEffect(() => { load(); }, [load]);
     const build = async () => {
+        if (busy) return;
         setMsg('');
+        setBusy(true);
         try {
             const r = await api('/api/admin/payouts', 'POST');
             setMsg(r.batchId ? `Batch ${r.batchId} built: ${r.lines.length} lines.` : `No payable batch (skipped: ${r.skipped.map((x: any) => x.reason).join('; ') || 'nothing approved'})`);
+            load();
+        } catch (e: any) { setMsg(e.message); }
+        finally { setBusy(false); }
+    };
+    const markPaid = async (batchId: string) => {
+        const reference = prompt('Disbursement reference (required)?') || '';
+        if (!reference.trim()) return;
+        try {
+            await api('/api/admin/payouts', 'PATCH', { batchId, reference, note: reference });
+            setMsg('Batch marked paid.');
             load();
         } catch (e: any) { setMsg(e.message); }
     };
     return (
         <Section title="Payouts — batches (affiliate commissions + paid projects, KYC + minimum enforced)">
             {msg && <p className="text-sm text-blue-700 mb-2">{msg}</p>}
-            <button className={btnCls} onClick={build}>Build Payout Batch</button>
+            <button className={btnCls} onClick={build} disabled={busy}>{busy ? 'Building…' : 'Build Payout Batch'}</button>
             <div className="mt-4 space-y-2">
                 {batches.map(b => (
                     <div key={b.id} className="border rounded-lg p-3 text-sm">
@@ -230,7 +264,7 @@ function PayoutsPanel() {
                             <span><strong>{b.status}</strong> · {new Date(b.createdAt).toLocaleString('en-IN')} · {b.lines?.length || 0} lines</span>
                             <span className="font-mono">Gross ₹{Number(b.totalGross).toFixed(0)} · TDS ₹{Number(b.totalTds).toFixed(0)} · Net ₹{Number(b.totalNet).toFixed(0)}</span>
                         </div>
-                        {b.status === 'open' && <button className={`${ghostCls} mt-2`} onClick={async () => { const reference = prompt('Disbursement reference (required)?') || ''; if (!reference.trim()) return; await api('/api/admin/payouts', 'PATCH', { batchId: b.id, reference, note: reference }); load(); }}>Mark Paid</button>}
+                        {b.status === 'open' && <button className={`${ghostCls} mt-2`} onClick={() => markPaid(b.id)}>Mark Paid</button>}
                         {b.paidAt && <p className="text-xs text-gray-500 mt-1">Paid {new Date(b.paidAt).toLocaleString('en-IN')} {b.reference ? `· Ref ${b.reference}` : ''} {b.paidNote ? `· ${b.paidNote}` : ''}</p>}
                     </div>
                 ))}
@@ -247,7 +281,11 @@ function RefundsPanel() {
     const load = useCallback(() => { api('/api/admin/refunds').then(d => setRequests(d.requests)).catch(e => setMsg(e.message)); }, []);
     useEffect(() => { load(); }, [load]);
     const act = async (id: string, action: string) => {
-        try { const r = await api(`/api/admin/refunds/${id}`, 'POST', { action, note: prompt('Note (optional)?') || '' }); setMsg(action === 'approve' ? `Approved — ${r.commissionsReversed} commission(s) reversed. Complete the refund in PayU.` : 'Rejected.'); load(); }
+        if (action === 'approve' && !confirm('Approve this refund? The order is marked refunded and its commission, licences and certificates are revoked. You still need to refund the money in PayU.')) return;
+        const note = askNote('Note (optional)?');
+        if (note === null) return;
+        const gatewayRefundRef = action === 'approve' ? (prompt('PayU refund reference (optional — add it if the PayU refund is already done)') || '') : '';
+        try { const r = await api(`/api/admin/refunds/${id}`, 'POST', { action, note, gatewayRefundRef }); setMsg(action === 'approve' ? `Approved — ${r.commissionsReversed} commission(s) reversed. Complete the refund in PayU.` : 'Rejected.'); load(); }
         catch (e: any) { setMsg(e.message); }
     };
     return (
@@ -289,7 +327,7 @@ function TestsPanel() {
         api(`/api/admin/tests/${slug}`).then(d => {
             const t = d.test;
             setJson(JSON.stringify(t?.questions || [], null, 1));
-            if (t?.passMarkPct) setPassMark(t.passMarkPct);
+            if (typeof t?.passMarkPct === 'number') setPassMark(t.passMarkPct);
         }).catch(e => setMsg(e.message));
         api('/api/admin/tests/attempts').then(d => setAttempts(d.attempts)).catch(() => { });
     }, [slug]);
@@ -297,18 +335,21 @@ function TestsPanel() {
     const save = async () => {
         try {
             const questions = JSON.parse(json);
-            await api(`/api/admin/tests/${slug}`, 'POST', { questions, passMarkPct: passMark });
-            setMsg('Question bank saved.');
+            const r = await api(`/api/admin/tests/${slug}`, 'POST', { questions, passMarkPct: passMark });
+            setMsg(`Question bank saved (${r.count} questions).`);
+            loadTest();
         } catch (e: any) { setMsg(e.message); }
     };
     const review = async (id: string, decision: string) => {
-        try { await api(`/api/admin/tests/attempts/${id}`, 'POST', { decision, feedback: prompt('Feedback for the student (optional)?') || '' }); setMsg('Review saved.'); loadTest(); }
+        const feedback = askNote('Feedback for the student (optional)?');
+        if (feedback === null) return;
+        try { const r = await api(`/api/admin/tests/attempts/${id}`, 'POST', { decision, feedback }); setMsg(r.status === 'PASSED' ? 'Approved — certificate issued.' : 'Review saved.'); loadTest(); }
         catch (e: any) { setMsg(e.message); }
     };
     const awaiting = attempts.filter(a => a.status === 'AWAITING_REVIEW');
     return (
         <>
-            <Section title="Question bank (per course) — format: [{question, options[4], correctIndex}]">
+            <Section title='Question bank (per course) — format: [{"question": "…", "options": ["A","B","C","D"], "correctIndex": 0}]  (correctIndex starts at 0)'>
                 {msg && <p className="text-sm text-blue-700 mb-2">{msg}</p>}
                 <div className="flex gap-2 mb-3">
                     <select className={inputCls} value={slug} onChange={e => setSlug(e.target.value)}>
@@ -324,8 +365,10 @@ function TestsPanel() {
                     {awaiting.map(a => (
                         <div key={a.id} className="border rounded-lg p-3 text-sm flex flex-wrap justify-between gap-2">
                             <div>
-                                <p><strong>{a.courseSlug}</strong> · MCQ {a.mcqPct}% {a.mcqPassed ? '(passed)' : '(failed)'}</p>
-                                <p className="text-xs text-gray-500">{new Date(a.createdAt).toLocaleString('en-IN')} · <a className="text-blue-600 underline" href={a.practicalUrl} target="_blank" rel="noreferrer">View practical edit</a></p>
+                                <p><strong>{a.courseSlug}</strong> · MCQ {a.mcqScorePct ?? 0}% · user {a.userId}</p>
+                                <p className="text-xs text-gray-500">{a.createdAt ? new Date(a.createdAt).toLocaleString('en-IN') : '-'} · {safeHref(a.practical?.link)
+                                    ? <a className="text-blue-600 underline" href={safeHref(a.practical?.link)} target="_blank" rel="noreferrer">View practical edit</a>
+                                    : <span className="text-red-600">No valid practical link</span>}</p>
                             </div>
                             <span className="flex gap-1.5">
                                 <button className={ghostCls} onClick={() => review(a.id, 'approve')}>Approve Practical</button>
@@ -386,6 +429,14 @@ function PaidWorkPanel() {
     }, []);
     useEffect(() => { load(); }, [load]);
     const pool = affiliates.filter(a => a.proPool);
+    const run = async (fn: () => Promise<unknown>, ok: string) => {
+        try { await fn(); setMsg(ok); load(); } catch (e: any) { setMsg(e.message); }
+    };
+    const review = (id: string, decision: 'approve' | 'reject') => {
+        const feedback = decision === 'reject' ? askNote('Feedback for the student?') : '';
+        if (feedback === null) return;
+        run(() => api(`/api/admin/portfolios/${id}`, 'POST', { decision, feedback }), decision === 'approve' ? 'Added to the Pro Pool.' : 'Portfolio rejected.');
+    };
     const create = async () => {
         try {
             await api('/api/admin/projects', 'POST', {
@@ -405,17 +456,19 @@ function PaidWorkPanel() {
                     {portfolios.map(p => (
                         <div key={p.id} className="border rounded-lg p-3 text-sm flex flex-wrap justify-between gap-2">
                             <div>
-                                <p><strong>{p.userId}</strong> · <span className="capitalize">{p.status}</span></p>
+                                <p><strong>{p.userId}</strong> · <span className="capitalize">{p.reviewStatus || p.status}</span></p>
                                 <p className="text-xs text-gray-500">
-                                    <a className="text-blue-600 underline" href={p.showreelLink} target="_blank" rel="noreferrer">Showreel</a>
-                                    {(p.editLinks || []).map((l: string, i: number) => <span key={i}> · <a className="text-blue-600 underline" href={l} target="_blank" rel="noreferrer">Edit {i + 1}</a></span>)}
+                                    {safeHref(p.showreelLink) ? <a className="text-blue-600 underline" href={safeHref(p.showreelLink)} target="_blank" rel="noreferrer">Showreel</a> : <span>Showreel link invalid</span>}
+                                    {(p.edits || p.editLinks || []).map((l: string, i: number) => safeHref(l)
+                                        ? <span key={i}> · <a className="text-blue-600 underline" href={safeHref(l)} target="_blank" rel="noreferrer">Edit {i + 1}</a></span>
+                                        : null)}
                                 </p>
                                 {p.feedback && <p className="text-xs text-gray-500">Feedback: {p.feedback}</p>}
                             </div>
-                            {p.status === 'pending' && (
+                            {(p.reviewStatus || p.status) === 'pending' && (
                                 <span className="flex gap-1.5">
-                                    <button className={ghostCls} onClick={async () => { await api(`/api/admin/portfolios/${p.id}`, 'POST', { decision: 'approve' }); load(); }}>Approve → Pro Pool</button>
-                                    <button className={ghostCls} onClick={async () => { await api(`/api/admin/portfolios/${p.id}`, 'POST', { decision: 'reject', feedback: prompt('Feedback for the student?') || '' }); load(); }}>Reject</button>
+                                    <button className={ghostCls} onClick={() => review(p.id, 'approve')}>Approve → Pro Pool</button>
+                                    <button className={ghostCls} onClick={() => review(p.id, 'reject')}>Reject</button>
                                 </span>
                             )}
                         </div>
@@ -427,7 +480,7 @@ function PaidWorkPanel() {
                 <div className="grid gap-2 md:grid-cols-3 mb-3">
                     <input className={inputCls} placeholder="Project title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
                     <input className={inputCls} placeholder="Client (optional)" value={form.clientName} onChange={e => setForm({ ...form, clientName: e.target.value })} />
-                    <input className={inputCls} placeholder="Footage link (Drive etc.)" value={form.footageLink} onChange={e => setForm({ ...form, footageLink: e.target.value })} />
+                    <input className={inputCls} placeholder="Footage link (required)" value={form.footageLink} onChange={e => setForm({ ...form, footageLink: e.target.value })} />
                     <input className={inputCls} type="date" value={form.deadline} onChange={e => setForm({ ...form, deadline: e.target.value })} />
                     <input className={inputCls} type="number" placeholder="Pay amount ₹" value={form.payAmount} onChange={e => setForm({ ...form, payAmount: e.target.value })} />
                     <select className={inputCls} value={form.assigneeId} onChange={e => setForm({ ...form, assigneeId: e.target.value })}>
@@ -435,24 +488,24 @@ function PaidWorkPanel() {
                         {pool.map(a => <option key={a.id} value={a.id}>{a.name} ({a.email})</option>)}
                     </select>
                 </div>
-                <button className={btnCls} onClick={create} disabled={!form.title}>Create Project</button>
+                <button className={btnCls} onClick={create} disabled={!form.title || !form.footageLink}>Create Project</button>
                 <div className="mt-4 space-y-2">
                     {projects.map(pr => (
                         <div key={pr.id} className="border rounded-lg p-3 text-sm flex flex-wrap justify-between gap-2">
                             <div>
                                 <p><strong>{pr.title}</strong> · ₹{Number(pr.payAmount).toLocaleString('en-IN')} · <span className="capitalize">{String(pr.status).replace('_', ' ')}</span></p>
-                                <p className="text-xs text-gray-500">{pr.clientName || 'No client'} {pr.deadline ? `· due ${String(pr.deadline).slice(0, 10)}` : ''} {pr.assigneeId ? `· assigned` : '· unassigned'} {pr.submissionLink ? '· submission received' : ''}</p>
+                                <p className="text-xs text-gray-500">{pr.clientName || pr.client || 'No client'} {pr.deadline ? `· due ${String(pr.deadline).slice(0, 10)}` : ''} {pr.assigneeId ? `· assigned` : '· unassigned'} {safeHref(pr.submissionLink) ? <> · <a className="text-blue-600 underline" href={safeHref(pr.submissionLink)} target="_blank" rel="noreferrer">submission</a></> : ''}</p>
                             </div>
                             <span className="flex gap-1.5">
                                 {!pr.assigneeId && pool.length > 0 && (
-                                    <select className="border rounded-lg px-2 py-1 text-xs" defaultValue="" onChange={async e => { if (e.target.value) { await api(`/api/admin/projects/${pr.id}`, 'PATCH', { assigneeId: e.target.value }); load(); } }}>
+                                    <select className="border rounded-lg px-2 py-1 text-xs" defaultValue="" onChange={e => { const v = e.target.value; if (v) run(() => api(`/api/admin/projects/${pr.id}`, 'PATCH', { assigneeId: v }), 'Project assigned.'); }}>
                                         <option value="">Assign to…</option>
                                         {pool.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                     </select>
                                 )}
                                 {pr.status === 'submitted' && <>
-                                    <button className={ghostCls} onClick={async () => { await api(`/api/admin/projects/${pr.id}`, 'PATCH', { status: 'revision' }); load(); }}>Request revision</button>
-                                    <button className={ghostCls} onClick={async () => { await api(`/api/admin/projects/${pr.id}`, 'PATCH', { status: 'approved' }); load(); }}>Approve → payout queue</button>
+                                    <button className={ghostCls} onClick={() => run(() => api(`/api/admin/projects/${pr.id}`, 'PATCH', { status: 'revision' }), 'Revision requested.')}>Request revision</button>
+                                    <button className={ghostCls} onClick={() => run(() => api(`/api/admin/projects/${pr.id}`, 'PATCH', { status: 'approved' }), 'Approved — it goes into the next payout batch.')}>Approve → payout queue</button>
                                 </>}
                             </span>
                         </div>
@@ -503,7 +556,7 @@ function ExtensionsPanel() {
                 {licenses.map(l => (
                     <p key={l.id} className="text-xs border rounded-lg px-3 py-1.5 flex justify-between">
                         <span className="font-mono">{l.key}</span>
-                        <span>{l.productSlug} · {l.activations?.length || 0}/{l.activationLimit} machines</span>
+                        <span>{l.productSlug} · {l.activations?.length || 0}/{l.limit ?? l.activationLimit ?? '?'} machines{l.status && l.status !== 'active' ? ` · ${l.status}` : ''}</span>
                     </p>
                 ))}
                 {licenses.length === 0 && <p className="text-sm text-gray-500">No licences yet.</p>}
@@ -518,33 +571,39 @@ function LessonsPanel() {
     const [lessons, setLessons] = useState<any[]>([]);
     const [form, setForm] = useState({ title: '', videoLink: '', durationSec: '', order: '' });
     const [msg, setMsg] = useState('');
-    const load = useCallback(() => {
-        if (!courseId) return;
-        api(`/api/admin/courses/${courseId}/lessons`).then(d => setLessons(d.lessons)).catch(e => setMsg(e.message));
+    const [loadedId, setLoadedId] = useState('');
+    // Loads when the admin presses Load — not on every keystroke of the ID.
+    const load = useCallback((id: string = courseId.trim()) => {
+        if (!id) return;
+        setMsg('');
+        api(`/api/admin/courses/${id}/lessons`).then(d => { setLessons(d.lessons); setLoadedId(id); }).catch(e => setMsg(e.message));
     }, [courseId]);
-    useEffect(() => { load(); }, [load]);
     const add = async () => {
         try {
-            await api(`/api/admin/courses/${courseId}/lessons`, 'POST', {
+            await api(`/api/admin/courses/${loadedId}/lessons`, 'POST', {
                 title: form.title, videoLink: form.videoLink,
                 durationSec: Number(form.durationSec) || 0, order: Number(form.order) || lessons.length,
             });
-            setForm({ title: '', videoLink: '', durationSec: '', order: '' }); load();
+            setForm({ title: '', videoLink: '', durationSec: '', order: '' }); load(loadedId);
         } catch (e: any) { setMsg(e.message); }
     };
     const del = async (lessonId: string) => {
-        await fetch(`/api/admin/courses/${courseId}/lessons?lessonId=${lessonId}`, { method: 'DELETE' });
-        load();
+        if (!confirm('Delete this lesson? Students lose access to it immediately.')) return;
+        try {
+            await api(`/api/admin/courses/${loadedId}/lessons?lessonId=${encodeURIComponent(lessonId)}`, 'DELETE');
+            load(loadedId);
+        } catch (e: any) { setMsg(e.message); }
     };
     return (
         <Section title="Lessons — pick a course doc ID (from the Courses tab). No lessons = the course's own videoLink plays as Lesson 1. Course 01's first lesson is the ₹19 demo.">
             {msg && <p className="text-sm text-red-600 mb-2">{msg}</p>}
             <div className="flex gap-2 mb-3">
                 <input className={inputCls} placeholder="Course document ID" value={courseId} onChange={e => setCourseId(e.target.value)} />
-                <button className={btnCls} onClick={load}>Load</button>
+                <button className={btnCls} onClick={() => load()}>Load</button>
             </div>
-            {courseId && (
+            {loadedId && (
                 <>
+                    <p className="text-xs text-gray-500 mb-2">Editing lessons of course <span className="font-mono">{loadedId}</span></p>
                     <div className="space-y-1.5 mb-4">
                         {lessons.map(l => (
                             <div key={l.id} className="flex justify-between border rounded-lg px-3 py-2 text-sm">

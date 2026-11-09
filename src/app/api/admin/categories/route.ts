@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { requireAdmin } from '@/lib/adminGuard';
 
 export async function GET() {
     try {
@@ -15,13 +14,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'ADMIN') {
+        const guard = await requireAdmin();
+        if (!guard.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const data = await req.json();
-        console.log('Creating category:', data);
 
         // Basic validation
         if (!data.title) {
@@ -31,7 +29,8 @@ export async function POST(req: Request) {
         const newCategory = {
             title: data.title,
             image: data.image || '', // URL or path
-            order: data.order || 0,
+            // Stored as a number so orderBy('order') sorts correctly.
+            order: Number(data.order) || 0,
             createdAt: new Date().toISOString(),
         };
 

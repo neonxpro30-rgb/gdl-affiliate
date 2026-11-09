@@ -29,7 +29,9 @@ export default function UsersTable({ users }: { users: any[] }) {
 
     const handleEditClick = (user: any) => {
         setSelectedUser(user);
-        setFormData(user);
+        // Start with an empty password field: only a newly typed password
+        // is sent, never the stored one.
+        setFormData({ ...user, password: '' });
         setIsEditOpen(true);
     };
 
@@ -50,7 +52,8 @@ export default function UsersTable({ users }: { users: any[] }) {
                 router.refresh();
                 setIsEditOpen(false);
             } else {
-                alert('Failed to update user');
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || 'Failed to update user');
             }
         } catch (error) {
             console.error(error);
@@ -98,7 +101,8 @@ export default function UsersTable({ users }: { users: any[] }) {
                 setIsDeleteOpen(false);
                 setUserToDelete(null);
             } else {
-                alert('Failed to delete user');
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || 'Failed to delete user');
             }
         } catch (error) {
             console.error(error);
@@ -155,7 +159,7 @@ export default function UsersTable({ users }: { users: any[] }) {
                         {filteredUsers.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="p-8 text-center text-gray-500">
-                                    No users found matching "{searchTerm}"
+                                    {searchTerm ? <>No users found matching &quot;{searchTerm}&quot;</> : 'No users found.'}
                                 </td>
                             </tr>
                         ) : (
@@ -194,18 +198,25 @@ export default function UsersTable({ users }: { users: any[] }) {
                                         </button>
                                         <button
                                             onClick={async () => {
-                                                if (confirm(`${user.isActive ? 'Deactivate' : 'Activate'} ${user.name}?`)) {
-                                                    await fetch(`/api/admin/users/${user.id}`, {
+                                                // Older accounts have no isActive field; login treats
+                                                // them as active, so the button must too.
+                                                const active = user.isActive !== false;
+                                                if (confirm(`${active ? 'Deactivate' : 'Activate'} ${user.name}?`)) {
+                                                    const res = await fetch(`/api/admin/users/${user.id}`, {
                                                         method: 'PUT',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ isActive: !user.isActive }),
+                                                        body: JSON.stringify({ isActive: !active }),
                                                     });
+                                                    if (!res.ok) {
+                                                        const data = await res.json().catch(() => ({}));
+                                                        alert(data.error || 'Failed to update user');
+                                                    }
                                                     router.refresh();
                                                 }
                                             }}
-                                            className={`font-medium ${user.isActive ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
+                                            className={`font-medium ${user.isActive !== false ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
                                         >
-                                            {user.isActive ? 'Deactivate' : 'Activate'}
+                                            {user.isActive !== false ? 'Deactivate' : 'Activate'}
                                         </button>
                                         <button
                                             type="button"
@@ -264,12 +275,12 @@ export default function UsersTable({ users }: { users: any[] }) {
                                 <label className="flex items-center space-x-2 cursor-pointer mb-4">
                                     <input
                                         type="checkbox"
-                                        checked={formData.isActive === true}
+                                        checked={formData.isActive !== false}
                                         onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                                         className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-5 w-5"
                                     />
-                                    <span className={`font-medium ${formData.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                                        {formData.isActive ? 'Active' : 'Inactive'}
+                                    <span className={`font-medium ${formData.isActive !== false ? 'text-green-600' : 'text-red-600'}`}>
+                                        {formData.isActive !== false ? 'Active' : 'Inactive'}
                                     </span>
                                 </label>
 
@@ -352,7 +363,7 @@ export default function UsersTable({ users }: { users: any[] }) {
                                 className="w-full border p-2 rounded bg-white text-gray-900 border-gray-300"
                             />
                             <input
-                                placeholder="Password"
+                                placeholder="Password (min 8 characters)"
                                 type="password"
                                 value={formData.password || ''}
                                 onChange={e => setFormData({ ...formData, password: e.target.value })}

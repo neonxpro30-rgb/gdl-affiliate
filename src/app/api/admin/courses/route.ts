@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireAdmin } from '@/lib/adminGuard';
 
 export async function GET(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'ADMIN') {
+        const guard = await requireAdmin();
+        if (!guard.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -38,19 +37,23 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'ADMIN') {
+        const guard = await requireAdmin();
+        if (!guard.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await req.json();
         const { title, description, videoLink, category } = body;
+        if (!title || !String(title).trim()) {
+            return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+        }
 
+        // Firestore rejects undefined values — default every optional field.
         await db.collection('courses').add({
-            title,
-            description,
-            videoLink,
-            category, // e.g., 'Silver', 'Gold', 'Diamond'
+            title: String(title).trim(),
+            description: description || '',
+            videoLink: videoLink || '',
+            category: category || '', // category title
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         });

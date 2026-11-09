@@ -8,8 +8,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!(await requireAdmin()).ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
         const { id } = await params;
-        const { reviewStatus, feedback } = await req.json();
-        if (!['approved', 'rejected'].includes(reviewStatus)) return NextResponse.json({ error: 'Invalid reviewStatus' }, { status: 400 });
+        const body = await req.json();
+        // Accept { reviewStatus: 'approved'|'rejected' } and the admin
+        // panel's { decision: 'approve'|'reject' }.
+        const decisionMap: Record<string, string> = { approve: 'approved', reject: 'rejected', approved: 'approved', rejected: 'rejected' };
+        const reviewStatus = decisionMap[String(body.reviewStatus ?? body.decision ?? '')];
+        const feedback = body.feedback;
+        if (!reviewStatus) return NextResponse.json({ error: 'Invalid decision (use approve or reject)' }, { status: 400 });
         const ref = db.collection('portfolios').doc(id);
         const doc = await ref.get();
         if (!doc.exists) return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 });

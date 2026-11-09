@@ -19,18 +19,20 @@ export const authOptions: NextAuthOptions = {
                 const usersRef = db.collection('users');
                 const snapshot = await usersRef.where('email', '==', credentials.email.trim().toLowerCase()).limit(1).get();
 
+                // Same message for unknown email and wrong password, so the
+                // login form can't be used to discover which emails exist.
                 if (snapshot.empty) {
-                    throw new Error("User not found");
+                    throw new Error("Wrong email or password");
                 }
 
                 const userDoc = snapshot.docs[0];
                 const user = userDoc.data();
                 user.id = userDoc.id; // Add ID to user object
 
-                const isValid = await bcrypt.compare(credentials.password, user.password);
+                const isValid = user.password ? await bcrypt.compare(credentials.password, user.password) : false;
 
                 if (!isValid) {
-                    throw new Error("Invalid password");
+                    throw new Error("Wrong email or password");
                 }
 
                 // Check if user is active (paid)

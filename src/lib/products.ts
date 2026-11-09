@@ -77,11 +77,25 @@ export const SEED_PRODUCTS: Product[] = [
     },
 ];
 
+// A Firestore product doc may hold only the fields an admin edited, so
+// it is layered over the seed entry with the same slug (seed supplies
+// type, courseSlug, includes, etc.).
+function withSeedDefaults(slug: string, data: Record<string, unknown>): Product {
+    const seed = SEED_PRODUCTS.find(p => p.slug === slug);
+    return { ...(seed || {}), ...data, slug } as Product;
+}
+
 export async function getProducts(opts: { visibleOnly?: boolean } = {}): Promise<Product[]> {
     try {
         const snap = await db.collection('products').get();
         if (snap.empty) return SEED_PRODUCTS.filter(p => !opts.visibleOnly || p.visible);
-        const products = snap.docs.map(d => ({ slug: d.id, ...(d.data() as any) })) as Product[];
+        const stored = new Map(snap.docs.map(d => [d.id, withSeedDefaults(d.id, d.data() as Record<string, unknown>)]));
+        // Seed products that were never written to Firestore (e.g. a
+        // course added after the collection was first seeded) still show.
+        const products = [
+            ...SEED_PRODUCTS.map(p => stored.get(p.slug) || p),
+            ...[...stored.values()].filter(p => !SEED_PRODUCTS.some(s => s.slug === p.slug)),
+        ];
         return opts.visibleOnly ? products.filter(p => p.visible) : products;
     } catch {
         return SEED_PRODUCTS.filter(p => !opts.visibleOnly || p.visible);
@@ -92,7 +106,7 @@ export async function getProduct(slug: string): Promise<Product | null> {
     if (!slug) return null;
     try {
         const doc = await db.collection('products').doc(slug).get();
-        if (doc.exists) return { slug: doc.id, ...(doc.data() as any) } as Product;
+        if (doc.exists) return withSeedDefaults(doc.id, doc.data() as Record<string, unknown>);
     } catch { /* fall through to seed */ }
     return SEED_PRODUCTS.find(p => p.slug === slug) || null;
 }

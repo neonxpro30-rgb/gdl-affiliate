@@ -9,6 +9,10 @@ function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const success = searchParams.get('success');
+    // Where to go after login (e.g. back to a payment page). Only
+    // same-site paths are allowed — never an external URL.
+    const rawNext = searchParams.get('next') || searchParams.get('callbackUrl') || '';
+    const nextPath = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -29,15 +33,15 @@ function LoginForm() {
 
         const res = await signIn('credentials', {
             redirect: false,
-            email,
+            email: email.trim(),
             password,
         });
 
         if (res?.error) {
-            setError(res.error);
+            setError(res.error === 'CredentialsSignin' ? 'Wrong email or password' : res.error);
             setLoading(false);
         } else {
-            router.push('/dashboard');
+            router.push(nextPath);
         }
     };
 
@@ -113,7 +117,7 @@ function LoginForm() {
             </form>
 
             <p className="mt-4 text-center text-sm text-gray-600">
-                Don't have an account? <Link href="/signup" className="text-blue-600 hover:underline">Sign up here</Link>
+                Don&apos;t have an account? <Link href="/signup" className="text-blue-600 hover:underline">Sign up here</Link>
             </p>
         </div>
     );

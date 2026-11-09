@@ -102,6 +102,38 @@ export async function buildPayoutBatch(createdBy: string): Promise<{ batchId: st
 
     if (!rawLines.length) return { batchId: null, lines: [], skipped };
 
+    // Claim every source row for this batch inside a transaction BEFORE
+    // the batch exists: if two builds run at once (double click, two
+    // tabs), a row can only be claimed by one of them, so it is never
+    // paid twice. A row that changed since it was read is left out.
+    const batchRef = db.collection('payouts').doc();
+    const now = new Date().toISOString();
+    const claimedLines: RawLine[] = [];
+    for (const raw of rawLines) {
+        const ref = raw.source === 'affiliate'
+            ? db.collection('referrals').doc(raw.refId)
+            : db.collection('projects').doc(raw.refId);
+        const ok = await db.runTransaction(async (tx) => {
+            const doc = await tx.get(ref);
+            const data = doc.data() as any;
+            if (!data || data.payoutId || data.status !== 'approved') return false;
+            if (raw.source === 'affiliate') {
+                tx.update(ref, {
+                    status: 'batched', payoutId: batchRef.id,
+                    statusHistory: [...(data.statusHistory || []), { status: 'batched', at: now, note: `payout batch ${batchRef.id}` }],
+                    updatedAt: now,
+                });
+            } else {
+                tx.update(ref, { status: 'batched', payoutId: batchRef.id, updatedAt: now });
+            }
+            return true;
+        });
+        if (ok) claimedLines.push(raw);
+    }
+    if (!claimedLines.length) {
+        return { batchId: null, lines: [], skipped: [...skipped, { userId: '-', reason: 'rows were already claimed by another batch' }] };
+    }
+
     // TDS per line. With a yearly threshold, only the slice of the
     // user's FY gross above the threshold is taxed — prior paid payouts
     // this FY count first, then this batch's lines in order.
@@ -109,7 +141,7 @@ export async function buildPayoutBatch(createdBy: string): Promise<{ batchId: st
         ? await priorFinancialYearGrossByUser()
         : new Map<string, number>();
     const runningByUser = new Map<string, number>();
-    const lines: PayoutLine[] = rawLines.map(raw => {
+    const lines: PayoutLine[] = claimedLines.map(raw => {
         let taxable = raw.gross;
         if (settings.tds.pct != null && tdsThreshold != null) {
             const before = (priorGross.get(raw.userId) || 0) + (runningByUser.get(raw.userId) || 0);
@@ -121,8 +153,7 @@ export async function buildPayoutBatch(createdBy: string): Promise<{ batchId: st
         return { ...raw, tdsPct, tdsAmount, net: raw.gross - tdsAmount };
     });
 
-    const now = new Date().toISOString();
-    const batchRef = await db.collection('payouts').add({
+    await batchRef.set({
         status: 'open', cadence: settings.payout.cadence, createdBy, createdAt: now,
         // Denormalised member list so a user's payout history can be
         // fetched with an array-contains query instead of scanning
@@ -133,22 +164,31 @@ export async function buildPayoutBatch(createdBy: string): Promise<{ batchId: st
         totalNet: lines.reduce((s, l) => s + l.net, 0),
     });
 
-    // Mark sources as batched (NOT paid — money moves only when the
-    // admin marks the batch paid with a disbursement reference).
-    for (const line of lines) {
-        if (line.source === 'affiliate') {
-            const ref = db.collection('referrals').doc(line.refId);
-            const doc = await ref.get();
-            await ref.update({
-                status: 'batched', payoutId: batchRef.id,
-                statusHistory: [...((doc.data() as any)?.statusHistory || []), { status: 'batched', at: now, note: `payout batch ${batchRef.id}` }],
-                updatedAt: now,
-            });
-        } else {
-            await db.collection('projects').doc(line.refId).update({ status: 'batched', payoutId: batchRef.id, updatedAt: now });
-        }
-    }
     return { batchId: batchRef.id, lines, skipped };
+}
+
+// Remove one source row from an OPEN batch (used when a commission is
+// reversed by a refund after it was batched): the batch totals must not
+// still include money for a reversed sale. Paid batches are never
+// changed — those need a manual clawback.
+export async function removeLineFromOpenBatch(batchId: string, refId: string): Promise<boolean> {
+    const ref = db.collection('payouts').doc(batchId);
+    return db.runTransaction(async (tx) => {
+        const doc = await tx.get(ref);
+        const batch = doc.data() as any;
+        if (!batch || batch.status !== 'open') return false;
+        const lines: PayoutLine[] = (batch.lines || []).filter((l: PayoutLine) => l.refId !== refId);
+        if (lines.length === (batch.lines || []).length) return false;
+        tx.update(ref, {
+            lines,
+            userIds: [...new Set(lines.map(l => l.userId))],
+            totalGross: lines.reduce((s, l) => s + l.gross, 0),
+            totalTds: lines.reduce((s, l) => s + l.tdsAmount, 0),
+            totalNet: lines.reduce((s, l) => s + l.net, 0),
+            updatedAt: new Date().toISOString(),
+        });
+        return true;
+    });
 }
 
 // Flip a batch's rows from 'batched' to 'paid'. Called by the admin

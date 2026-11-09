@@ -24,15 +24,45 @@ function SignupForm() {
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
+    const [checkingSession, setCheckingSession] = useState(true);
+
     useEffect(() => {
-        // Clear any existing session to prevent "Ghost Login"
-        import('next-auth/react').then(({ signOut }) => {
-            signOut({ redirect: false });
+        const productSlug = searchParams.get('product');
+        let cancelled = false;
+
+        // A student who is already logged in and clicks "Buy" must get a
+        // new order on their EXISTING account — not be signed out and sent
+        // to create a second account (which fails with "already exists").
+        import('next-auth/react').then(async ({ getSession, signOut }) => {
+            const session = await getSession();
+            if (cancelled) return;
+            if (session?.user && productSlug) {
+                try {
+                    const res = await fetch('/api/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productSlug, couponCode: searchParams.get('coupon') || undefined }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (res.ok && data.orderId) {
+                        router.replace(`/payment/${data.orderId}`);
+                        return;
+                    }
+                    setError(data.error || 'Could not start checkout. Please try again.');
+                } catch {
+                    setError('Network error. Please try again.');
+                }
+                setCheckingSession(false);
+                return;
+            }
+            // Not buying while logged in: clear any old session so a new
+            // account is never mixed up with someone else's login.
+            if (session?.user) await signOut({ redirect: false });
+            setCheckingSession(false);
         });
 
         // Auto-fill from URL
         const pkgId = searchParams.get('package');
-        const productSlug = searchParams.get('product');
         const refCode = searchParams.get('ref');
 
         setFormData(prev => ({
@@ -51,7 +81,9 @@ function SignupForm() {
             .then(res => res.json())
             .then(data => setProducts(Array.isArray(data) ? data : []))
             .catch(err => console.error(err));
-    }, [searchParams]);
+
+        return () => { cancelled = true; };
+    }, [searchParams, router]);
 
     const [referrerName, setReferrerName] = useState('');
     const [verifyingReferral, setVerifyingReferral] = useState(false);
@@ -156,6 +188,14 @@ function SignupForm() {
         }
     };
 
+    if (checkingSession) {
+        return (
+            <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center text-gray-600">
+                Loading…
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
             <h2 className="text-2xl font-bold mb-6 text-center text-[#1A0B12]">Create Account</h2>
@@ -196,7 +236,8 @@ function SignupForm() {
                     <label className="block text-sm font-medium text-gray-700">Password</label>
                     <div className="relative">
                         <input
-                            name="password" type={showPassword ? "text" : "password"} required
+                            name="password" type={showPassword ? "text" : "password"} required minLength={8}
+                            placeholder="At least 8 characters"
                             className="w-full mt-1 p-2 pr-10 border rounded-lg focus:ring-2 focus:ring-[#732C3F] outline-none text-gray-900"
                             value={formData.password} onChange={handleChange}
                         />

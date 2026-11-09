@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
                             {message}
                         </div>
                         <p className="text-sm text-gray-500 mb-4">
-                            Check your server console (for demo) or email for the reset link.
+                            Check your inbox (and the spam folder) for the reset link. It works for 1 hour.
                         </p>
                         <Link href="/login" className="text-blue-600 hover:underline">
                             Back to Login
