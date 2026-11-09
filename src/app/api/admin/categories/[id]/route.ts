@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { requireAdmin } from '@/lib/adminGuard';
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== 'ADMIN') {
+        const guard = await requireAdmin();
+        if (!guard.ok) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { id } = await params;
-        console.log('Attempting to delete category:', id);
         await db.collection('categories').doc(id).delete();
-        console.log('Deleted category:', id);
 
         return NextResponse.json({ success: true });
     } catch (error) {

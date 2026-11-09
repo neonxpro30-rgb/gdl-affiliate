@@ -17,12 +17,16 @@ export async function POST(req: Request) {
 
         const { showreelLink, edits } = await req.json();
         if (!showreelLink) return NextResponse.json({ error: 'showreelLink required' }, { status: 400 });
+        const isWebLink = (v: unknown) => /^https?:\/\/\S+$/i.test(String(v || '').trim());
+        if (!isWebLink(showreelLink) || (Array.isArray(edits) && edits.some((e: unknown) => e && !isWebLink(e)))) {
+            return NextResponse.json({ error: 'All links must be full https:// links' }, { status: 400 });
+        }
 
         const existing = await db.collection('portfolios').where('userId', '==', session.user.id).limit(1).get();
         const data = {
             userId: session.user.id,
             showreelLink,
-            edits: Array.isArray(edits) ? edits.slice(0, 3) : [],
+            edits: Array.isArray(edits) ? edits.filter(Boolean).slice(0, 3) : [],
             reviewStatus: 'pending',
             feedback: '',
             updatedAt: new Date().toISOString(),

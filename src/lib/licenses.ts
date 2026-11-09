@@ -79,7 +79,7 @@ export async function issueLicencesForOrder(userId: string, product: Product, or
 
 export async function activateLicence(key: string, machineId: string): Promise<{ ok: boolean; error?: string; activations?: number; limit?: number }> {
     if (!key || !machineId) return { ok: false, error: 'key and machineId are required' };
-    const snap = await db.collection('licenses').where('key', '==', key.toUpperCase()).limit(1).get();
+    const snap = await db.collection('licenses').where('key', '==', String(key).trim().toUpperCase()).limit(1).get();
     if (snap.empty) return { ok: false, error: 'Licence key not found' };
     const ref = snap.docs[0].ref;
 

@@ -17,6 +17,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const { id } = await params;
         const { status, submissionLink } = await req.json();
+        if (submissionLink && !/^https?:\/\/\S+$/i.test(String(submissionLink).trim())) {
+            return NextResponse.json({ error: 'Submission link must be a full https:// link' }, { status: 400 });
+        }
+        if (status === 'submitted' && !submissionLink) {
+            return NextResponse.json({ error: 'Add your submission link before submitting' }, { status: 400 });
+        }
 
         const ref = db.collection('projects').doc(id);
         const doc = await ref.get();

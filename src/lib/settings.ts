@@ -47,11 +47,20 @@ export const DEFAULT_SETTINGS: LearnPeakSettings = {
     },
 };
 
+// Fields an admin may clear back to null ("not set"). Everything else
+// ignores a null patch — notably cutoverAt, which must never be unset
+// (that would re-arm the legacy commission engine).
+const NULLABLE_KEYS = new Set(['pct', 'yearlyThreshold']);
+
 function deepMerge<T>(base: T, patch: any): T {
     if (patch === null || patch === undefined) return base;
     if (typeof base !== 'object' || base === null || Array.isArray(base)) return (patch as T) ?? base;
     const out: any = { ...(base as any) };
     for (const key of Object.keys(base as any)) {
+        if (key in patch && patch[key] === null && NULLABLE_KEYS.has(key)) {
+            out[key] = null;
+            continue;
+        }
         out[key] = key in patch ? deepMerge((base as any)[key], patch[key]) : (base as any)[key];
     }
     return out;

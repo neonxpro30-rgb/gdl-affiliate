@@ -23,8 +23,8 @@ export default function PaymentButtons({ orderId, amount, userEmail, userName, u
             });
 
             const data = await res.json();
-            if (!data.hash) {
-                alert('Failed to generate payment hash');
+            if (!res.ok || !data.hash || !data.key) {
+                alert(data.error || 'Could not start the payment. Please refresh the page and try again.');
                 setLoading(false);
                 return;
             }
@@ -37,7 +37,7 @@ export default function PaymentButtons({ orderId, amount, userEmail, userName, u
             form.action = payuUrl;
 
             const fields = {
-                key: 'bTpGZj',
+                key: data.key,
                 txnid: orderId,
                 amount: String(amount), // Ensure string match
                 productinfo: productInfo,

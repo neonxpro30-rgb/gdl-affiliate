@@ -11,8 +11,14 @@ export async function POST(req: Request) {
         if (!(await rateLimit(`forgot_ip_${ip}`, 5, 3600_000))) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
-        const { email } = await req.json();
-        if (email && !(await rateLimit(`forgot_email_${String(email).trim().toLowerCase()}`, 3, 3600_000))) {
+        const body = await req.json();
+        // Accounts store emails lower-cased; normalise so "Name@Gmail.com"
+        // still finds the account.
+        const email = String(body.email || '').trim().toLowerCase();
+        if (!email) {
+            return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+        }
+        if (!(await rateLimit(`forgot_email_${email}`, 3, 3600_000))) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
 

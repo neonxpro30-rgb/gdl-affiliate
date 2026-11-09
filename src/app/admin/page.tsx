@@ -11,6 +11,19 @@ import BlogManager from "./BlogManager";
 import DateFilter from "./DateFilter";
 import CommissionFilter from "./CommissionFilter";
 import RelaunchAdmin from "./RelaunchAdmin";
+import { requireAdmin } from "@/lib/adminGuard";
+import { toAdminSafeUser } from "@/lib/adminUsers";
+
+// Dates on old rows can be missing or malformed; never let one bad row
+// crash the whole admin page (toISOString throws on an invalid date).
+function dayOf(value: unknown): string {
+    const d = new Date(String(value || ''));
+    return Number.isNaN(d.getTime()) ? '-' : d.toISOString().split('T')[0];
+}
+
+// New-model commissions that still cost money (or may): everything
+// except rejected / reversed.
+const V2_COST_STATUSES = ['pending', 'confirmed', 'approved', 'batched', 'paid', 'held'];
 
 export const dynamic = 'force-dynamic';
 
@@ -19,14 +32,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     const { tab, startDate, endDate, commissionFilter, pendingFilter } = await searchParams;
     const activeTab = tab || 'commissions';
 
-    if (!session || session.user.role !== 'ADMIN') {
+    // Re-check the role in Firestore (same as every /api/admin route):
+    // a demoted admin's old login token must not still open this page.
+    const guard = await requireAdmin();
+    if (!session || !guard.ok) {
         redirect('/dashboard');
     }
 
     // Date filter helper
     const isDateInRange = (dateStr: string) => {
         if (!startDate && !endDate) return true;
-        const date = dateStr.split('T')[0];
+        const date = String(dateStr || '').split('T')[0];
         if (startDate && date < startDate) return false;
         if (endDate && date > endDate) return false;
         return true;
@@ -70,7 +86,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         }));
 
         // Apply date filter to commissions
-        let filteredCommissions = allCommissions.filter((comm: any) => isDateInRange(comm.createdAt));
+        const filteredCommissions = allCommissions.filter((comm: any) => isDateInRange(comm.createdAt));
 
         // Apply commission status filter
         if (commissionFilter === 'pending') {
@@ -89,16 +105,20 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     let thisMonthRevenue = 0;
     let thisMonthProfit = 0;
     let orders: any[] = [];
+    let v2Commissions: any[] = [];
 
     try {
         const ordersSnapshot = await db.collection('orders')
             .where('status', '==', 'SUCCESS')
             .get();
+        // Refunded orders are not revenue.
+        const paidOrderDocs = ordersSnapshot.docs.filter(d => (d.data() as any).refundStatus !== 'REFUNDED');
 
         // Fetch package names, buyer names, and commission data for each order
-        orders = await Promise.all(ordersSnapshot.docs.map(async (doc) => {
+        orders = await Promise.all(paidOrderDocs.map(async (doc) => {
             const orderData = doc.data();
             let packageName = orderData.paymentData?.productinfo || '';
+            const isNewCatalog = !!orderData.productSlug;
             let buyerName = orderData.paymentData?.firstname || '';
             let referrerPackagePrice = 0;
             let baseAmount = orderData.amount || 0;
@@ -118,8 +138,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     const userData = userDoc.data();
                     buyerName = buyerName || userData?.name || '';
 
-                    // Get referrer's package price
-                    if (userData?.referrerId) {
+                    // Get referrer's package price (legacy package orders only)
+                    if (userData?.referrerId && !isNewCatalog) {
                         const referrerOrdersSnapshot = await db.collection('orders')
                             .where('userId', '==', userData.referrerId)
                             .where('status', '==', 'SUCCESS')
@@ -145,7 +165,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 baseAmount = Math.min(soldPrice, referrerPackagePrice);
             }
 
-            return { ...orderData, packageName, buyerName, baseAmount, referrerPackagePrice };
+            return { id: doc.id, ...orderData, packageName, buyerName, baseAmount, referrerPackagePrice, isNewCatalog };
         }));
 
         // Apply date filter to orders
@@ -159,10 +179,21 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         const thisMonthOrders = orders.filter(order => order.createdAt >= startOfMonth);
         thisMonthRevenue = thisMonthOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
 
-        // Calculate Commissions for this month
-        const thisMonthCommissions = commissions
-            .filter(comm => comm.createdAt >= startOfMonth)
-            .reduce((sum, comm) => sum + (comm.amount || 0), 0);
+        // New-model (v2-flat) commissions live in the same collection with
+        // lowercase statuses — they are company cost too.
+        try {
+            const v2Snap = await db.collection('referrals').where('model', '==', 'v2-flat').get();
+            v2Commissions = v2Snap.docs
+                .map(d => ({ id: d.id, ...(d.data() as any) }))
+                .filter((c: any) => V2_COST_STATUSES.includes(c.status) && isDateInRange(c.createdAt));
+        } catch (err) {
+            console.error('Error fetching v2 commissions:', err);
+        }
+
+        // Calculate Commissions for this month (legacy + new model)
+        const thisMonthCommissions = [...commissions, ...v2Commissions]
+            .filter(comm => String(comm.createdAt || '') >= startOfMonth)
+            .reduce((sum, comm) => sum + (Number(comm.amount) || 0), 0);
 
         thisMonthProfit = thisMonthRevenue - thisMonthCommissions;
 
@@ -176,9 +207,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         const paidReferrals = commissions.filter(c => c.status === 'PAID');
         const earningsMap: Record<string, { total: number, today: number, week: number, month: number }> = {};
 
+        // Separate Date objects: setHours/setDate mutate, and reusing one
+        // object shifted "this month" into last month early in a month.
         const now = new Date();
-        const startOfDay = new Date(now.setHours(0, 0, 0, 0));
-        const startOfWeek = new Date(now.setDate(now.getDate() - 7));
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfWeek = new Date(startOfDay.getTime() - 7 * 24 * 3600 * 1000);
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         paidReferrals.forEach(ref => {
@@ -201,8 +234,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         // Fetch User Details for Leaderboard
         const referrerIds = Object.keys(earningsMap);
         if (referrerIds.length > 0) {
-            const usersSnapshot = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', referrerIds.slice(0, 10)).get(); // Limit to 10 for now to avoid query limits
-            const usersMap = new Map(usersSnapshot.docs.map(doc => [doc.id, doc.data()]));
+            // Firestore 'in' takes at most 10 ids — query in chunks so every
+            // earner gets a name, not just the first 10.
+            const usersMap = new Map<string, any>();
+            for (let i = 0; i < referrerIds.length; i += 10) {
+                const usersSnapshot = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', referrerIds.slice(i, i + 10)).get();
+                usersSnapshot.docs.forEach(doc => usersMap.set(doc.id, doc.data()));
+            }
 
             leaderboardData = referrerIds.map(id => ({
                 id,
@@ -287,7 +325,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 }
             }
 
-            return { id: doc.id, ...userData, packageId: currentPackageId };
+            // Never ship password hashes / reset tokens to the browser.
+            return { ...toAdminSafeUser(doc.id, userData), packageId: currentPackageId };
         }));
         // Apply date filter to users based on createdAt
         users = allUsers.filter((user: any) => isDateInRange(user.createdAt));
@@ -361,17 +400,19 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                     // Process Orders
                                     orders.forEach(order => {
                                         const date = new Date(order.createdAt);
+                                        if (Number.isNaN(date.getTime())) return;
                                         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                                         if (!monthlyStats[key]) monthlyStats[key] = { revenue: 0, commissions: 0 };
                                         monthlyStats[key].revenue += (order.amount || 0);
                                     });
 
-                                    // Process Commissions
-                                    commissions.forEach(comm => {
+                                    // Process Commissions (legacy + new model)
+                                    [...commissions, ...v2Commissions].forEach(comm => {
                                         const date = new Date(comm.createdAt);
+                                        if (Number.isNaN(date.getTime())) return;
                                         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                                         if (!monthlyStats[key]) monthlyStats[key] = { revenue: 0, commissions: 0 };
-                                        monthlyStats[key].commissions += (comm.amount || 0);
+                                        monthlyStats[key].commissions += (Number(comm.amount) || 0);
                                     });
 
                                     const sortedMonths = Object.keys(monthlyStats).sort().reverse();
@@ -552,7 +593,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                                         {comm.status}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-gray-700">{new Date(comm.createdAt).toISOString().split('T')[0]}</td>
+                                                <td className="p-4 text-gray-700">{dayOf(comm.createdAt)}</td>
                                                 <td className="p-4">
                                                     <AdminDashboardClient referralId={comm.id} status={comm.status} />
                                                 </td>
@@ -567,7 +608,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <div className="bg-white rounded-xl shadow-md overflow-hidden">
                         <div className="p-6 border-b border-gray-200">
                             <h2 className="text-xl font-bold text-gray-900">Sales & Commission Breakdown</h2>
-                            <p className="text-sm text-gray-500">Breakdown: 70% Direct / 10% Passive / 20% Company</p>
+                            <p className="text-sm text-gray-500">Legacy packages: 70% Direct / 10% Passive / 20% Company. New courses: the actual commission recorded for the order (flat 30%/40%, demo ₹17).</p>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left min-w-[900px]">
@@ -598,8 +639,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
                                             let direct, passive, company;
 
-                                            // Silicon or base amount = 19: Fixed commission
-                                            if (packageName.includes('Silicon') || baseAmount === 19) {
+                                            if (order.isNewCatalog) {
+                                                // New catalog: single-tier, use the commission actually recorded
+                                                const rec = v2Commissions.find((c: any) => c.orderId === order.id);
+                                                direct = Math.round(Number(rec?.amount) || 0);
+                                                passive = 0;
+                                                company = price - direct;
+                                            } else if (packageName.includes('Silicon') || baseAmount === 19) {
+                                                // Silicon or base amount = 19: Fixed commission
                                                 direct = 17;
                                                 passive = 0;
                                                 company = price - 17; // Company gets remaining
@@ -611,8 +658,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                             }
 
                                             return (
-                                                <tr key={order.transactionId || index} className="hover:bg-gray-50">
-                                                    <td className="p-4 text-gray-700">{new Date(order.createdAt).toISOString().split('T')[0]}</td>
+                                                <tr key={order.id || order.transactionId || index} className="hover:bg-gray-50">
+                                                    <td className="p-4 text-gray-700">{dayOf(order.createdAt)}</td>
                                                     <td className="p-4 font-medium text-gray-900">{order.buyerName || order.paymentData?.firstname || 'Unknown'}</td>
                                                     <td className="p-4 text-gray-900">
                                                         {packageName || 'Package'}
@@ -731,7 +778,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                                     {p.expiresAt ? new Date(p.expiresAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'}
                                                 </td>
                                                 <td className="p-4 text-gray-700 text-sm">
-                                                    {p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : '-'}
+                                                    {dayOf(p.createdAt)}
                                                 </td>
                                             </tr>
                                         ))

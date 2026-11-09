@@ -29,7 +29,8 @@ export default function AffiliatePanel() {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(kyc),
         });
-        setKycMsg(res.ok ? 'KYC submitted. It will be verified before your first payout.' : 'KYC submit failed — check the details and try again.');
+        const body = res.ok ? null : await res.json().catch(() => ({}));
+        setKycMsg(res.ok ? 'KYC submitted. It will be verified before your first payout.' : (body?.error || 'KYC submit failed — check the details and try again.'));
         if (res.ok) setData((d: any) => ({ ...d, kyc: { ...kyc, status: 'pending' } }));
     };
 

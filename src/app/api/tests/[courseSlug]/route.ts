@@ -67,6 +67,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ courseS
             return NextResponse.json({ error: 'Course not purchased' }, { status: 403 });
         }
         const { answers, practicalLink } = await req.json();
+        // Links are opened by the admin reviewer — only real web links.
+        if (practicalLink && !/^https?:\/\/\S+$/i.test(String(practicalLink).trim())) {
+            return NextResponse.json({ error: 'Practical link must be a full https:// link (Drive, YouTube, Vimeo…)' }, { status: 400 });
+        }
         const settings = await getSettings();
 
         const prev = await latestAttempt(session.user.id, courseSlug);

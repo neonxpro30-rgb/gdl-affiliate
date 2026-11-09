@@ -35,7 +35,8 @@ export default function BankDetailsForm({ user }: { user: any }) {
                 setMessage('Bank details updated successfully!');
                 router.refresh();
             } else {
-                setMessage('Failed to update details.');
+                const data = await res.json().catch(() => ({}));
+                setMessage(data.error || 'Failed to update details.');
             }
         } catch (error) {
             console.error(error);

@@ -48,7 +48,9 @@ export async function POST(req: Request) {
         for (const s of watchedSet) {
             watchedPct = Math.max(watchedPct, await courseWatchedPercent(session.user.id, s));
         }
-        const ageHours = (Date.now() - new Date(order.updatedAt || order.createdAt).getTime()) / 3600000;
+        // Measure from the moment of payment. updatedAt moves on any later
+        // edit of the order, so it is only a fallback for older orders.
+        const ageHours = (Date.now() - new Date(order.paidAt || order.updatedAt || order.createdAt).getTime()) / 3600000;
         const within24h = ageHours <= 24;
         const reasons: string[] = [];
         if (!within24h) reasons.push('More than 24 hours have passed since purchase');

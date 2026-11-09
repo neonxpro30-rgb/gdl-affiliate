@@ -14,11 +14,15 @@ export async function GET() {
 export async function POST(req: Request) {
     if (!(await requireAdmin()).ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
-        const { title, client, footageLink, deadline, payAmount, assigneeId } = await req.json();
-        if (!title || !footageLink) return NextResponse.json({ error: 'title and footageLink required' }, { status: 400 });
+        const { title, client, clientName, footageLink, deadline, payAmount, assigneeId } = await req.json();
+        if (!title || !footageLink) return NextResponse.json({ error: 'Project title and footage link are required' }, { status: 400 });
+        const pay = Number(payAmount) || 0;
+        if (pay < 0) return NextResponse.json({ error: 'Pay amount cannot be negative' }, { status: 400 });
+        const name = clientName || client || '';
         const ref = await db.collection('projects').add({
-            title, client: client || '', footageLink, deadline: deadline || '',
-            payAmount: Number(payAmount) || 0,
+            // clientName is what the admin panel reads; client kept for older rows
+            title, clientName: name, client: name, footageLink, deadline: deadline || '',
+            payAmount: pay,
             assigneeId: assigneeId || null,
             status: assigneeId ? 'assigned' : 'unassigned',
             createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
